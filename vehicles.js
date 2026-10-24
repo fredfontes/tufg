@@ -113,12 +113,13 @@ window.TUFG_VEHICLES = {
       name: 'Falcão Z', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xe9ecef, trim: 0x14161a, wing: false,
       sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
       maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
-    }
-     
+    },
+
+   // Classe S
     mature: {
-    name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 0, length: 4.5, width: 1.9,
-    maxSpeed: 80, accel: 15, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
-    sound: { synth: 'v8', engine: 'sounds/meu_motor.ogg' }
+       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 0, length: 4.5, width: 1.9,
+       maxSpeed: 80, accel: 15, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
+       sound: { synth: 'v8', engine: 'sounds/meu_motor.ogg' }
     },
 
     // Exemplo (descomente e ajuste):
