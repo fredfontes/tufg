@@ -115,7 +115,7 @@ window.TUFG_VEHICLES = {
      daemon: {
         name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
-        maxSpeed: 78, accel: 13, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
+        maxSpeed: 77, accel: 12, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
      },
      
      // Class B
@@ -128,6 +128,18 @@ window.TUFG_VEHICLES = {
         name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.6,
         sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: false, pops: true },
         maxSpeed: 68, accel: 12.5, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
+     },     
+     
+     // Class C
+     blonde: {
+        name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.4, width: 2.6,
+        sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
+        maxSpeed: 58, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0
+     },
+     lunar: {
+        name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.6, width: 2.9,
+        sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 68, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0
      },
 
 /*
