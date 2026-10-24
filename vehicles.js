@@ -95,7 +95,7 @@ window.TUFG_VEHICLES = {
      // Classe S
      mature: {
         name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
-        sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true },
+        sound: { synth: 'i4', pitch: 1, volume: 1, turbo: false, pops: true },
         maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9
      },
      cat: {
@@ -111,9 +111,21 @@ window.TUFG_VEHICLES = {
         maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 22, steerRate: 1.8
      },
      daemon: {
-        name: 'Rapid Daemon', model: 'assets/cars/fun/crossing/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
+        name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
         maxSpeed: 78, accel: 15, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
+     },
+     
+     // Class B
+     retro: {
+        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
+        maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
+     },
+     holy: {
+        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
      },
 
    /*
