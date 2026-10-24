@@ -130,8 +130,7 @@ window.TUFG_VEHICLES = {
         maxSpeed: 68, accel: 12.5, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
      },
 
-   /*
-   
+/*
     vento: {
       name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
       color: 0xd8321f, trim: 0x1b1d22,
@@ -154,6 +153,8 @@ window.TUFG_VEHICLES = {
       sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
       maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
     }
+*/
+     
     // Exemplo (descomente e ajuste):
     // meu_carro: {
     //   name: 'Meu Carro', model: 'models/meu_carro.glb', modelRot: 0, length: 4.5, width: 1.9,
