@@ -120,7 +120,7 @@ window.TUFG_VEHICLES = {
      
      // Class B
      retro: {
-        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 5.0, width: 3.0,
+        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 4.8, width: 2.8,
         sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
         maxSpeed: 68, accel: 11.5, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9
      },
