@@ -92,6 +92,19 @@ window.TUFG_VEHICLES = {
   playerCar: 'vento',   // carro de reserva. Na prática o jogador escolhe na Garagem (ou sorteia). Também dá para forçar um com  index.html#id_do_carro
 
   cars: {
+   // Classe S
+   mature: {
+      name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
+      sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+      maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
+   },
+   cat: {
+      name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 0, length: 4.4, width: 1.9, color: 0xf2b100, trim: 0x1b1d22,
+      sound: { synth: 'v6', pitch: 1.05, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+      maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 22, steerRate: 2.0
+   },
+     
+   /*
     vento: {
       name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
       color: 0xd8321f, trim: 0x1b1d22,
@@ -114,14 +127,8 @@ window.TUFG_VEHICLES = {
       sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
       maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
     },
-
-   // Classe S
-    mature: {
-       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
-       maxSpeed: 80, accel: 15, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
-       sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
-    },
-
+   */
+     
     // Exemplo (descomente e ajuste):
     // meu_carro: {
     //   name: 'Meu Carro', model: 'models/meu_carro.glb', modelRot: 0, length: 4.5, width: 1.9,
