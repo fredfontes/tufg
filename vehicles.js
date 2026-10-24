@@ -99,7 +99,7 @@ window.TUFG_VEHICLES = {
         maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9
      },
      cat: {
-        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.4, width: 2.6,
+        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.6, width: 2.8,
         sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
         maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 19, steerRate: 2.0
      },
@@ -113,7 +113,7 @@ window.TUFG_VEHICLES = {
      daemon: {
         name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
-        maxSpeed: 78, accel: 15, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
+        maxSpeed: 78, accel: 14, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
      },
      
      // Class B
@@ -123,7 +123,7 @@ window.TUFG_VEHICLES = {
         maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
      },
      holy: {
-        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 5.0, width: 3.0,
+        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.6,
         sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: false, pops: true },
         maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
      },
