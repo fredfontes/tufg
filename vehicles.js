@@ -117,7 +117,7 @@ window.TUFG_VEHICLES = {
 
    // Classe S
     mature: {
-       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 3.5, width: 1.4,
+       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 3.8, width: 1.9,
        maxSpeed: 80, accel: 15, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
        sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
     },
