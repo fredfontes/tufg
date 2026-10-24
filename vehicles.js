@@ -96,25 +96,26 @@ window.TUFG_VEHICLES = {
      mature: {
         name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true },
-        maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9,
+        maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9
      },
      cat: {
-        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 5.0, width: 3.0,
+        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.4, width: 2.6,
         sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
-        maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 19, steerRate: 2.0,
+        maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 19, steerRate: 2.0
      },
      
      // Class A
      future: {
         name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
-        maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 22, steerRate: 1.8,
+        maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 22, steerRate: 1.8
      },
      daemon: {
         name: 'Rapid Daemon', model: 'assets/cars/fun/crossing/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
         sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
-        maxSpeed: 78, accel: 15, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8,
+        maxSpeed: 78, accel: 15, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
      },
+
    /*
     vento: {
       name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
