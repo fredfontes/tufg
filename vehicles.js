@@ -134,12 +134,12 @@ window.TUFG_VEHICLES = {
      blonde: {
         name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.4, width: 2.6,
         sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
-        maxSpeed: 58, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0
+        maxSpeed: 58, accel: 13, brake: 42, reverseAccel: 7, maxLat: 28, steerRate: 2.0
      },
      lunar: {
         name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.6, width: 2.9,
         sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
-        maxSpeed: 68, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0
+        maxSpeed: 62, accel: 12, brake: 42, reverseAccel: 7, maxLat: 24, steerRate: 2.0
      },
 
 /*
