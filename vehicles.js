@@ -94,6 +94,44 @@ window.TUFG_VEHICLES = {
   playerCar: 'vento',   // carro de reserva. Na prática o jogador escolhe na Garagem (ou sorteia). Também dá para forçar um com  index.html#id_do_carro
 
   cars: {
+     // Classe S
+     mature: {
+        name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'i4', pitch: 1, volume: 1, turbo: false, pops: true },
+        maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9
+     },
+     cat: {
+        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.6, width: 2.8,
+        sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
+        maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 19, steerRate: 2.0
+     },
+     
+     // Class A
+     future: {
+        name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
+        maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 22, steerRate: 1.8
+     },
+     daemon: {
+        name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
+        maxSpeed: 78, accel: 13, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
+     },
+     
+     // Class B
+     retro: {
+        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 5.0, width: 3.0,
+        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
+        maxSpeed: 68, accel: 11.5, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9
+     },
+     holy: {
+        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.6,
+        sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 68, accel: 12.5, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
+     },
+
+   /*
+   
     vento: {
       name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
       color: 0xd8321f, trim: 0x1b1d22,
