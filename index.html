@@ -325,7 +325,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <li><kbd>C</kbd> garagem · <kbd>V</kbd> pistas · <kbd>H</kbd> campeonato</li>
       </ul>
       <details>
-        <summary>Estado do projeto · v0.14</summary>
+        <summary>Estado do projeto · v0.15</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -370,6 +370,8 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       <div class="eyebrow" id="cEye">Campeonato</div>
       <h2>Campeonato</h2>
       <p class="lede" id="cLede"></p>
+      <p class="lede" id="cNews" hidden></p>
+      <details id="cRiv"><summary>Rivais · garagem</summary><ul id="cRivList"></ul></details>
       <div id="cGrid" class="glist" role="group" aria-label="Etapas do campeonato"></div>
       <div class="btns">
         <button class="btn primary" id="cGo" type="button">Começar <small>Enter</small></button>
@@ -426,7 +428,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 (() => {
 'use strict';
 /* =====================================================================
-   THE URGE FOR GAS — v0.14 (garagem em carrossel, dinheiro e compra de carros no campeonato)
+   THE URGE FOR GAS — v0.15 (rivais com dinheiro, oásis chefão com copas e túneis de bambu)
    Single-file engine; content lives in vehicles.js (cars, traffic, classes) and tracks.js (tracks, sceneries).
    Sections are written as independent modules so they can be split into ES modules later:
      Config   data registries (tracks, cars, themes). New content = new entries here.
@@ -490,8 +492,8 @@ const Config = {
 for (const [id, t] of Object.entries(Config.tracks)) t.id = id;
 Config.champ = Object.assign({ times: ['amanhecer', 'dia', 'entardecer', 'noite'], tracks: null, finale: 'oasis', finaleTime: 'amanhecer', passGrade: 'C', points: { S: 100, A: 75, B: 55, C: 35, D: 15 },
   startClass: 'C', startCash: 0, repeat: 0.3,   // starts owning only this class; replaying a stage already passed pays this fraction
-  prizes: [8000, 6000, 4500, 3500, 2800, 2200, 1800, 1400, 1100, 800, 500, 300],   // cash by finishing position (the last value repeats)
-  prices: { C: 0, B: 20000, A: 55000, S: 120000 } }, TR.championship || {});
+  prizes: [16000, 12000, 9000, 3500, 2800, 2200, 1800, 1400, 1100, 800, 500, 300], botIncome: 1.3,   // cash by finishing position (the last value repeats)
+  prices: { C: 0, B: 20000, A: 55000, S: 100000 } }, TR.championship || {});
 Config.champRounds = function () {   // championship = every track x every time of day, in order (5 x 4 = 20 rounds); the finale comes after
   const C = Config.champ, ids = (C.tracks || Config.trackOrder).filter(i => Config.tracks[i]), out = []; ids.forEach(id => C.times.forEach(tm => { if (Config.times[tm]) out.push({ track: id, time: tm }); })); return out;
 };
@@ -514,7 +516,7 @@ Config.atmosphere = function (timeId, wxId) {   // time of day x weather -> ever
 };
 for (const c of Object.values(Config.cars)) c.rating = rateCar(c);
 // Starting grid (single player): the player plus AI drivers. Defaults here; edit the `grid` block in vehicles.js.
-Config.grid = Object.assign({ cars: 12, reduced: 8, rowGap: 9, laneOffset: 2.6, playerSlot: null, balance: 0.6, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
+Config.grid = Object.assign({ cars: 12, reduced: 8, rowGap: 9, laneOffset: 2.6, playerSlot: null, balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
   names: [], colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8] }, V.grid || {});
 
 /* ============================ Track ============================ */
@@ -701,7 +703,7 @@ class CarSim {
    takes the speed from Track.profile, steps around slower cars and gives up (respawns) when stuck or off the road. */
 class Driver {
   constructor(sim, track, o) {
-    Object.assign(this, { sim, track, name: o.name, skill: o.skill, slot: o.slot, lane: o.lane, carId: o.carId, color: o.color, lat: o.lat, tAcc: Math.random() / 30, fin: null, stuck: 0, off: 0, react: 0.12 + Math.random() * 0.45, model: null, _o: {}, respawns: 0 });
+    Object.assign(this, { sim, track, name: o.name, rid: o.rid, skill: o.skill, slot: o.slot, lane: o.lane, carId: o.carId, color: o.color, lat: o.lat, tAcc: Math.random() / 30, fin: null, stuck: 0, off: 0, react: 0.12 + Math.random() * 0.45, model: null, _o: {}, respawns: 0 });
     this.inp = { throttle: 0, brake: 1, steer: 0, handbrake: 0 }; this.prof = track.profile(sim.spec.maxLat, sim.spec.brake, sim.grip || 1, sim.spec.maxSpeed);
   }
   respawn() {
@@ -1039,7 +1041,7 @@ class World {
     this.gantry(T.lineS, bannerTex('THE URGE FOR GAS', false), false);
     this.gantry(T.finishS, bannerTex('CHEGADA', true), true);
 
-    this.tz = T.def.tunnels || []; this.props(); this.posts(); this.billboards(); this.tunnels();
+    this.tz = T.def.tunnels || []; this.cnz = T.def.canopy || []; this.props(); this.posts(); this.billboards(); this.tunnels(); this.canopies();
   }
   gantry(s, tex, finish) {
     const T = this.track, o = T.at(s), W = T.def.wall + 1.2, g = new THREE.Group(), steel = new THREE.MeshLambertMaterial({ color: 0x3a3e46 });
@@ -1079,6 +1081,7 @@ class World {
             const x = o.x + o.lx * sg * lat, z = o.z + o.lz * sg * lat;
             if (!clear(x, z, WALL + (big ? 4 : 0.9) + rad * (big ? 1 : rad > 8 ? 0.8 : 0.5))) continue;   // hills and mesas stay completely off the road (also off other stretches of it)
             if (this.tz.length && lat < WALL + 25 && !big && this.tz.some(([a, b]) => ss > a - 25 && ss < b + 25)) continue;   // keep the tunnel mounds clear
+            if (this.cnz.length && lat < WALL + 14 && !big && this.cnz.some(z => ss > z.from - 12 && ss < z.to + 12)) continue;   // and the palm / bamboo arches
             if (rule.kind === 'building') { if (buildings.some(b => (b[0] - x) ** 2 + (b[1] - z) ** 2 < 110)) continue; buildings.push([x, z]); }
             const yaw = yawMode === 'face' ? Math.atan2(-sg * o.lx, -sg * o.lz) : yawMode === 'road' ? o.h : yawR;
             const key = rule.kind + ':' + (K.variants ? ri + '.' + vi : ''); let slot = slots.get(key); if (!slot) slots.set(key, slot = { V, items: [] });
@@ -1162,6 +1165,57 @@ class World {
       const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.14, 1.5), new THREE.MeshBasicMaterial({ color: 0xfff0c0 }), nL), mx = new THREE.Matrix4(), qq = new THREE.Quaternion(), up = Y_UP(), one = new THREE.Vector3(1, 1, 1), v = new THREE.Vector3();
       for (let i = 0; i < nL; i++) { mx.compose(v.set(lampPos[i * 3], lampPos[i * 3 + 1], lampPos[i * 3 + 2]), qq.setFromAxisAngle(up, lampYaw[i]), one); im.setMatrixAt(i, mx); } im.frustumCulled = false; G.add(im);
       const gm = new THREE.Mesh(mk(gp, guv, gi), new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, opacity: 0.6, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })); gm.frustumCulled = false; G.add(gm);
+    }
+  }
+  canopies() {   // overhead vegetation (tracks.js: canopy: [{ kind: 'palm' | 'bamboo', from, to }]): palms leaning over the road, bamboo groves closing into a tunnel
+    const T = this.track, list = this.cnz; if (!list.length) return;
+    let pos = [], col = [], idx = []; const WALL = T.def.wall, R = rng((T.def.seed || 1) + 5), o = {}, hex = h => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255], mix = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)], rr = (a, b) => lerp(a, b, R());
+    const vtx = (x, y, z, c) => { pos.push(x, y, z); col.push(c[0], c[1], c[2]); return pos.length / 3 - 1; };
+    const blade = (x, y, z, dx, dz, L, w, rise, droop, c0, c1, N = 3) => {   // one leaf / frond: a tapering ribbon that rises and then droops
+      const px = -dz, pz = dx; let prev = null;
+      for (let k = 0; k <= N; k++) { const t = k / N, hw = w * 0.5 * Math.pow(Math.sin(Math.PI * (0.12 + 0.88 * t * 0.97)), 0.7), cx = x + dx * L * t, cy = y + rise * t - droop * t * t, cz = z + dz * L * t, c = mix(c0, c1, t);
+        const a = vtx(cx + px * hw, cy, cz + pz * hw, c), b = vtx(cx - px * hw, cy, cz - pz * hw, c); if (prev) idx.push(prev[0], prev[1], a, prev[1], b, a); prev = [a, b]; }
+    };
+    const stalk = (pts, r, cA, cB) => {   // thin prism along a curve; colors alternate per ring (bamboo nodes / palm rings)
+      let prev = null; pts.forEach((p, k) => { const c = k % 2 ? cA : cB, ring = [[r, 0], [0, r], [-r, 0], [0, -r]].map(([ox, oz]) => vtx(p[0] + ox, p[1], p[2] + oz, c)); if (prev) for (let q = 0; q < 4; q++) { const q1 = (q + 1) % 4; idx.push(prev[q], prev[q1], ring[q], prev[q1], ring[q1], ring[q]); } prev = ring; });
+    };
+    const green = [hex(0x2c6a30), hex(0x58a84a)], bam = [hex(0x3f8a3a), hex(0x9ccb52)];
+    let darkZones = [], tris = 0; const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    const flush = () => {   // one mesh per stretch, so the ones out of sight are culled
+      if (!idx.length) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals(); g.computeBoundingSphere();
+      this.group.add(new THREE.Mesh(g, mat)); tris += idx.length / 3; pos = []; col = []; idx = [];
+    };
+    for (const z of list) {
+      const s0 = z.from, s1 = z.to, bamboo = z.kind === 'bamboo';
+      if (!bamboo) {
+        for (let s = s0; s < s1; s += rr(11, 15)) for (const sg of [-1, 1]) {
+          T.at(s + (sg > 0 ? 0 : rr(2, 6)), o); const ix = -sg * o.lx, iz = -sg * o.lz, lat0 = WALL + rr(2, 3.5), H = rr(9, 11.5), lean = rr(5, 7.5), bx = o.x + o.lx * sg * lat0, bz = o.z + o.lz * sg * lat0, pts = [];
+          for (let k = 0; k <= 6; k++) { const t = k / 6; pts.push([bx + ix * lean * t * t, H * t, bz + iz * lean * t * t]); }
+          stalk(pts, 0.4, hex(0x8a6a44), hex(0xb89a62)); const top = pts[6], nF = 11, ph = R() * TAU;
+          for (let f = 0; f < nF; f++) { const a = ph + f * TAU / nF, cs = Math.cos(a), sn = Math.sin(a), dx = ix * cs + o.tx * sn, dz = iz * cs + o.tz * sn, inward = cs > -0.2, L = inward ? rr(9, 12.5) : rr(5, 7);
+            blade(top[0], top[1] - 0.1, top[2], dx, dz, L, rr(1.1, 1.6), rr(1, 2), inward ? rr(3.2, 4.4) : rr(2.5, 3.5), green[0], mix(green[0], green[1], R()), 4); }
+        }
+      } else {
+        for (let s = s0; s < s1; s += rr(1.1, 1.8)) for (const sg of [-1, 1]) {
+          T.at(s, o); const lat0 = WALL + rr(0.8, 4.2), latT = rr(-1.5, 5.5), H = rr(11, 15), bx = o.x, bz = o.z, pts = [], leafAt = [];
+          for (let k = 0; k <= 5; k++) { const t = k / 5, lat = sg * lerp(lat0, latT, Math.pow(t, 2.3)); pts.push([bx + o.lx * lat, H * (t - 0.1 * t * t), bz + o.lz * lat]); }
+          stalk(pts, rr(0.09, 0.14), hex(0x3a7a32), bam[1].map((v, i) => lerp(v, bam[0][i], 0.2)));
+          for (const k of [2, 4, 5]) { const p = pts[k], n = k === 5 ? 4 : 2; for (let q = 0; q < n; q++) { const a = R() * TAU; blade(p[0], p[1], p[2], Math.cos(a), Math.sin(a), rr(1.6, 2.6), 0.26, 0.2, rr(0.5, 1), bam[0], bam[1], 2); } }
+        }
+        for (let s = s0; s < s1; s += rr(1.1, 1.7)) for (let q = 0; q < 2; q++) {   // the roof: drooping leaves across the road
+          T.at(s, o); const lat = rr(-8, 8), y = rr(8.5, 11.8), x = o.x + o.lx * lat, zz = o.z + o.lz * lat;
+          for (let f = 0; f < 3; f++) { const a = R() * TAU; blade(x, y, zz, Math.cos(a), Math.sin(a), rr(2.4, 3.8), 0.4, rr(0, 0.4), rr(1, 1.8), bam[0], bam[1], 2); }
+        }
+        darkZones.push([s0, s1]);
+      }
+      flush();
+    }
+    this.canopyTris = tris;
+    if (darkZones.length) {   // shade on the road under the bamboo
+      const tint = new THREE.Color(this.theme.tint || '#ffffff'), lum = (tint.r + tint.g + tint.b) / 3, dm = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 * lum, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+      for (const [s0, s1] of darkZones) { const i0 = clamp(Math.round(s0 / T.step), 0, T.N - 1), i1 = clamp(Math.round(s1 / T.step), 0, T.N - 1), pp = [], ii = [];
+        for (let i = i0; i <= i1; i++) { for (const sg of [-1, 1]) pp.push(T.cx[i] + T.lx[i] * sg * WALL, 0.06, T.cz[i] + T.lz[i] * sg * WALL); if (i < i1) { const q = (i - i0) * 2; ii.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } }
+        const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3)); gg.setIndex(ii); const m2 = new THREE.Mesh(gg, dm); m2.frustumCulled = false; this.group.add(m2); }
     }
   }
   billboards() {
@@ -1689,11 +1743,31 @@ class Game {
   roundAtm(i) { const R = this.cRounds(); return i >= R.length ? Config.atmosphere(Config.champ.finaleTime, 'limpo') : Config.atmosphere(R[i].time, this.champ.rain[i] ? 'chuva' : 'limpo'); }
   champLoad() {
     try { const c = JSON.parse(this.load('champ', 'null')), n = this.cRounds().length; if (c && c.rain && c.rain.length === n && c.res && c.res.length === n && Config.cars[c.car] && c.round >= 0 && c.round <= n) {
+      if (!Array.isArray(c.rivals)) c.rivals = this.champMakeRivals(); c.paid = Array.isArray(c.paid) ? c.paid : []; c.news = Array.isArray(c.news) ? c.news : [];
       c.cash = Math.max(0, +c.cash || 0); c.owned = (Array.isArray(c.owned) ? c.owned : this.startOwned()).filter(i => Config.cars[i]); if (!c.owned.includes(c.car)) c.owned.push(c.car); return c; } } catch (e) { /* no valid save */ } return null;
+  }
+  champMakeRivals() {   // the rivals: each has a car, a purse and a spending habit
+    const G = Config.grid, n = Math.max(G.cars, 12) - 1, sh = a => a.slice().sort(() => Math.random() - 0.5), names = sh(G.names), cols = sh(G.colors), own = this.startOwned(), N = this.cRounds().length;
+    const styles = sh(Array.from({ length: n }, (_, i) => ['impulsive', 'balanced', 'saver'][i % 3]));
+    return styles.map((style, i) => ({ id: i, name: names[i % names.length] || 'Piloto ' + (i + 1), color: cols[i % cols.length], skill: lerp(G.skill[0], G.skill[1], Math.random()), lane: (Math.random() * 2 - 1) * 3, car: own[Math.floor(Math.random() * own.length)], cash: 0, style,
+      after: style === 'impulsive' ? 0 : style === 'balanced' ? 2 : Math.round(N * (0.78 + Math.random() * 0.12)), reserve: style === 'balanced' ? 1.3 : 1 }));
+  }
+  champRivalsPay(i) {   // after each stage: rivals earn prize money by finishing place (once per stage) and may buy a better car
+    const C = this.champ; if (!C.rivals || C.paid.includes(i)) return []; C.paid.push(i);
+    const pz = Config.champ.prizes, rows = this.bots.map(b => ({ rid: b.rid, key: b.fin != null ? 1e6 - b.fin : b.sim.s })); rows.push({ rid: -1, key: this.finClock != null ? 1e6 - this.finClock : this.sim.s });
+    rows.sort((a, b) => b.key - a.key); const place = new Map(), msgs = []; rows.forEach((r, k) => place.set(r.rid, k + 1));
+    for (const r of C.rivals) {
+      const pl = place.get(r.id) || 3 + Math.floor(Math.random() * 10); r.cash += Math.round((pz[Math.min(pl, pz.length) - 1] || 0) * Config.champ.botIncome);
+      const all = Object.keys(Config.cars).sort((a, b) => Config.cars[b].rating.pi - Config.cars[a].rating.pi), cur = Config.cars[r.car].rating.pi;
+      // savers only go for the best car in the game until the last stages, then take the best one they can pay; the others buy the best they can pay once their start round arrives
+      const opts = i < r.after && r.style === 'saver' ? all.slice(0, 1).filter(id => Config.cars[id].rating.pi > cur && this.price(id) <= r.cash) : i < r.after ? [] : all.filter(id => Config.cars[id].rating.pi > cur && this.price(id) * r.reserve <= r.cash);
+      if (opts.length) { const id = opts[0]; r.cash -= this.price(id); r.car = id; msgs.push(r.name + ' comprou o ' + (Config.cars[id].name || id) + ' (classe ' + Config.cars[id].rating.letter + ')'); }
+    }
+    C.news = msgs.concat(C.news).slice(0, 5); return msgs;
   }
   champSave() { this.save('champ', JSON.stringify(this.champ)); }
   champNew() {
-    const R = this.cRounds(), own = this.startOwned(); this.champ = { car: own.includes(this.sel) ? this.sel : own[Math.floor(Math.random() * own.length)], cash: Config.champ.startCash || 0, owned: own, round: 0, done: false, res: R.map(() => null), rain: R.map(r => Math.random() < (Config.tracks[r.track].rainChance == null ? 0.3 : Config.tracks[r.track].rainChance)) }; this.champSave();
+    const R = this.cRounds(), own = this.startOwned(); this.champ = { car: own.includes(this.sel) ? this.sel : own[Math.floor(Math.random() * own.length)], cash: Config.champ.startCash || 0, owned: own, rivals: this.champMakeRivals(), paid: [], news: [], round: 0, done: false, res: R.map(() => null), rain: R.map(r => Math.random() < (Config.tracks[r.track].rainChance == null ? 0.3 : Config.tracks[r.track].rainChance)) }; this.champSave();
   }
   champPoints() { const P = Config.champ.points; return this.champ.res.reduce((a, r) => a + (r ? P[r.g] || 0 : 0), 0); }
   openChamp() {
@@ -1711,7 +1785,10 @@ class Game {
   renderChamp() {
     const C = this.champ, R = this.cRounds(), N = R.length, box = $('cGrid'), car = Config.cars[C.car]; box.textContent = ''; this._cReset = false; $('cReset').firstChild.textContent = 'Reiniciar campeonato';
     $('cEye').textContent = C.done ? 'Campeonato concluído' : 'Etapa ' + Math.min(C.round + 1, N) + ' de ' + N;
-    $('cCash').textContent = this.money(C.cash); $('cLede').textContent = 'Carro: ' + (car.name || C.car) + ' · classe ' + car.rating.letter + ' · ' + this.champPoints() + ' pontos · caixa ' + this.money(C.cash) + '. Nota ' + Config.champ.passGrade + ' ou melhor libera a próxima etapa. A chuva de cada etapa já foi sorteada.';
+    $('cCash').textContent = this.money(C.cash);
+    { const nw = $('cNews'); nw.hidden = !C.news.length; nw.textContent = C.news.length ? 'Notícias: ' + C.news.slice(0, 3).join(' · ') + '.' : ''; const ul = $('cRivList'); ul.textContent = '';
+      for (const r of C.rivals) { const li = document.createElement('li'), cr = Config.cars[r.car]; li.textContent = r.name + ' · ' + (cr.name || r.car) + ' (' + cr.rating.letter + ') · ' + ({ impulsive: 'compra assim que pode', balanced: 'compra com folga no caixa', saver: 'guarda para o final' })[r.style]; ul.appendChild(li); } }
+ $('cLede').textContent = 'Carro: ' + (car.name || C.car) + ' · classe ' + car.rating.letter + ' · ' + this.champPoints() + ' pontos · caixa ' + this.money(C.cash) + '. Nota ' + Config.champ.passGrade + ' ou melhor libera a próxima etapa. A chuva de cada etapa já foi sorteada.';
     const cell = (i, wide) => {
       const b = document.createElement('button'), r = C.res[i], open = i <= C.round; b.type = 'button'; b.className = 'cc' + (wide ? ' wide' : '') + (r ? ' done' : '') + (i === C.round ? ' cur' : ''); b.disabled = !open; b.setAttribute('aria-checked', i === this.cSel);
       const lbl = i >= N ? 'Final no oásis' : Config.times[R[i].time].label, big = document.createElement('b'); big.textContent = i >= N ? (C.done ? '✓' : '★') : r ? r.g : (open ? '·' : '–'); b.append(big, lbl);
@@ -1737,6 +1814,7 @@ class Game {
     const C = this.champ, N = this.cRounds().length, i = this.cRound, P = Config.champ.points, GR = ['S', 'A', 'B', 'C', 'D'];
     const pos = this.position(0), pz = Config.champ.prizes, again = i >= N ? C.done : i < C.round, prize = Math.round((pz[Math.min(pos, pz.length) - 1] || 0) * (again ? Config.champ.repeat : 1)); C.cash += prize;
     { const pc = $('rCash'); pc.hidden = false; pc.textContent = 'Prêmio ' + this.money(prize) + ' pelo ' + pos + 'º lugar' + (again ? ' (etapa já vencida: ' + Math.round(Config.champ.repeat * 100) + '%)' : '') + ' · caixa ' + this.money(C.cash); $('rGarage').hidden = false; $('rCashB').textContent = this.money(C.cash); }
+    const buys = this.champRivalsPay(i); if (buys.length) $('rCash').textContent += ' · ' + buys.join(' · ');
     if (i >= N) {   // finale: the oasis
       C.done = true; this.champSave(); const pts = this.champPoints(), avg = pts / N, fg = avg >= 87.5 ? 'S' : avg >= 65 ? 'A' : avg >= 45 ? 'B' : avg >= 25 ? 'C' : 'D';
       $('rEyebrow').textContent = 'Campeonato concluído · ' + Config.tracks[Config.champ.finale].name; $('rGrade').textContent = fg; $('rTime').textContent = pts + ' pts'; const b = $('rBest'); b.textContent = 'Média de ' + Math.round(avg) + ' pontos em ' + N + ' etapas'; b.className = 'sub rec';
@@ -1963,7 +2041,10 @@ class Game {
   }
   setupGrid(keep) {   // fills the grid with AI drivers; keep=true (restart with R) repeats the same field
     const G = Config.grid, n = this.gridN(), T = this.track, ids = Object.keys(Config.cars), me = this.carSpec, myK = this.playerIdx(0), myK2 = this.two ? this.playerIdx(1) : -1, hum = this.two ? 2 : 1, L = 'CBAS';
-    if (!(keep && this.roster && this.roster.n === n && this.roster.two === this.two && this.roster.me === this.carId)) {
+    const rv = this.mode === 'champ' && !this.two && this.champ && this.champ.rivals, boss = !!this.trackDef.boss;
+    if (rv) {   // championship: the same rivals all season, each with the car they have bought so far
+      this.roster = { n, two: false, me: this.carId, list: this.champ.rivals.slice(0, Math.max(0, n - hum)).map(r => ({ rid: r.id, carId: r.car, skill: Math.min(1, r.skill + (boss ? G.bossSkill : 0)), name: r.name, color: r.color, lane: r.lane })) };
+    } else if (!(keep && this.roster && this.roster.n === n && this.roster.two === this.two && this.roster.me === this.carId)) {
       const shuf = a => a.slice().sort(() => Math.random() - 0.5), names = shuf(G.names), cols = shuf(G.colors);
       const wt = id => { const d = Math.abs(L.indexOf(Config.cars[id].rating.letter) - L.indexOf(me.rating.letter)); return d === 0 ? 4 : d === 1 ? 3 : 1.5; };
       const tot = ids.reduce((a, id) => a + wt(id), 0), pick = () => { let x = Math.random() * tot; for (const id of ids) { x -= wt(id); if (x <= 0) return id; } return ids[ids.length - 1]; };
@@ -1973,10 +2054,10 @@ class Game {
     this.bots = []; let bi = 0;
     for (let k = 0; k < n; k++) {
       if (k === myK || k === myK2) continue; const r = this.roster.list[bi++], sl = this.slotOf(k), base = Config.cars[r.carId], o = T.at(sl.s), spec = Object.assign({}, base);
-      for (const f of ['maxSpeed', 'accel', 'brake', 'maxLat', 'steerRate']) spec[f] = lerp(base[f], me[f], G.balance);
+      for (const f of ['maxSpeed', 'accel', 'brake', 'maxLat', 'steerRate']) spec[f] = lerp(base[f], me[f], rv ? G.champBalance : G.balance);
       const sim = new CarSim(spec); sim.reset(o.x + o.lx * sl.lat, o.z + o.lz * sl.lat, o.h); sim.grip = this.atm.grip;
       const Lc = T.locate(sim.x, sim.z, -1, {}); sim.s = Lc.s; sim.d = Lc.d; sim.hint = Lc.i;
-      const d = new Driver(sim, T, { name: r.name, skill: r.skill, slot: k, lane: r.lane, lat: sl.lat, carId: r.carId, color: r.color }); d.model = this.botModel(k, r.carId, r.color); this.bots.push(d);
+      const d = new Driver(sim, T, { name: r.name, rid: r.rid, skill: r.skill, slot: k, lane: r.lane, lat: sl.lat, carId: r.carId, color: r.color }); d.model = this.botModel(k, r.carId, r.color); this.bots.push(d);
     }
     this.racers = [this.sim, ...(this.two ? [this.sim2] : []), ...this.bots.map(b => b.sim)];
     this.botEv = this.botEv || { hit: (imp, x, z, nx, nz) => { if (this.fx && Math.hypot(x - this.sim.x, z - this.sim.z) < 45) this.fx.spark(x, z, nx, nz, imp, Math.min(14, 4 + imp)); } };

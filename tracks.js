@@ -27,6 +27,9 @@
      tunnels      (opcional) túneis de pedra com iluminação: lista de [de, até] em metros ao longo da pista, ex.: [[320,405],[1215,1325]].
                   Eles formam um morro sobre a pista; adereços e placas ficam fora dessas áreas.
      ranks        tempos [S, A, B, C] em segundos para as notas na tela de resultado
+     canopy       (opcional) vegetação sobre a pista: lista de { kind, from, to } em metros. kind 'palm' = palmeiras inclinadas cujas copas se cruzam
+                  acima da pista; kind 'bamboo' = bosque de bambu que fecha um túnel verde (sombreia o asfalto). Adereços comuns saem dessas áreas.
+     boss         (opcional) true = etapa de chefão: os rivais correm com mais habilidade (grid.bossSkill em vehicles.js)
 
    HORÁRIOS E CLIMA (opcional, no topo de window.TUFG_TRACKS: times: { dia: { ... } })
      Os horários (amanhecer, dia, entardecer, noite) e a chuva já vêm definidos em index.html (Config.times).
@@ -125,10 +128,16 @@ window.TUFG_TRACKS = {
     /* Final do campeonato: não está em  order , então não aparece na seleção de pistas. Percurso livre até o oásis. */
     oasis: {
       name: 'Oásis do Tepui', scenery: 'oasis', time: 'amanhecer', rainChance: 0, difficulty: 1,
-      blurb: 'A estrada termina numa lagoa aos pés de um tepui coberto de névoa.',
-      width: 16, wall: 12, step: 3, runoff: 140, startS: 9, seed: 77,
-      traffic: 0, trafficPool: [],
-      segments: [[260,0],[200,-30],[160,0],[220,35],[180,0],[200,-30],[260,0]],
+      blurb: 'Fase final de chefão: 6 km de selva, palmeiras sobre a pista e túneis de bambu, até a lagoa aos pés de um tepui.',
+      width: 16, wall: 12, step: 3, runoff: 140, startS: 9, seed: 77, boss: true,
+      traffic: 4, trafficPool: null,
+      segments: [[300,0],[220,-40],[180,0],[260,60],[200,0],[180,-90],[160,0],[240,70],[300,0],[200,-50],[140,0],[200,-75],[260,0],[160,100],[220,0],[240,-60],[320,0],[180,80],[260,0],[300,-45],[200,0],[220,50],[180,0],[200,-110],[300,0],[260,40],[400,0]],
+      /* copas de palmeira sobre a pista e túneis de bambu (veja canopy na documentação) */
+      canopy: [
+        { kind: 'palm', from: 650, to: 920 }, { kind: 'bamboo', from: 1250, to: 1560 }, { kind: 'palm', from: 2000, to: 2350 },
+        { kind: 'bamboo', from: 2750, to: 3150 }, { kind: 'palm', from: 3500, to: 3800 }, { kind: 'bamboo', from: 4350, to: 4800 },
+        { kind: 'palm', from: 5050, to: 5250 }, { kind: 'bamboo', from: 5350, to: 5650 }
+      ],
       ranks: [1, 2, 3, 4]
     }
   },

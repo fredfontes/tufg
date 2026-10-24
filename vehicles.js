@@ -52,6 +52,8 @@
      cars         total de carros na largada, jogador incluído (12 = 11 adversários). Use 1 para correr sozinho
      reduced      total quando o jogador liga "Grid reduzido" no menu (PCs mais fracos)
      versus       total de carros na largada em 2 jogadores, os dois incluídos (null = igual a cars/reduced; 2 = só os dois, lado a lado; 8 = 6 de IA atrás)
+     champBalance igual a balance, mas no campeonato (menor = o carro de cada rival pesa mais; rivais compram carros melhores com o prêmio)
+     bossSkill    habilidade extra dos rivais nas pistas com  boss: true  (oásis)
      rowGap       distância entre as fileiras (m)        laneOffset   distância das duas colunas ao eixo da pista (m)
      playerSlot   posição do jogador no grid (0 = pole). null = 4ª de trás para frente; 'random' sorteia
      balance      0 = cada adversário usa os números reais do carro dele; 1 = todos iguais ao carro do jogador (corrida mais justa)
@@ -78,7 +80,7 @@ window.TUFG_VEHICLES = {
   // Índice >= limite da classe define a letra; abaixo de B é C.
   grid: {
     cars: 12, reduced: 8, versus: null, rowGap: 9, laneOffset: 2.6, playerSlot: null,
-    balance: 0.6, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
+    balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
     names: ['Faísca', 'Trovão', 'Nitro', 'Cobra', 'Raio', 'Tubarão', 'Mestre Marcha', 'Sombra', 'Ferrugem', 'Dona Gasolina', 'Pé de Chumbo', 'Furacão', 'Pisca-Alerta', 'Zé do Turbo'],
     colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8, 0xe8761c, 0xe9c32a, 0x1fa3a3, 0xd6528f, 0x9aa3ad, 0x7a4e2d]
   },
@@ -92,43 +94,6 @@ window.TUFG_VEHICLES = {
   playerCar: 'vento',   // carro de reserva. Na prática o jogador escolhe na Garagem (ou sorteia). Também dá para forçar um com  index.html#id_do_carro
 
   cars: {
-     // Classe S
-     mature: {
-        name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 5.0, width: 3.0,
-        sound: { synth: 'i4', pitch: 1, volume: 1, turbo: false, pops: true },
-        maxSpeed: 90, accel: 20, brake: 38, reverseAccel: 7, maxLat: 18, steerRate: 1.9
-     },
-     cat: {
-        name: 'Gemini Cat Turbo', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.6, width: 2.8,
-        sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
-        maxSpeed: 84, accel: 18, brake: 56, reverseAccel: 7, maxLat: 19, steerRate: 2.0
-     },
-     
-     // Class A
-     future: {
-        name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 5.0, width: 3.0,
-        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
-        maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 22, steerRate: 1.8
-     },
-     daemon: {
-        name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 5.0, width: 3.0,
-        sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
-        maxSpeed: 78, accel: 13, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8
-     },
-     
-     // Class B
-     retro: {
-        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 5.0, width: 3.0,
-        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
-        maxSpeed: 68, accel: 11.5, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9
-     },
-     holy: {
-        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.6,
-        sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: false, pops: true },
-        maxSpeed: 68, accel: 12.5, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9
-     },
-
-   /*
     vento: {
       name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
       color: 0xd8321f, trim: 0x1b1d22,
@@ -150,9 +115,7 @@ window.TUFG_VEHICLES = {
       name: 'Falcão Z', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xe9ecef, trim: 0x14161a, wing: false,
       sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
       maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
-    },
-   */
-     
+    }
     // Exemplo (descomente e ajuste):
     // meu_carro: {
     //   name: 'Meu Carro', model: 'models/meu_carro.glb', modelRot: 0, length: 4.5, width: 1.9,
