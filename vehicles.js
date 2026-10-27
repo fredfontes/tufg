@@ -132,6 +132,7 @@ window.TUFG_VEHICLES = {
     // Classe S
     mature: {
       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 4.4, width: 2.2,
+      color: 0x112950, trim: 0x262725,
       // Exemplo de ajuste das peças sobre o .glb (tudo opcional; sem o campo glb valem os padrões). Valores em metros a partir do centro do carro:
       // glb: { wheels: true, caps: true, brake: { x: 0.8, y: 0.8, z: -2.25, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.26, wheelFront: 1.4, wheelRear: -1.3, wheelR: 0.36, wheelW: 0.26, capOut: 0.03, capSize: 0.72 },
       glb: { 
@@ -144,6 +145,7 @@ window.TUFG_VEHICLES = {
     },
     cat: {
       name: 'Gemini Cat', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.1, width: 2.2,
+      color: 0xE75912, trim: 0x836D41,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.55, y: 0.85, z: -2.15, w: 0.95, h: 0.5 }, limitX: 1.3, wheelIn: 0.36, wheelFront: 1.16, wheelRear: -1.175, wheelR: 0.415, wheelW: 0.26, wheelRR: 0.445,
         capOut: 0.001, capSize: 0.7, capShape: 'mesh', capColor: 0x000000, rimColor: 0x846D41,
@@ -154,6 +156,7 @@ window.TUFG_VEHICLES = {
     },
     web: {
       name: 'Pixel Web', model: 'assets/cars/fun/pixel/cars_pixel_web.glb', modelRot: 90, length: 4.1, width: 2.2,
+      color: 0xFFCE35, trim: 0x8A9499, 
       glb: { 
         wheels: true, caps: true, brake: { x: 0.75, y: 0.7, z: -2.15, w: 1.5, h: 0.5 }, limitX: 1.3, wheelIn: 0.39, wheelFront: 1.11, wheelRear: -1.35, wheelR: 0.34, wheelW: 0.21, wheelRR: 0.35,
         capOut: 0.001, capSize: 0.7, capShape: 'turbine', capColor: 0xAFB5BD, rimColor: 0x000000,
@@ -166,6 +169,7 @@ window.TUFG_VEHICLES = {
     // Class A
     future: {
       name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 4.4, width: 2.2,
+      color: 0xFFFFFF, trim: 0x6E726C,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.8, y: 0.85, z: -2.15, w: 0.75, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.32, wheelRear: -1.48, wheelR: 0.4, wheelW: 0.26, wheelRR: 0.42,
         capOut: 0.001, capSize: 0.75, capShape: 'hex6', capColor: 0x000000, rimColor: 0x747774
@@ -176,6 +180,7 @@ window.TUFG_VEHICLES = {
     },
     daemon: {
       name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 4.5, width: 2.2,
+      color: 0x5E2762, trim: 0xA8915C,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.22, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.235, wheelRear: -1.36, wheelR: 0.38, wheelW: 0.26, 
         capOut: 0.001, capSize: 0.46, capShape: 'star5', capColor: 0xD5B272, rimColor: 0x000000
