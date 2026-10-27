@@ -27,6 +27,15 @@
      tunnels      (opcional) túneis de pedra com iluminação: lista de [de, até] em metros ao longo da pista, ex.: [[320,405],[1215,1325]].
                   Eles formam um morro sobre a pista; adereços e placas ficam fora dessas áreas.
      ranks        tempos [S, A, B, C] em segundos para as notas na tela de resultado
+     ads          (opcional) lista de ids de ads.js só para esta pista; substitui os billboards do cenário
+     skybox       (opcional) imagem SVG ou PNG panorâmica (equiretangular, proporção 2:1, ex.: 2048 × 1024) usada como céu 3D por trás de tudo,
+                  no lugar do degradê padrão. Texto simples: skybox: 'img/ceu.png'  (local, da pasta do jogo, ou endereço absoluto https://...).
+                  Forma completa: skybox: { image: 'img/ceu.png', byTime: { noite: 'img/ceu_noite.png' }, size: 2048, rotate: 0, hideBackdrop: false }
+                    byTime       (opcional) imagem diferente por horário (amanhecer | dia | entardecer | noite); o que faltar usa  image
+                    size         largura em pixels com que a imagem é guardada (padrão 2048; use 4096 para PNG grande e nítido)
+                    rotate       gira o céu em graus (para posicionar o sol ou uma montanha do desenho)
+                    hideBackdrop true = esconde as montanhas/cidade distantes do cenário (o desenho do céu já traz o horizonte)
+                  As estrelas somem quando há skybox. Se a imagem não carregar, o céu padrão continua. Exemplo pronto: img/exemplo_skybox.svg
      canopy       (opcional) vegetação sobre a pista: lista de { kind, from, to } em metros. kind 'palm' = palmeiras inclinadas cujas copas se cruzam
                   acima da pista; kind 'bamboo' = bosque de bambu que fecha um túnel verde (sombreia o asfalto). Adereços comuns saem dessas áreas.
      boss         (opcional) true = etapa de chefão: os rivais correm com mais habilidade (grid.bossSkill em vehicles.js)
@@ -61,7 +70,8 @@
                   (listar do mais distante para o mais próximo)
      posts        true = marcadores brancos ao lado da pista
      props        lista de regras de adereços (abaixo)
-     billboards   [[texto, cor],...] placas ao lado da pista
+     billboards   ['id', 'id', ...] outdoors ao lado da pista, pelo id em ads.js (veja ads.js para criar/editar outdoors com texto grande, texto menor,
+                  cor da borda e de fundo, ou uma imagem SVG/PNG). O antigo formato [texto, cor] ainda funciona.
      billboard    (opcional) { dist, scale }: distância da barreira e tamanho das placas (padrão 10 e 1)
 
    REGRA DE ADEREÇO (props)
@@ -127,6 +137,7 @@ window.TUFG_TRACKS = {
     },
     /* Final do campeonato: não está em  order , então não aparece na seleção de pistas. Percurso livre até o oásis. */
     oasis: {
+      code: 'tepui',   // palavra secreta que libera esta pista na seleção (digitar nos menus, ou index.html#oasis)
       name: 'Oásis do Tepui', scenery: 'oasis', time: 'amanhecer', rainChance: 0, difficulty: 1,
       blurb: 'Fase final de chefão: 6 km de selva, palmeiras sobre a pista e túneis de bambu, até a lagoa aos pés de um tepui.',
       width: 16, wall: 12, step: 3, runoff: 140, startS: 9, seed: 77, boss: true,
@@ -162,7 +173,7 @@ window.TUFG_TRACKS = {
         { kind: 'lighthouse', at: [1250], side: 'right', dist: [6, 6], scale: [1, 1], face: false },
         { kind: 'hill', step: [26, 44], side: 'left', dist: [75, 135], scale: [30, 62], stretch: [1, 0.55], palette: [0x8d9a58, 0x7a8a4e, 0x9aa662] }
       ],
-      billboards: [['SURF & CIA', '#1b9ac4'], ['SORVETE POLAR', '#e86a8a'], ['PRAIA DO FAROL', '#f2a900'], ['BRISA FM 101', '#2a2e36'], ['OCTANA', '#e8a400'], ['PEIXE FRESCO', '#2f7d4a']]
+      billboards: ['surf', 'sorvete', 'farol', 'brisa', 'octana', 'peixe']
     },
 
     /* ---------- URBANO: prédios, calçadas, postes de luz, horizonte de cidade ---------- */
@@ -181,7 +192,7 @@ window.TUFG_TRACKS = {
         { kind: 'tree', step: [40, 70], side: 'both', dist: [3.6, 3.6], scale: [0.55, 0.75], palette: [0x4f8a3c, 0x5c9a44] }
       ],
       billboard: { dist: 3.8, scale: 0.55 },
-      billboards: [['NEON CAFÉ', '#d8326f'], ['BANCO CENTRAL', '#1f6fb5'], ['TURBOLUBE 20W', '#e8a400'], ['REDLINE FM 98.1', '#2a2e36'], ['PIZZA 24H', '#c9352a'], ['METRÔ', '#2f7d4a']]
+      billboards: ['neon', 'banco', 'turbolube', 'redline', 'pizza', 'metro']
     },
 
     /* ---------- FAZENDA: lavouras, cercas, celeiros, silos e moinho ---------- */
@@ -202,7 +213,7 @@ window.TUFG_TRACKS = {
         { kind: 'windmill', at: [700, 1900, 2800], side: 'right', dist: [34, 50], scale: [1, 1.15] },
         { kind: 'hill', step: [60, 100], side: 'both', dist: [110, 230], scale: [50, 110], stretch: [1, 0.3], palette: [0x8fae5a, 0x7e9d4f, 0xa0b866] }
       ],
-      billboards: [['MILHO DOURADO', '#e8a400'], ['LATICÍNIOS SOL', '#1f6fb5'], ['FEIRA DO PRODUTOR', '#2f7d4a'], ['COOP AGRO', '#c9352a'], ['TURBOLUBE 20W', '#7a4aa8'], ['OCTANA', '#e8a400']]
+      billboards: ['milho', 'laticinios', 'feira', 'coop', 'turbolube2', 'octana']
     },
 
     /* ---------- SERRA: pinheiros, paredão de pedra, montanhas com neve ---------- */
@@ -219,7 +230,7 @@ window.TUFG_TRACKS = {
         { kind: 'rock', step: [25, 50], side: 'right', dist: [3, 20], scale: [1, 2.4], palette: [0x8a8478, 0x7b7568, 0x9a9488] },
         { kind: 'hill', step: [30, 56], side: 'both', dist: [60, 170], scale: [55, 115], stretch: [1, 0.95], palette: [0x5f7a4a, 0x6f8a58, 0x7a8a78] }
       ],
-      billboards: [['MIRANTE 2 KM', '#2f7d4a'], ['PEDÁGIO SERRA', '#2a2e36'], ['CAFÉ DA SERRA', '#7a4aa8'], ['ATENÇÃO CURVAS', '#e8a400']]
+      billboards: ['mirante', 'pedagio', 'cafeserra', 'curvas']
     },
 
     /* ---------- CÂNION: rocha vermelha, mesas, cactos e arbustos secos ---------- */
@@ -238,7 +249,7 @@ window.TUFG_TRACKS = {
         { kind: 'rock', step: [15, 30], side: 'both', dist: [3, 28], scale: [0.8, 2.2], palette: [0xa4553a, 0xb4663f, 0x8f4a32] }
       ],
       billboard: { dist: 2.4, scale: 0.36 },   // pequenas e coladas na zebra: entre a barreira e o paredão
-      billboards: [['VÁLVULA', '#d83a2a'], ['ASFALTO CAFÉ', '#2f7d4a'], ['OCTANA', '#e8a400']]
+      billboards: ['valvula', 'asfaltocafe', 'octana']
     },
 
     /* ---------- OÁSIS (final): lagoa à direita, floresta, paredões e tepuis com névoa ao fundo ---------- */
@@ -260,7 +271,7 @@ window.TUFG_TRACKS = {
         { kind: 'mesa', step: [80, 140], side: 'left', dist: [90, 220], scale: [28, 60], stretch: [0.8, 2.2], palette: [0x6a5a48, 0x7a6650], group: 'mesa' },
         { kind: 'hill', step: [26, 44], side: 'left', dist: [60, 140], scale: [30, 60], stretch: [1, 0.7], palette: [0x3f7a3f, 0x4f8a48] }
       ],
-      billboards: [['BEM-VINDO AO OÁSIS', '#2f7d4a'], ['ÚLTIMA CURVA', '#e8a400']]
+      billboards: ['oasis', 'ultima']
     }
   }
 };
