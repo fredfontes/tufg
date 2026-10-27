@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+  <defs>
+    <linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a6b"/><stop offset=".35" stop-color="#6b4fa0"/><stop offset=".5" stop-color="#ff9a5a"/><stop offset=".52" stop-color="#ffd9a0"/><stop offset="1" stop-color="#ffd9a0"/>
+    </linearGradient>
+    <radialGradient id="sun"><stop offset="0" stop-color="#fff6d0"/><stop offset=".4" stop-color="#ffd27a" stop-opacity=".8"/><stop offset="1" stop-color="#ffb060" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="2048" height="1024" fill="url(#s)"/>
+  <circle cx="512" cy="480" r="190" fill="url(#sun)"/>
+  <g fill="#ffffff" opacity=".55">
+    <ellipse cx="300" cy="260" rx="190" ry="34"/><ellipse cx="430" cy="290" rx="140" ry="26"/>
+    <ellipse cx="1100" cy="200" rx="230" ry="38"/><ellipse cx="1260" cy="236" rx="150" ry="26"/>
+    <ellipse cx="1720" cy="310" rx="200" ry="34"/><ellipse cx="1600" cy="340" rx="130" ry="24"/>
+  </g>
+  <path d="M0 512 L180 440 L360 500 L560 420 L760 505 L980 430 L1200 510 L1420 440 L1640 505 L1860 430 L2048 500 V560 H0 Z" fill="#3b2b54"/>
+  <text x="1024" y="130" font-family="Impact, 'Arial Narrow', sans-serif" font-size="90" text-anchor="middle" fill="#ffffff" opacity=".8">SKYBOX DE EXEMPLO 360°</text>
+</svg>
