@@ -145,7 +145,7 @@ details b{color:var(--hazard);font-weight:600}
 .timer .pos b{font-size:clamp(20px,3.4vw,30px);color:var(--hazard)}
 .timer .best{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:4px}
 .timer .best i{font-style:normal;color:var(--chalk);font-variant-numeric:tabular-nums}
-.prog{align-self:center;display:flex;flex-direction:column;gap:6px;background:rgba(14,16,19,.7);padding:10px 14px;min-width:0}
+.prog{align-self:start;display:flex;flex-direction:column;gap:6px;background:rgba(14,16,19,.7);padding:10px 14px;min-width:0}
 .prog-track{position:relative;height:8px;background:#2a2e36}
 .prog-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--hazard)}
 .prog-car{position:absolute;top:-5px;width:6px;height:18px;margin-left:-3px;background:var(--chalk);left:0}
@@ -192,7 +192,7 @@ details b{color:var(--hazard);font-weight:600}
 .ptag{display:none;position:absolute;left:50%;top:0;transform:translateX(-50%);font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.2em;color:var(--hazard-ink);background:var(--hazard);padding:2px 12px 1px;white-space:nowrap}
 #hud2 .ptag{background:#4aa8ff}
 #divider{display:none;position:absolute;left:0;right:0;top:calc(50% - 2px);height:4px;background:repeating-linear-gradient(90deg,var(--hazard) 0 18px,#111 18px 36px);pointer-events:none}
-.mir{position:absolute;z-index:3;pointer-events:none;box-sizing:border-box;border:3px solid #0b0d10;border-radius:12px;box-shadow:0 0 0 2px #39404a,0 4px 10px rgba(0,0,0,.6),inset 0 0 16px rgba(0,0,0,.55);background:linear-gradient(165deg,rgba(255,255,255,.16),transparent 38%)}
+.mir{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:3px solid #0b0d10;border-radius:12px;box-shadow:0 0 0 2px #39404a,0 4px 10px rgba(0,0,0,.6),inset 0 0 16px rgba(0,0,0,.55);background:linear-gradient(165deg,rgba(255,255,255,.16),transparent 38%)}
 #mload{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:max(10px,env(safe-area-inset-top,0px));z-index:6;display:flex;align-items:center;gap:7px;background:rgba(14,16,19,.8);border-left:3px solid var(--hazard);color:var(--dim);font-size:10px;letter-spacing:.16em;padding:4px 9px 4px 7px;pointer-events:none}
 #mload i{width:10px;height:10px;border:2px solid var(--line);border-top-color:var(--hazard);border-radius:50%;animation:mlspin .8s linear infinite}
 @keyframes mlspin{to{transform:rotate(360deg)}}
@@ -398,7 +398,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.33</summary>
+        <summary>Estado do projeto · v0.35</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -2257,10 +2257,19 @@ class Game {
   toggleMirror() {
     this.mirOn = !this.mirOn; this.save('mirror', this.mirOn ? '1' : '0'); const e = $('hCam'); if (!e) return; e.textContent = this.mirOn ? 'Retrovisor ligado' : 'Retrovisor desligado'; e.classList.remove('show'); void e.offsetWidth; e.classList.add('show'); clearTimeout(this._cm1); this._cm1 = setTimeout(() => e.classList.remove('show'), 1500);
   }
+  mirTop(n, split, ih) {   // distance (render pixels) from the top of the player's view to just below the distance bar, so the mirror sits under it
+    const m = this._mt || (this._mt = [0, 0, 0, 0]), now = performance.now();
+    if (now - m[n + 2] > 400 || !m[n]) {
+      m[n + 2] = now; const pr = document.querySelector(n ? '#hud2 .prog' : '#hud .prog'), cv = $('gl').getBoundingClientRect();
+      if (pr && cv.height) { const b = pr.getBoundingClientRect(); m[n] = Math.max(0, Math.round((b.bottom - cv.top - (split && n ? cv.height / 2 : 0)) * ih / cv.height)) + Math.round(ih * (split ? 0.012 : 0.01)); }
+      if (!m[n]) m[n] = Math.round(ih * (split ? 0.1 : 0.14));
+    }
+    return m[n];
+  }
   drawMirror(q, n, split, iw, ih) {   // rear-view mirror: only with the hood / bumper cameras (and not while looking back); a mirrored second render in a small viewport at the top centre of the player's view
     const R = this.renderer, M = this.mcam, el = n ? this.mir2 : this.mir1, cc = n ? this.cam2 : this.cam, on = this.mirOn && !this.menuLike() && cc.mode >= 2 && !cc.back;
     if (el.hidden === on) el.hidden = !on; if (!on) return;
-    const vh = split ? Math.floor(ih / 2) : ih, vy = split ? (n ? 0 : ih - vh) : 0, w = Math.round(iw * 0.24), h = Math.round(w / 4.6), x = Math.round(iw * 0.38), y = vy + vh - Math.round(vh * (split ? 0.095 : 0.012)) - h;
+    const vh = split ? Math.floor(ih / 2) : ih, vy = split ? (n ? 0 : ih - vh) : 0, w = Math.round(iw * 0.24), h = Math.round(w / 4.6), x = Math.round(iw * 0.38), top = this.mirTop(n, split, ih), y = vy + vh - top - h;
     const key = x + ',' + y + ',' + w + ',' + h + ',' + ih; if (el._k !== key) { el._k = key; el.style.left = x / iw * 100 + '%'; el.style.width = w / iw * 100 + '%'; el.style.top = (ih - y - h) / ih * 100 + '%'; el.style.height = h / ih * 100 + '%'; }
     const sy = Math.sin(q.h), cy = Math.cos(q.h), tx = q.x - sy * 60, tz = q.z - cy * 60, own = n ? this.carModel2 : this.carModel, keepVis = own && own.root.visible, rain = this.world.rain, rv = rain && rain.visible;
     M.position.set(q.x + sy * 0.3, 1.3, q.z + cy * 0.3); this.world.follow(M);
