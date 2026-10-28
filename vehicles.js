@@ -93,7 +93,7 @@
                         rimColor  cor do aro / desenho em hexadecimal, ex.: '#14161a' (padrão grafite)
                         capShape  formato do desenho do aro. 8 tipos:  'star5' (estrela de 5 raios, padrão)  'spoke10' (raios finos, 10)
                                   'turbine' (pás curvas)  'mesh' (grade em cruz)  'disc' (disco liso com furo)  'dish' (prato com aro grosso)
-                                  'twin5' (5 raios duplos)  'hex6' (6 parafusos / hexagonal)
+                                  'twin5' (5 raios duplos)  'hex6' (6 parafusos / hexagonal)  'ninja3' (estrela ninja, 3 pontas grossas)
                     Exemplo: glb: { capShape: 'turbine', capColor: '#e8e8ea', rimColor: '#c1121f', wheelRF: 0.40, wheelRR: 0.46, wheelWF: 0.24, wheelWR: 0.30 }
 
    CÓDIGOS SECRETOS (cheat codes)
@@ -171,8 +171,8 @@ window.TUFG_VEHICLES = {
       name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 4.4, width: 2.2,
       color: 0xFFFFFF, trim: 0x6E726C,
       glb: { 
-        wheels: true, caps: true, brake: { x: 0.8, y: 0.85, z: -2.15, w: 0.75, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.32, wheelRear: -1.48, wheelR: 0.4, wheelW: 0.26, wheelRR: 0.42,
-        capOut: 0.001, capSize: 0.75, capShape: 'hex6', capColor: 0x000000, rimColor: 0x747774
+        wheels: true, caps: true, brake: { x: 0.8, y: 0.85, z: -2.15, w: 0.75, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.33, wheelRear: -1.48, wheelR: 0.4, wheelW: 0.26, wheelRR: 0.405,
+        capOut: 0.001, capSize: 0.4, capShape: 'ninja3', capColor: 0x000000, rimColor: 0x747774
       },
       sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
       maxSpeed: 60, accel: 14, brake: 22, reverseAccel: 6, maxLat: 22, steerRate: 1.8,
@@ -207,7 +207,7 @@ window.TUFG_VEHICLES = {
         wheels: true, caps: true, brake: { x: 0.65, y: 0.85, z: -2.15, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.288, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, wheelRR: 0.415,
         capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0xF2EBD1,
       },
-      sound: { synth: 'v8', pitch: 0.5, volume: 1.2, turbo: false, pops: true },
+      sound: { synth: 'v8', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
       maxSpeed: 64, accel: 14, brake: 23, reverseAccel: 2, maxLat: 22, steerRate: 2.8,
       class: 'A'
     },
@@ -251,9 +251,9 @@ window.TUFG_VEHICLES = {
       color: 0x8B080B, trim: 0x000000,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.68, y: 0.78, z: -2.08, w: 0.7, h: 0.42 }, limitX: 1.3, wheelIn: 0.31, wheelFront: 1.35, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, 
-        capOut: 0.001, capSize: 0.6, capShape: 'turbine', capColor: 0x000000
+        capOut: 0.001, capSize: 0.8, capShape: 'ninja3', capColor: 0x000000
       },
-      sound: { synth: 'v6', pitch: 0.5, volume: 1.2, turbo: false, pops: true },
+      sound: { synth: 'v6', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
       maxSpeed: 60, accel: 11, brake: 38, reverseAccel: 2, maxLat: 20, steerRate: 3.0,
       class: 'B'
     },

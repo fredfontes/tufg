@@ -192,6 +192,7 @@ details b{color:var(--hazard);font-weight:600}
 .ptag{display:none;position:absolute;left:50%;top:0;transform:translateX(-50%);font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.2em;color:var(--hazard-ink);background:var(--hazard);padding:2px 12px 1px;white-space:nowrap}
 #hud2 .ptag{background:#4aa8ff}
 #divider{display:none;position:absolute;left:0;right:0;top:calc(50% - 2px);height:4px;background:repeating-linear-gradient(90deg,var(--hazard) 0 18px,#111 18px 36px);pointer-events:none}
+.mir{position:absolute;z-index:3;pointer-events:none;box-sizing:border-box;border:3px solid #0b0d10;border-radius:12px;box-shadow:0 0 0 2px #39404a,0 4px 10px rgba(0,0,0,.6),inset 0 0 16px rgba(0,0,0,.55);background:linear-gradient(165deg,rgba(255,255,255,.16),transparent 38%)}
 #mload{position:absolute;left:max(12px,env(safe-area-inset-left,0px));top:max(10px,env(safe-area-inset-top,0px));z-index:6;display:flex;align-items:center;gap:7px;background:rgba(14,16,19,.8);border-left:3px solid var(--hazard);color:var(--dim);font-size:10px;letter-spacing:.16em;padding:4px 9px 4px 7px;pointer-events:none}
 #mload i{width:10px;height:10px;border:2px solid var(--line);border-top-color:var(--hazard);border-radius:50%;animation:mlspin .8s linear infinite}
 @keyframes mlspin{to{transform:rotate(360deg)}}
@@ -326,6 +327,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
   <canvas id="gl"></canvas>
   <div id="scan" hidden></div>
   <div id="hitflash"></div>
+  <div class="mir" id="mir1" hidden></div><div class="mir" id="mir2" hidden></div>
   <div id="flare" hidden><i class="fg"></i><i class="fs"></i><i class="fa a1"></i><i class="fa a2"></i><i class="fa a3"></i></div>
 
   <div id="hud" hidden>
@@ -378,13 +380,13 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="pk"><span>Dirigir</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div>
         <div class="pk"><span>Freio de mão</span><span><kbd>Espaço</kbd></span></div>
         <div class="pk"><span>Recolocar</span><span><kbd>Shift esq.</kbd></span></div>
-        <div class="pk pkc"><span>Câmera</span><span><kbd>C</kbd></span></div>
+        <div class="pk pkc"><span>Câmera · atrás</span><span><kbd>C</kbd><kbd>Q</kbd></span></div>
       </div>
       <div class="pcard"><h3>Jogador 2</h3>
         <div class="pk"><span>Dirigir</span><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>
         <div class="pk"><span>Freio de mão</span><span><kbd>Ctrl dir.</kbd></span></div>
         <div class="pk"><span>Recolocar</span><span><kbd>Shift dir.</kbd></span></div>
-        <div class="pk pkc"><span>Câmera</span><span><kbd>V</kbd></span></div>
+        <div class="pk pkc"><span>Câmera · atrás</span><span><kbd>V</kbd><kbd>/</kbd></span></div>
       </div>
       <div class="mfoot">
         <div class="toggles">
@@ -393,10 +395,10 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
           <button class="tog" id="tSound" type="button" aria-pressed="true"><i></i>Som <kbd>M</kbd></button>
           <button class="tog" id="tGrid" type="button" aria-pressed="false"><i></i><span id="tGridT">Grid reduzido (8)</span></button>
         </div>
-        <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
+        <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.32</summary>
+        <summary>Estado do projeto · v0.33</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1433,7 +1435,7 @@ function fitModel(src, def, length) {
    and the brake lamps get a red glow that lights up when braking. Each part can be switched off per car. */
 const capTex = new Map();
 const hexCss = (v, d) => v == null ? d : typeof v === 'number' ? '#' + v.toString(16).padStart(6, '0') : String(v);
-const CAP_SHAPES = ['star5', 'spoke10', 'turbine', 'mesh', 'disc', 'dish', 'twin5', 'hex6'];
+const CAP_SHAPES = ['star5', 'spoke10', 'turbine', 'mesh', 'disc', 'dish', 'twin5', 'hex6', 'ninja3'];
 function drawCap(c, shape, bg, fg) {   // hubcap face, 128 x 128: bg = background (hex), fg = rim / spokes (hex)
   c.fillStyle = bg; c.fillRect(0, 0, 128, 128); c.translate(64, 64); c.strokeStyle = fg; c.fillStyle = fg; c.lineCap = 'round';
   const spokes = (n, w, r0, r1, off = 0) => { c.lineWidth = w; for (let i = 0; i < n; i++) { const a = off + i * Math.PI * 2 / n; c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke(); } };
@@ -1447,6 +1449,12 @@ function drawCap(c, shape, bg, fg) {   // hubcap face, 128 x 128: bg = backgroun
     case 'dish': ring(60, 10); ring(48, 6); ring(36, 6); ring(24, 6); hub(11, 4); break;                                // concentric dish
     case 'twin5': ring(60, 6); for (const d of [-0.16, 0.16]) spokes(5, 6, 14, 56, -Math.PI / 2 + d); hub(13, 5); break;   // 5 twin spokes
     case 'hex6': ring(60, 8); spokes(6, 13, 8, 54, Math.PI / 6); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; c.beginPath(); c.arc(Math.cos(a) * 31, Math.sin(a) * 31, 4, 0, 7); c.fillStyle = bg; c.fill(); c.fillStyle = fg; } hub(11, 0); break;   // 6 fat spokes with bolt holes
+    case 'ninja3': {   // ninja star: three thick pointed blades with concave sides
+      ring(60, 7); const tip = i => { const a = -Math.PI / 2 + i * Math.PI * 2 / 3; return [Math.cos(a) * 55, Math.sin(a) * 55]; };
+      c.beginPath(); let t0 = tip(0); c.moveTo(t0[0], t0[1]);
+      for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 3 + Math.PI / 3, t1 = tip(i + 1); c.quadraticCurveTo(Math.cos(a) * (-42), Math.sin(a) * (-42), t1[0], t1[1]); }
+      c.closePath(); c.fill(); c.fillStyle = bg; c.beginPath(); c.arc(0, 0, 7, 0, 7); c.fill(); c.fillStyle = fg; c.beginPath(); c.arc(0, 0, 3.2, 0, 7); c.fill(); break;
+    }
     default: ring(60, 7); spokes(5, 12, 8, 56, -Math.PI / 2); hub(14, 5);                                              // 'star5'
   }
 }
@@ -1547,7 +1555,7 @@ class FX {
 
 /* ============================ Camera ============================ */
 class ChaseCam {
-  constructor(cam) { this.cam = cam; this.yaw = 0; this.x = 0; this.y = 3; this.z = -8; this.shake = 0; this.fov = 62; this.blend = 0; this.orbit = 0; this.mode = 0; }
+  constructor(cam) { this.cam = cam; this.yaw = 0; this.x = 0; this.y = 3; this.z = -8; this.shake = 0; this.fov = 62; this.blend = 0; this.orbit = 0; this.mode = 0; this.back = false; }
   attract(car, dt, dock) {   // dock: the garage panel covers the bottom of the screen, so aim lower to lift the car up
     this.orbit += dt * 0.22; const a = this.orbit + 2.4, d = 7.2;
     this.setPose(car.x + Math.sin(a) * d, 2.1, car.z + Math.cos(a) * d, car.x, dock ? -0.1 : 1.0, car.z, 58, 0);
@@ -1559,6 +1567,11 @@ class ChaseCam {
     this.yaw += angDiff(this.yaw, car.h) * (1 - Math.exp(-(m >= 2 ? 14 : 4.5) * dt));
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw); this.shake = Math.max(0, this.shake - dt * 2.2);
     const sh = this.shake * 0.35 + clamp((v - 45) / 25, 0, 1) * 0.015, roll = -car.steer * 0.02 * clamp(v / 40, 0, 1);
+    if (this.back) {   // look behind: the camera sits at the rear of the (hidden) car and faces backwards
+      this.x = car.x - sy * 6.8; this.z = car.z - cy * 6.8; this.y = 2.5; this.blend = 0;
+      this.setPose(car.x - sy * 1.9 + (r() - 0.5) * sh, 0.85 + (r() - 0.5) * sh, car.z - cy * 1.9 + (r() - 0.5) * sh, car.x - sy * 40, 0.9, car.z - cy * 40, 68 + 14 * clamp(v / car.spec.maxSpeed, 0, 1), -roll);
+      return;
+    }
     if (m >= 2) {   // the camera rides on the car
       const fw = m === 2 ? 0.7 : 2.15, hy = m === 2 ? 1.32 : 0.52;
       this.x = car.x + sy * fw; this.z = car.z + cy * fw; this.y = hy; this.blend = 0;
@@ -1738,6 +1751,7 @@ class BotVoice {
 class Input {
   constructor() { this.keys = new Set(); this.virtual = null; this.tc = { l: 0, r: 0, gas: 0, brk: 0, hb: 0 }; addEventListener('keyup', e => this.keys.delete(e.code)); addEventListener('blur', () => this.keys.clear()); }
   down(c) { this.keys.add(c); }
+  back(p) { const k = this.keys; return ((p !== 2 && k.has('KeyQ')) || (p !== 1 && (k.has('Slash') || k.has('Numpad0')))) ? 1 : 0; }   // look behind while held: Q (player 1) · / or Num 0 (player 2)
   get(p) {   // p = 1: WASD + Space (player 1) · p = 2: arrows + right Ctrl (player 2) · none: both sets (single player)
     if (this.virtual) return this.virtual;
     const t = this.tc, tt = p !== 2 && t;
@@ -1797,7 +1811,7 @@ class Game {
     this.models = {}; this.carModel = this.ensureModel(this.carId); this.scene.add(this.carModel.root);
     this.camera2 = new THREE.PerspectiveCamera(62, 16 / 9, 0.3, 1500); this.models2 = {}; this.carModel2 = this.model2(this.carId2); this.scene.add(this.carModel2.root); this.carModel2.root.visible = false;
     this.traffic = this.newTraffic(); this.buildTrafficMeshes();
-    this.fx = new FX(this.scene); this.cam = new ChaseCam(this.camera); this.cam2 = new ChaseCam(this.camera2); this.cam.mode = (+this.load('cam1', '0') || 0) % 4; this.cam2.mode = (+this.load('cam2', '0') || 0) % 4; this.flare = $('flare'); this.ft = { v: new THREE.Vector3(), d: new THREE.Vector3(), sd: new THREE.Vector3() };
+    this.fx = new FX(this.scene); this.mcam = new THREE.PerspectiveCamera(52, 4.6, 0.3, 450); this.mir1 = $('mir1'); this.mir2 = $('mir2'); this.mirOn = this.load('mirror', '1') !== '0'; this.cam = new ChaseCam(this.camera); this.cam2 = new ChaseCam(this.camera2); this.cam.mode = (+this.load('cam1', '0') || 0) % 4; this.cam2.mode = (+this.load('cam2', '0') || 0) % 4; this.flare = $('flare'); this.ft = { v: new THREE.Vector3(), d: new THREE.Vector3(), sd: new THREE.Vector3() };
     const pt = canvasTex(64, 128, (c, w, h) => { const im = c.createImageData(w, h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const d = 1 - y / h, hw = 0.1 + 0.4 * d, ax = Math.abs(x / w - 0.5), a = Math.max(0, 1 - ax / hw) * Math.pow(1 - d, 1.4), k = (y * w + x) * 4; im.data[k] = 255; im.data[k + 1] = 240; im.data[k + 2] = 190; im.data[k + 3] = Math.round(a * 200); } c.putImageData(im, 0, 0); });
     this.pool = new THREE.Mesh(new THREE.PlaneGeometry(12, 26), new THREE.MeshBasicMaterial({ map: pt, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide, opacity: 0 })); this.pool.rotation.order = 'YXZ'; this.pool.rotation.x = Math.PI / 2; this.pool.renderOrder = 2; this.scene.add(this.pool);
     this.pool2 = this.pool.clone(); this.pool2.material = this.pool.material.clone(); this.pool2.visible = false; this.scene.add(this.pool2);
@@ -2229,6 +2243,7 @@ class Game {
     else if (c === 'KeyP') { if (st === 'race' || st === 'countdown') this.pause(); else if (st === 'paused') this.resume(); }
     else if (c === 'KeyR') { if (racing && this.two) { /* too close to WASD: restart a 2-player race from the pause menu */ } else if (racing || st === 'paused') this.startRace(true); else if (st === 'result') this.startRace(); }
     else if (c === 'KeyC') { if (racing) this.cycleCam(0); }
+    else if (c === 'KeyB') { if (racing || st === 'paused') this.toggleMirror(); }
     else if (c === 'KeyV') { if (st === 'menu') this.hotkey(() => this.state === 'menu' && this.openTracks()); else if (racing && this.two) this.cycleCam(1); }
     else if (c === 'KeyG') { if (st === 'menu') this.hotkey(() => this.state === 'menu' && this.openGarage()); }
     else if (c === 'KeyX') { if (st === 'menu') this.hotkey(() => this.state === 'menu' && this.openChamp()); }
@@ -2238,6 +2253,22 @@ class Game {
     else if (c === 'KeyM') this.hotkey(() => this.setSound(!this.snd));
     else if (c === 'KeyF') this.hotkey(() => this.setRetro(!this.retro));
     else if (c === 'KeyH') this.hotkey(() => this.setHires(!this.hires));
+  }
+  toggleMirror() {
+    this.mirOn = !this.mirOn; this.save('mirror', this.mirOn ? '1' : '0'); const e = $('hCam'); if (!e) return; e.textContent = this.mirOn ? 'Retrovisor ligado' : 'Retrovisor desligado'; e.classList.remove('show'); void e.offsetWidth; e.classList.add('show'); clearTimeout(this._cm1); this._cm1 = setTimeout(() => e.classList.remove('show'), 1500);
+  }
+  drawMirror(q, n, split, iw, ih) {   // rear-view mirror: only with the hood / bumper cameras (and not while looking back); a mirrored second render in a small viewport at the top centre of the player's view
+    const R = this.renderer, M = this.mcam, el = n ? this.mir2 : this.mir1, cc = n ? this.cam2 : this.cam, on = this.mirOn && !this.menuLike() && cc.mode >= 2 && !cc.back;
+    if (el.hidden === on) el.hidden = !on; if (!on) return;
+    const vh = split ? Math.floor(ih / 2) : ih, vy = split ? (n ? 0 : ih - vh) : 0, w = Math.round(iw * 0.24), h = Math.round(w / 4.6), x = Math.round(iw * 0.38), y = vy + vh - Math.round(vh * (split ? 0.095 : 0.012)) - h;
+    const key = x + ',' + y + ',' + w + ',' + h + ',' + ih; if (el._k !== key) { el._k = key; el.style.left = x / iw * 100 + '%'; el.style.width = w / iw * 100 + '%'; el.style.top = (ih - y - h) / ih * 100 + '%'; el.style.height = h / ih * 100 + '%'; }
+    const sy = Math.sin(q.h), cy = Math.cos(q.h), tx = q.x - sy * 60, tz = q.z - cy * 60, own = n ? this.carModel2 : this.carModel, keepVis = own && own.root.visible, rain = this.world.rain, rv = rain && rain.visible;
+    M.position.set(q.x + sy * 0.3, 1.3, q.z + cy * 0.3); this.world.follow(M);
+    M.position.x = -M.position.x; M.lookAt(-tx, 0.55, tz);   // the scene is mirrored in x for this pass, so the camera is mirrored too
+    if (own) own.root.visible = false; if (rain) rain.visible = false;
+    R.setScissorTest(true); R.setViewport(x, y, w, h); R.setScissor(x, y, w, h);
+    this.scene.scale.x = -1; R.render(this.scene, M); this.scene.scale.x = 1;
+    if (own) own.root.visible = keepVis; if (rain) rain.visible = rv; if (!split) R.setScissorTest(false);
   }
   cycleCam(n) {   // C = player 1, V = player 2: default, closer, hood, bumper (no car)
     const cam = n ? this.cam2 : this.cam, names = ['Câmera padrão', 'Câmera próxima', 'Câmera capô', 'Câmera para-choque'];
@@ -2493,7 +2524,7 @@ class Game {
     });
     this.fx.update(dt);
     if (this.state === 'garage' && this.gmode !== 'shop' && this.curSel() === 'random') { this._gt = (this._gt || 0) + dt; if (this._gt > 2.6) { this._gt = 0; this.gdir = 1; if (this.gp === 2) this.useCar2(this.pickRandom2()); else this.useCar(this.pickRandom()); return; } }   // random slot: preview cycles through the cars
-    if (this.menuLike()) this.cam.attract(H[gv].sim, dt, this.state === 'garage'); else { this.cam.update(dt, sim); if (split) this.cam2.update(dt, sim2); }
+    if (this.menuLike()) this.cam.attract(H[gv].sim, dt, this.state === 'garage'); else { this.cam.back = !!this.input.back(this.two ? 1 : undefined); this.cam2.back = !!this.input.back(2); this.cam.update(dt, sim); if (split) this.cam2.update(dt, sim2); }
     this.world.update(dt);
     const hl = A.headlights || 0;
     [[this.pool, sim, true], [this.pool2, sim2, split]].forEach(([pl, q, on]) => { pl.visible = hl > 0 && on; if (pl.visible) { pl.material.opacity = hl * 0.75; pl.position.set(q.x + Math.sin(q.h) * 14, 0.07, q.z + Math.cos(q.h) * 14); pl.rotation.y = q.h; } });
@@ -2503,8 +2534,8 @@ class Game {
       if (split) { const y = n ? 0 : ih - hh; R.setViewport(0, y, iw, hh); R.setScissor(0, y, iw, hh); }   // player 1 on top, player 2 below
       this.world.follow(cam);
       if ((A.rain || A.snow) && this.world.rain) { this.world.rain.visible = !this.world.inTunnel(q.s); this.world.rainUpdate(dt, cam, q.vf * Math.sin(q.h), q.vf * Math.cos(q.h), i === 0); }
-      const own = n ? this.carModel2 : this.carModel, hide = own && !this.menuLike() && (n ? this.cam2 : this.cam).mode === 3, keepVis = own && own.root.visible; if (hide) own.root.visible = false;
-      R.render(this.scene, cam); if (hide) own.root.visible = keepVis; this.sunFlare(n, cam);
+      const own = n ? this.carModel2 : this.carModel, hide = own && !this.menuLike() && ((n ? this.cam2 : this.cam).mode === 3 || (n ? this.cam2 : this.cam).back), keepVis = own && own.root.visible; if (hide) own.root.visible = false;
+      R.render(this.scene, cam); if (hide) own.root.visible = keepVis; this.sunFlare(n, cam); this.drawMirror(q, n, split, iw, ih, dt);
     });
     if (split) R.setScissorTest(false); else if (this._fo1 !== '0') { this._fo1 = '0'; $('flare2').hidden = true; }
     this.botSound(dt);
