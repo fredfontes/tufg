@@ -27,6 +27,22 @@
      tunnels      (opcional) túneis de pedra com iluminação: lista de [de, até] em metros ao longo da pista, ex.: [[320,405],[1215,1325]].
                   Eles formam um morro sobre a pista; adereços e placas ficam fora dessas áreas.
      ranks        tempos [S, A, B, C] em segundos para as notas na tela de resultado
+     base         (opcional) id de outra pista da qual esta herda tudo (cenário, largura, tráfego, anúncios...). Só o que você escrever aqui muda.
+                  Uma pista com  base  é um TRAÇADO NOVO da pista de origem: aparece na seleção de pistas, no sorteio e no campeonato (etapas 2, 3 e 4 de cada pista).
+                  (Não herda  fork ,  tunnels  nem  canopy : declare os seus.)
+     cuts         (opcional) atalhos de terra: caminhos curtos e estreitos por dentro de uma curva, com menos aderência. Cada piloto de IA decide se usa.
+                    cuts: [ { at: 900, len: 320, amp: 44 }, ... ]
+                      at     metro do percurso onde o atalho começa
+                      len    comprimento do atalho em metros
+                      amp    quanto ele se afasta da pista, em metros (o lado é sempre o de dentro da curva; side: 'left' | 'right' força o lado)
+                    Não pode sobrepor túneis, cobertura nem a bifurcação (o jogo ignora o atalho e avisa no console).
+     fork         (opcional) bifurcação: a pista se divide em dois caminhos paralelos que voltam a se encontrar. Vale em qualquer horário e clima.
+                    fork: { from: 0.45, len: 800, side: 'left', amp: 46 }
+                      from   onde a divisão começa, como fração do percurso (0.30 a 0.70)
+                      len    comprimento total da bifurcação em metros (até se encontrar de novo)
+                      side   'left' | 'right': para que lado sai o segundo caminho
+                      amp    distância lateral máxima entre os eixos dos dois caminhos, em metros (46 = duas pistas separadas, com barreira no meio; 24 = desvio curto ao lado)
+                    Cada piloto de IA sorteia o caminho. Evite curvas muito fechadas do lado de dentro do desvio (o jogo avisa no console e ignora a bifurcação) e túneis na área.
      ads          (opcional) lista de ids de ads.js só para esta pista; substitui os billboards do cenário
      skybox       (opcional) imagem SVG ou PNG panorâmica (equiretangular, proporção 2:1, ex.: 2048 × 1024) usada como céu 3D por trás de tudo,
                   no lugar do degradê padrão. Texto simples: skybox: 'img/ceu.png'  (local, da pasta do jogo, ou endereço absoluto https://...).
@@ -50,7 +66,7 @@
 
    CAMPEONATO (championship, no topo de window.TUFG_TRACKS) — todos os campos são opcionais
      times        horários de cada cenário, em ordem (padrão: amanhecer, dia, entardecer, noite)
-     tracks       ids das pistas do campeonato, em ordem (padrão: o campo  order ). Etapas = pistas x horários (5 x 4 = 20)
+     tracks       ids das pistas do campeonato, em ordem (padrão: as pistas de  order  que não têm  base ). Etapas = pistas x horários (5 x 4 = 20). Em cada pista a 1ª etapa é o traçado original e as seguintes são seus traçados novos (base), na ordem de  order 
      finale       id da pista final, fora da lista  order  (padrão: 'oasis'). É um percurso livre, sem nota, que fecha o campeonato
      finaleTime   horário da etapa final (padrão: 'amanhecer')
      passGrade    nota mínima para liberar a próxima etapa: 'S' | 'A' | 'B' | 'C' | 'D' (padrão 'C')
@@ -90,7 +106,7 @@
      Para criar um adereço novo (ex.: 'chalé'), adicione o desenho em PROPS no index.html.
    ===================================================================== */
 window.TUFG_TRACKS = {
-  order: ['litoral', 'urbana', 'fazenda', 'serra', 'canion'],
+  order: ['litoral', 'litoral_b', 'litoral_c', 'litoral_d', 'urbana', 'urbana_b', 'urbana_c', 'urbana_d', 'fazenda', 'fazenda_b', 'fazenda_c', 'fazenda_d', 'serra', 'serra_b', 'serra_c', 'serra_d', 'canion', 'canion_b', 'canion_c', 'canion_d'],
   championship: { finale: 'oasis', finaleTime: 'amanhecer', passGrade: 'C' },
 
   tracks: {
@@ -135,6 +151,121 @@ window.TUFG_TRACKS = {
       segments: [[200,0],[180,40],[140,0],[200,-55],[100,0],[110,85],[160,0],[160,-100],[120,0],[200,45],[260,0],[180,-60],[140,0],[120,80],[200,0],[240,-50],[160,0],[220,60],[300,0]],
       ranks: [76, 84, 95, 110]
     },
+    /* ---- Traçados novos: 3 por pista. base = pista de onde herdam cenário, tráfego e ajustes. Têm bifurcação (fork) em qualquer horário e clima. ---- */
+    litoral_b: {
+      base: 'litoral', name: 'Costa Dourada · Enseada', difficulty: 2, seed: 101,
+      blurb: 'Arcos longos e largos contornando a enseada, sem curvas fechadas. A pista se divide em dois caminhos e tem atalhos de terra.',
+      segments: [[220,0],[540,180],[100,0],[300,-70],[640,0],[540,-170],[160,0],[300,60],[240,0]],
+      fork: { from: 0.37, len: 820, side: 'left', amp: 46 },
+      cuts: [{ at: 348, len: 540, amp: 50, ramp: 0.45 }, { at: 2004, len: 540, amp: 50, ramp: 0.45 }],
+      ranks: [60, 66, 73, 86]
+    },
+    litoral_c: {
+      base: 'litoral', name: 'Costa Dourada · Falésia', difficulty: 3, seed: 102,
+      blurb: 'Trecho mais técnico, com curvas fechadas entre barrancos. A pista se divide em dois caminhos.',
+      segments: [[180,0],[140,75],[100,0],[160,-85],[120,0],[200,50],[140,0],[160,-70],[100,0],[120,95],[160,0],[240,-60],[180,0],[100,80],[140,0],[220,-55],[260,0],[160,60],[200,0]],
+      fork: { from: 0.47, len: 760, side: 'left', amp: 46 },
+      ranks: [71, 78, 87, 101]
+    },
+    litoral_d: {
+      base: 'litoral', name: 'Costa Dourada · Retão', difficulty: 2, seed: 103,
+      blurb: 'Longas retas de velocidade e poucas curvas. A pista se divide em dois caminhos.',
+      segments: [[400,0],[220,-40],[300,0],[260,45],[500,0],[200,-55],[320,0],[240,50],[420,0],[180,-40],[360,0]],
+      fork: { from: 0.34, len: 900, side: 'left', amp: 46 },
+      ranks: [59, 65, 72, 84]
+    },
+    urbana_b: {
+      base: 'urbana', name: 'Centro Neon · Avenida Sul', difficulty: 4, seed: 111,
+      blurb: 'Esquinas abertas de avenida, em ritmo de bulevar. Há um desvio ao lado da pista e atalhos de terra entre os quarteirões.',
+      segments: [[300,0],[300,150],[200,0],[220,-90],[460,0],[300,-140],[200,0],[220,90],[300,0],[220,90],[240,0]],
+      fork: { from: 0.38, len: 440, side: 'left', amp: 24 },
+      cuts: [{ at: 204, len: 540, amp: 50, ramp: 0.45 }, { at: 1740, len: 540, amp: 50, ramp: 0.45 }],
+      ranks: [67, 73, 82, 96]
+    },
+    urbana_c: {
+      base: 'urbana', name: 'Centro Neon · Zigue-zague', difficulty: 4, seed: 112,
+      blurb: 'Curvas de 45° e 90° em sequência, ritmo quebrado. Há um desvio paralelo à avenida.',
+      segments: [[220,0],[70,45],[160,0],[70,-45],[200,0],[70,-45],[140,0],[70,45],[240,0],[90,90],[180,0],[90,-90],[260,0],[70,45],[120,0],[70,-45],[220,0],[90,-90],[200,0],[90,90],[280,0]],
+      fork: { from: 0.55, len: 440, side: 'left', amp: 24 },
+      ranks: [79, 86, 97, 113]
+    },
+    urbana_d: {
+      base: 'urbana', name: 'Centro Neon · Retorno', difficulty: 5, seed: 113,
+      blurb: 'Dois retornos de 180° entre as avenidas. Há um desvio paralelo à avenida.',
+      segments: [[360,0],[120,180],[300,0],[90,-90],[200,0],[90,-90],[340,0],[90,90],[220,0],[90,90],[280,0],[120,-180],[340,0],[90,90],[200,0],[90,-90],[300,0]],
+      fork: { from: 0.36, len: 420, side: 'left', amp: 24 },
+      ranks: [92, 100, 113, 131]
+    },
+    fazenda_b: {
+      base: 'fazenda', name: 'Campos do Vale · Colheita', difficulty: 1, seed: 121,
+      blurb: 'Grandes curvas de terra entre as plantações. A estrada se divide em dois caminhos e há atalhos pelo meio do campo.',
+      segments: [[320,0],[560,170],[620,0],[320,-60],[200,0],[560,-180],[180,0],[320,55],[260,0]],
+      fork: { from: 0.4, len: 820, side: 'left', amp: 46 },
+      cuts: [{ at: 252, len: 540, amp: 50, ramp: 0.45 }, { at: 2200, len: 540, amp: 50, ramp: 0.45 }],
+      ranks: [67, 73, 82, 95]
+    },
+    fazenda_c: {
+      base: 'fazenda', name: 'Campos do Vale · Estrada Velha', difficulty: 2, seed: 122,
+      blurb: 'Mais curvas e menos retas, em terra batida. A estrada se divide em dois caminhos.',
+      segments: [[260,0],[180,45],[140,0],[160,-60],[160,0],[200,55],[120,0],[180,-70],[200,0],[150,-50],[140,0],[210,65],[200,0],[160,-45],[260,0],[200,40],[240,0]],
+      fork: { from: 0.5, len: 800, side: 'left', amp: 46 },
+      ranks: [67, 73, 83, 96]
+    },
+    fazenda_d: {
+      base: 'fazenda', name: 'Campos do Vale · Retão do Vale', difficulty: 1, seed: 123,
+      blurb: 'Retas enormes e poucas curvas lentas. A estrada se divide em dois caminhos.',
+      segments: [[480,0],[260,-30],[420,0],[220,35],[540,0],[160,-75],[300,0],[240,30],[460,0]],
+      fork: { from: 0.36, len: 900, side: 'right', amp: 46 },
+      ranks: [55, 60, 68, 78]
+    },
+    serra_b: {
+      base: 'serra', name: 'Serra Verde · Subida Norte', difficulty: 5, seed: 131,
+      blurb: 'Curvas largas, um grampo e túneis. Há um desvio ao lado da pista e atalhos de terra pela encosta.',
+      tunnels: [[990, 1080], [1971, 2061], [2691, 2781]],
+      segments: [[200,0],[420,160],[100,0],[260,-80],[560,0],[420,-170],[140,0],[260,75],[100,0],[220,-110],[240,0]],
+      fork: { from: 0.42, len: 380, side: 'left', amp: 24 },
+      cuts: [{ at: 204, len: 540, amp: 50, ramp: 0.45 }],
+      ranks: [66, 73, 82, 96]
+    },
+    serra_c: {
+      base: 'serra', name: 'Serra Verde · Mirante', difficulty: 4, seed: 132,
+      blurb: 'Curvas mais abertas e túneis. Há um desvio ao lado da pista.',
+      tunnels: [[340, 430], [820, 930], [2150, 2280]],
+      segments: [[240,0],[160,70],[120,0],[150,-80],[140,0],[170,75],[100,0],[140,-85],[120,0],[110,120],[90,0],[110,-115],[130,0],[150,80],[160,0],[140,-75],[160,0],[130,90],[140,0],[150,-85],[240,0]],
+      fork: { from: 0.4, len: 460, side: 'right', amp: 24 },
+      ranks: [84, 92, 104, 122]
+    },
+    serra_d: {
+      base: 'serra', name: 'Serra Verde · Caracol', difficulty: 5, seed: 133,
+      blurb: 'Grampos seguidos de mais de 120°. Há um desvio ao lado da pista.',
+      tunnels: [[260, 340], [760, 860], [2000, 2100]],
+      segments: [[160,0],[100,130],[80,0],[100,-125],[90,0],[110,120],[80,0],[100,-130],[100,0],[120,110],[100,0],[120,-105],[110,0],[130,95],[120,0],[130,-100],[110,0],[110,120],[100,0],[110,-110],[240,0]],
+      fork: { from: 0.58, len: 440, side: 'right', amp: 24 },
+      ranks: [81, 88, 100, 117]
+    },
+    canion_b: {
+      base: 'canion', name: 'Estrada do Cânion · Mesa Vermelha', difficulty: 3, seed: 141,
+      blurb: 'Arcos amplos ao redor das mesas de rocha. A estrada se divide em dois caminhos e há atalhos de terra.',
+      segments: [[240,0],[520,-170],[100,0],[300,70],[640,0],[520,175],[160,0],[300,-65],[240,0],[220,45],[260,0]],
+      fork: { from: 0.32, len: 820, side: 'left', amp: 46 },
+      cuts: [{ at: 324, len: 540, amp: 50, ramp: 0.45 }, { at: 1980, len: 540, amp: 50, ramp: 0.45 }],
+      ranks: [71, 78, 89, 103]
+    },
+    canion_c: {
+      base: 'canion', name: 'Estrada do Cânion · Garganta', difficulty: 3, seed: 142,
+      blurb: 'Curvas largas e rápidas pela garganta. A estrada se divide em dois caminhos.',
+      segments: [[260,0],[150,60],[200,0],[140,-75],[180,0],[170,70],[240,0],[120,-100],[160,0],[180,60],[200,0],[150,-70],[240,0],[130,90],[200,0],[170,-55],[300,0]],
+      fork: { from: 0.5, len: 780, side: 'left', amp: 46 },
+      ranks: [78, 86, 97, 113]
+    },
+    canion_d: {
+      base: 'canion', name: 'Estrada do Cânion · Desfiladeiro', difficulty: 4, seed: 143,
+      blurb: 'Trecho curto e nervoso, de curvas fechadas. A estrada se divide em dois caminhos.',
+      segments: [[200,0],[100,100],[100,0],[110,-100],[120,0],[130,85],[100,0],[120,-90],[160,0],[100,110],[120,0],[110,-105],[140,0],[140,80],[160,0],[120,-85],[240,0]],
+      fork: { from: 0.52, len: 760, side: 'left', amp: 46 },
+      ranks: [68, 75, 85, 98]
+    },
+
     /* Final do campeonato: não está em  order , então não aparece na seleção de pistas. Percurso livre até o oásis. */
     oasis: {
       code: 'tepui',   // palavra secreta que libera esta pista na seleção (digitar nos menus, ou index.html#oasis)

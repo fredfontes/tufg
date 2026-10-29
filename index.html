@@ -284,6 +284,10 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 /* ---- garage carousel (bottom dock; the 3D car slides sideways when you change cars) ---- */
 .gscreen{align-items:flex-end;justify-content:center;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
 .gdock{width:min(900px,100%);background:rgba(14,16,19,.88);border-top:6px solid var(--hazard);padding:clamp(10px,1.6vw,16px);display:flex;flex-direction:column;gap:8px;max-height:100%;overflow:auto}
+.gtr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#gPaint{display:inline-flex;align-items:stretch;gap:10px;padding:0 0 0 11px!important;overflow:hidden}
+#gPaint svg{align-self:center;flex:none}
+.pdot{display:block;align-self:stretch;aspect-ratio:1/1;min-width:30px;margin:-1px -1px -1px 0;border:0;border-radius:0}
 .gtop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .cash{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:.04em;color:var(--hazard);font-variant-numeric:tabular-nums}
 .gmain{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
@@ -398,7 +402,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.35</summary>
+        <summary>Estado do projeto · v0.43</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -410,7 +414,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 
   <section id="garage" class="screen gscreen" hidden>
     <div class="gdock">
-      <div class="gtop"><div class="eyebrow" id="gEye">Escolha seu carro · <kbd>←</kbd><kbd>→</kbd> navegar</div><div class="seg" id="gPl" role="radiogroup" aria-label="Jogador"><button type="button" role="radio" data-v="1" aria-checked="true">Jogador 1</button><button type="button" role="radio" data-v="2" aria-checked="false">Jogador 2</button></div><div class="cash" id="gCash" hidden></div></div>
+      <div class="gtop"><div class="eyebrow" id="gEye">Escolha seu carro · <kbd>←</kbd><kbd>→</kbd> navegar</div><div class="gtr"><div class="seg" id="gPaintBox" hidden><button type="button" id="gPaint" aria-label="Trocar cor do carro (Espaço)" title="Trocar cor (Espaço)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg><i class="pdot" id="gDot"></i></button></div><div class="seg" id="gPl" role="radiogroup" aria-label="Jogador"><button type="button" role="radio" data-v="1" aria-checked="true">Jogador 1</button><button type="button" role="radio" data-v="2" aria-checked="false">Jogador 2</button></div><div class="cash" id="gCash" hidden></div></div></div>
       <div class="gmain"><button class="garr" id="gPrev" type="button" aria-label="Carro anterior">◀</button><div class="ginfo" id="gInfo" aria-live="polite"></div><button class="garr" id="gNext" type="button" aria-label="Próximo carro">▶</button></div>
       <div class="gbot">
         <div id="gList" class="gstrip" role="radiogroup" aria-label="Carros"></div>
@@ -547,11 +551,18 @@ const TR = window.TUFG_TRACKS || {
   sceneries: { canyon: { label: 'Cânion', ground: { color: '#c58a52', color2: '#b97b45' }, road: { asphalt: '#3b3e44', curb: ['#d83a2a', '#f0f0ea'] }, barrier: { kind: 'band', colors: ['#c9ccd0', '#d4402e'], height: 0.95, top: true },
     backdrop: { kind: 'mesas', seed: 3, layers: [['#d9a888', 0.42, 1], ['#a2604c', 0.22, 3]] }, posts: true, props: [{ kind: 'rock', step: [15, 30], side: 'both', dist: [3, 28], scale: [0.8, 2.2] }], billboards: [['VÁLVULA', '#d83a2a']] } }
 };
+// Track variants: "base" inherits everything from another track except fork/cuts/tunnels/canopy/code/boss/ranks.
+for (const id of Object.keys(TR.tracks)) {
+  const d = TR.tracks[id], b = d.base && TR.tracks[d.base];
+  if (!b || b.base) continue;
+  const o = Object.assign({}, b); for (const k of ['fork', 'cuts', 'tunnels', 'canopy', 'code', 'boss']) delete o[k];
+  TR.tracks[id] = Object.assign(o, d, { variantOf: d.base });
+}
 const Config = {
   retroHeight: 240,
   trackOrder: (TR.order || Object.keys(TR.tracks)).filter(id => TR.tracks[id]),
   tracks: TR.tracks, sceneries: TR.sceneries, ads: (window.TUFG_ADS && window.TUFG_ADS.ads) || {},
-  playerCar: V.playerCar, cars: V.cars, traffic: V.traffic,
+  playerCar: V.playerCar, cars: V.cars, traffic: V.traffic, 
   times: {   // time-of-day presets (override/extend in tracks.js: times: {...})
     amanhecer: { label: 'Amanhecer', skyTop: '#27356e', skyMid: '#b9708c', horizon: '#f8b98c', fog: '#e6b49c', fogNear: 70, fogFar: 480, sun: '#ffd8a0',
       sunDir: [0.5, 0.09, 0.86], hemiSky: '#d6bcd0', hemiGround: '#5e4c48', hemi: 0.8, sunLight: '#ffc490', sunI: 0.7, tint: '#ffd9c8', flare: 1, stars: 0.25, headlights: 0.35, winLit: 0.2 },
@@ -569,8 +580,8 @@ Config.champ = Object.assign({ times: ['amanhecer', 'dia', 'entardecer', 'noite'
   startClass: 'C', startCash: 0, repeat: 0.3,   // starts owning only this class; replaying a stage already passed pays this fraction
   prizes: [16000, 12000, 9000, 3500, 2800, 2200, 1800, 1400, 1100, 800, 500, 300], botIncome: 1.3,   // cash by finishing position (the last value repeats)
   prices: { C: 0, B: 20000, A: 55000, S: 100000 } }, TR.championship || {});
-Config.champRounds = function () {   // championship = every track x every time of day, in order (5 x 4 = 20 rounds); the finale comes after
-  const C = Config.champ, ids = (C.tracks || Config.baseOrder).filter(i => Config.tracks[i]), out = []; ids.forEach(id => C.times.forEach(tm => { if (Config.times[tm]) out.push({ track: id, time: tm }); })); return out;
+Config.champRounds = function () {   // championship = every track x every time of day (5 x 4 = 20 rounds); per track, round 1 is the original layout and the next ones are its variants; the finale comes after
+  const C = Config.champ, ids = (C.tracks || Config.champTracks).filter(i => Config.tracks[i]), out = []; ids.forEach(id => { const vs = [id].concat(Config.trackOrder.filter(v => Config.tracks[v].variantOf === id)); let j = 0; C.times.forEach(tm => { if (Config.times[tm]) out.push({ track: vs[j++ % vs.length], time: tm }); }); }); return out;
 };
 {   // field-level overrides from tracks.js (times: { noite: { fogFar: 380 } })
   const base = Config.times; for (const [k, v] of Object.entries(TR.times || {})) base[k] = Object.assign({}, base[k] || {}, v);
@@ -594,7 +605,8 @@ Config.atmosphere = function (timeId, wxId) {   // time of day x weather -> ever
   }
   return a;
 };
-Config.baseOrder = Config.trackOrder.slice();   // tracks of the championship / random pick (secret tracks unlocked by cheat codes are appended to trackOrder only)
+Config.baseOrder = Config.trackOrder.slice();
+Config.champTracks = Config.trackOrder.filter(id => !Config.tracks[id].variantOf);   // championship stays on the original tracks   // tracks of the championship / random pick (secret tracks unlocked by cheat codes are appended to trackOrder only)
 for (const c of Object.values(Config.cars)) c.rating = rateCar(c);
 // Starting grid (single player): the player plus AI drivers. Defaults here; edit the `grid` block in vehicles.js.
 Config.grid = Object.assign({ cars: 12, reduced: 8, rowGap: 9, laneOffset: 2.6, playerSlot: null, balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
@@ -602,7 +614,7 @@ Config.grid = Object.assign({ cars: 12, reduced: 8, rowGap: 9, laneOffset: 2.6, 
 
 /* ============================ Track ============================ */
 class Track {
-  constructor(def) {
+  constructor(def, opt) {
     this.def = def; const step = def.step; this.step = step;
     const X = [], Z = []; let x = 0, z = 0, h = 0;
     for (const [len, ang] of def.segments) {
@@ -618,12 +630,61 @@ class Track {
     }
     this.length = (N - 1) * step; this.finishS = this.length - def.runoff; this.half = def.width / 2;
     const G = Config.grid; this.lineS = Math.max(def.startS + 8, 6 + (Math.ceil(G.cars / 2) - 1) * G.rowGap + G.rowGap / 2 + 12); this._prof = {};   // start line, just ahead of the first grid row
+    this._var = {}; this.fork = (def.fork || def.cuts) && !(opt && opt.fork === false) ? this.makeFork(def.fork, def.cuts || []) : null;
   }
+  /* Fork: a second road B that leaves the main road A (the layout centre line) and rejoins it further on. B is A's centre line pushed sideways by ob[i]
+     (0 outside the fork, easing in and out in between), so both roads share the same sample index i and the same progress s. Everything that measures
+     the lateral position d keeps using A's frame; roadDist(i, d) / wallsAt(i) / medianAt(i) tell where the roads and walls really are. */
+  makeFork(F, cuts) {
+    const N = this.N, step = this.step, W = this.half, sm = p => p * p * (3 - 2 * p), cl = (this.def.tunnels || []).concat(this.def.canopy || []).filter(Array.isArray), nm = this.def.name || '?';
+    const specs = []; if (F) specs.push({ main: true, from: clamp(F.from == null ? 0.45 : F.from, 0.3, 0.7) * this.finishS, side: F.side === 'right' ? -1 : 1, amp: Math.max(8, F.amp || 45), len: Math.max(240, F.len || 700), ramp: clamp(F.ramp == null ? 0.3 : F.ramp, 0.2, 0.45), p: 0.5 });
+    for (const c of cuts) specs.push({ main: false, from: c.at, side: c.side === 'right' ? -1 : c.side === 'left' ? 1 : 0, amp: Math.max(10, c.amp || 30), len: Math.max(120, c.len || 260), ramp: clamp(c.ramp == null ? 0.28 : c.ramp, 0.2, 0.45), p: c.p == null ? 0.5 : c.p });
+    const ob = new Float32Array(N), lobeOf = new Int8Array(N).fill(-1), lobes = [];
+    for (const sp of specs) {
+      const i0 = Math.round(sp.from / step), i1 = Math.min(N - 3, i0 + Math.round(sp.len / step)), tag = (sp.main ? 'Bifurcação' : 'Atalho') + ' ignorado(a) em ' + nm;
+      if (cl.some(r => r[0] < i1 * step + 60 && r[1] > i0 * step - 60)) { console.warn(tag + ': sobrepõe túnel/cobertura'); continue; }
+      if (lobes.some(l => i0 <= l.i1 + 20 && i1 >= l.i0 - 20)) { console.warn(tag + ': sobrepõe outro desvio'); continue; }
+      if (!sp.side) sp.side = angDiff(this.th[i0], this.th[i1]) >= 0 ? 1 : -1;   // a shortcut cuts the inside of the bend
+      let amp = sp.amp, ok = false;
+      for (; amp >= (sp.main ? sp.amp : 10); amp -= 2) {   // the branch must stay clear of itself: its offset may not exceed the radius of the bend it sits inside of
+        ok = true; for (let i = i0 + 1; i < i1; i++) { const u = (i - i0) / (i1 - i0), o = sp.side * amp * (u < sp.ramp ? sm(u / sp.ramp) : u > 1 - sp.ramp ? sm((1 - u) / sp.ramp) : 1), k = angDiff(this.th[i - 1], this.th[i + 1]) / (2 * step); if (1 - o * k < (sp.main ? 0.3 : 0.4)) { ok = false; break; } }
+        if (ok) break;
+      }
+      if (!ok) { console.warn(tag + ': curva fechada demais'); continue; }
+      const k = lobes.length; for (let i = i0; i <= i1; i++) { const u = (i - i0) / (i1 - i0); ob[i] = sp.side * amp * (u < sp.ramp ? sm(u / sp.ramp) : u > 1 - sp.ramp ? sm((1 - u) / sp.ramp) : 1); lobeOf[i] = k; }
+      lobes.push({ i0, i1, side: sp.side, amp, cut: !sp.main, p: sp.p });
+    }
+    if (!lobes.length) return null;
+    const G = this.branchGeom(ob), i0 = Math.min(...lobes.map(l => l.i0)), i1 = Math.max(...lobes.map(l => l.i1)), main = lobes.find(l => !l.cut);
+    return Object.assign({ i0, i1, side: main ? main.side : lobes[0].side, amp: main ? main.amp : lobes[0].amp, ob, lobes, lobeOf, thr: 2 * W + 2.4, s0: i0 * step, s1: i1 * step }, G);
+  }
+  branchGeom(ob) {   // positions / headings / left normals of the road B = A shifted by ob
+    const N = this.N, bx = new Float32Array(N), bz = new Float32Array(N), btx = new Float32Array(N), btz = new Float32Array(N), bth = new Float32Array(N), blx = new Float32Array(N), blz = new Float32Array(N);
+    for (let i = 0; i < N; i++) { bx[i] = this.cx[i] + this.lx[i] * ob[i]; bz[i] = this.cz[i] + this.lz[i] * ob[i]; }
+    for (let i = 0; i < N; i++) { const a = Math.max(0, i - 1), b = Math.min(N - 1, i + 1), dx = bx[b] - bx[a], dz = bz[b] - bz[a], l = Math.hypot(dx, dz) || 1; btx[i] = dx / l; btz[i] = dz / l; bth[i] = Math.atan2(btx[i], btz[i]); blx[i] = btz[i]; blz[i] = -btx[i]; }
+    return { bx, bz, btx, btz, bth, blx, blz };
+  }
+  variant(mask) {   // the roads of a driver that takes branch k of the fork when bit k of mask is set
+    const F = this.fork; if (!mask || !F) return null; if (this._var[mask]) return this._var[mask];
+    const ob = new Float32Array(this.N); for (let i = F.i0; i <= F.i1; i++) if (F.lobeOf[i] >= 0 && (mask >> F.lobeOf[i]) & 1) ob[i] = F.ob[i];
+    return (this._var[mask] = Object.assign({ ob }, this.branchGeom(ob)));
+  }
+  onCut(i, d) {   // on the dirt of a shortcut (nearer its centre than the main road's)
+    const F = this.fork; if (!F) return false; i = clamp(i, 0, this.N - 1); const k = F.lobeOf[i]; return k >= 0 && F.lobes[k].cut && Math.abs(d - F.ob[i]) < Math.abs(d);
+  }
+  roadDist(i, d) {   // lateral distance to the nearest road centre (A, or B inside the fork)
+    const F = this.fork; if (!F) return Math.abs(d); const o = F.ob[i < 0 ? 0 : i > this.N - 1 ? this.N - 1 : i]; return o === 0 ? Math.abs(d) : Math.min(Math.abs(d), Math.abs(d - o));
+  }
+  roadCentre(i, d) { const F = this.fork; if (!F) return 0; const o = F.ob[clamp(i, 0, this.N - 1)]; return o !== 0 && Math.abs(d - o) < Math.abs(d) ? o : 0; }
+  outer(i, sg) {   // extra sideways shift of the outer scenery on side sg (+ left, - right): the branch pushes the outer wall away
+    const F = this.fork; if (!F) return 0; const o = F.ob[clamp(i, 0, this.N - 1)]; return sg > 0 ? Math.max(0, o) : Math.max(0, -o);
+  }
+  medianAt(i) { const F = this.fork; if (!F) return null; const o = F.ob[clamp(i, 0, this.N - 1)]; return Math.abs(o) >= F.thr ? o / 2 : null; }   // lateral position of the barrier between the two roads
   // Speed the AI can carry at every sample: cornering limit from curvature, then a backward pass so it brakes in time.
-  profile(maxLat, brake, grip, vmax) {
-    const key = [maxLat, brake, grip, vmax].join('|'); if (this._prof[key]) return this._prof[key];
+  profile(maxLat, brake, grip, vmax, mask) {   // mask: which branches of the fork the driver takes
+    const V = this.variant(mask), TH = V ? V.bth : this.th, key = [maxLat, brake, grip, vmax, mask || 0].join('|'); if (this._prof[key]) return this._prof[key];
     const N = this.N, k = new Float32Array(N), sm = new Float32Array(N), v = new Float32Array(N);
-    for (let i = 1; i < N - 1; i++) k[i] = Math.abs(angDiff(this.th[i - 1], this.th[i + 1])) / (2 * this.step);
+    for (let i = 1; i < N - 1; i++) k[i] = Math.abs(angDiff(TH[i - 1], TH[i + 1])) / (2 * this.step);
     for (let i = 0; i < N; i++) { let m = 0; for (let j = Math.max(0, i - 3); j <= Math.min(N - 1, i + 3); j++) m = Math.max(m, k[j] * (1 - Math.abs(j - i) * 0.12)); sm[i] = m; }
     for (let i = 0; i < N; i++) v[i] = Math.min(vmax, Math.sqrt(0.8 * maxLat * grip / Math.max(sm[i], 1e-4)));
     const b = Math.min(brake * 0.6, 20); for (let i = N - 2; i >= 0; i--) v[i] = Math.min(v[i], Math.sqrt(v[i + 1] * v[i + 1] + 2 * b * this.step));
@@ -660,8 +721,8 @@ class CarSim {
   step(dt, inp, track, traffic, ev) {
     const sp = this.spec, thr = inp.throttle, brk = inp.brake, hb = inp.handbrake;
     const L = track.locate(this.x, this.z, this.hint, this._l); this.hint = L.i; this.s = L.s; this.d = L.d;
-    const onRoad = Math.abs(L.d) <= track.half + 0.9; this.surface = onRoad ? 'road' : 'grass';
-    const gripS = onRoad ? 1 : 0.55;
+    const onRoad = track.roadDist(L.i, L.d) <= track.half + 0.9; this.surface = onRoad ? 'road' : 'grass';
+    const cut = onRoad && track.onCut(L.i, L.d), gripS = onRoad ? (cut ? 0.95 : 1) : 0.55; this.surface = cut ? 'dirt' : this.surface;
     this.wrong = Math.abs(angDiff(this.h, L.th)) > 1.9 && Math.abs(this.vf) > 3 ? this.wrong + dt : 0;
     this.hitCd = Math.max(0, this.hitCd - dt); this.hb = hb; this.thr = thr; if (this.ghost > 0 && this.ghost < 1e8) this.ghost = Math.max(0, this.ghost - dt);
 
@@ -717,9 +778,14 @@ class CarSim {
     let vx = sh * this.vf + ch * this.vl, vz = ch * this.vf - sh * this.vl, touched = false, dSpin = 0;
     for (const [fa, lb] of CORNERS) {
       const rx = sh * fa * this.hl + ch * lb * this.hw, rz = ch * fa * this.hl - sh * lb * this.hw, px = this.x + rx, pz = this.z + rz;
-      const L = track.locate(px, pz, this.hint, this._w), pen = Math.abs(L.d) - W;
+      const L = track.locate(px, pz, this.hint, this._w), F = track.fork; let pen, sg;
+      if (F) {   // fork: the outer walls sit further out beside the branch, and a barrier runs between the two roads
+        const ob = F.ob[L.i], lw = W + (ob > 0 ? ob : 0), rw = W + (ob < 0 ? -ob : 0), m = track.medianAt(L.i);
+        pen = L.d > 0 ? L.d - lw : -L.d - rw; sg = L.d > 0 ? 1 : -1;
+        if (m != null) { const side = this.d >= m ? 1 : -1, pm = 0.45 - side * (L.d - m); if (pm > 0 && pm > pen) { pen = pm; sg = -side; } }
+      } else { pen = Math.abs(L.d) - W; sg = L.d > 0 ? 1 : -1; }
       if (pen <= 0) continue;
-      const sg = L.d > 0 ? 1 : -1, nx = -sg * L.lx, nz = -sg * L.lz; touched = true;
+      const nx = -sg * L.lx, nz = -sg * L.lz; touched = true;
       this.x += nx * pen; this.z += nz * pen;
       const vn = vx * nx + vz * nz, tx = -nz, tz = nx; let dvx = 0, dvz = 0;
       if (vn < 0) { dvx = -1.2 * vn * nx; dvz = -1.2 * vn * nz; const vt = vx * tx + vz * tz; const kt = 0.06 * clamp(-vn / 6, 0, 1); dvx -= vt * kt * tx; dvz -= vt * kt * tz; dSpin += (rz * dvx - rx * dvz) * 0.06; this._hit(-vn, px, pz, nx, nz, ev); }
@@ -785,11 +851,12 @@ class CarSim {
 class Driver {
   constructor(sim, track, o) {
     Object.assign(this, { sim, track, name: o.name, rid: o.rid, skill: o.skill, slot: o.slot, lane: o.lane, carId: o.carId, color: o.color, lat: o.lat, tAcc: Math.random() / 30, fin: null, stuck: 0, off: 0, react: 0.12 + Math.random() * 0.45, model: null, _o: {}, respawns: 0 });
-    this.inp = { throttle: 0, brake: 1, steer: 0, handbrake: 0 }; this.prof = track.profile(sim.spec.maxLat, sim.spec.brake, sim.grip || 1, sim.spec.maxSpeed);
+    this.inp = { throttle: 0, brake: 1, steer: 0, handbrake: 0 }; this.mask = 0; const F = track.fork; if (F) F.lobes.forEach((l, k) => { if (Math.random() < (l.cut ? 0.3 + 0.35 * clamp(o.skill, 0, 1) : l.p)) this.mask |= 1 << k; });   // each bot picks its roads at random; the better ones like shortcuts
+    this.V = track.variant(this.mask); this.br = this.mask !== 0; this.prof = track.profile(sim.spec.maxLat, sim.spec.brake, sim.grip || 1, sim.spec.maxSpeed, this.mask);
   }
   respawn() {
-    const s = this.sim, T = this.track, o = T.at(clamp(s.s, 2, T.finishS - 20), this._o), lat = clamp(this.lane, -3, 3);
-    s.reset(o.x + o.lx * lat, o.z + o.lz * lat, o.h); s.hint = -1; s.vf = 6; s.ghost = 2.5; this.stuck = 0; this.off = 0; this.lat = lat; this.inp.brake = 0; this.respawns++;
+    const s = this.sim, T = this.track, o = T.at(clamp(s.s, 2, T.finishS - 20), this._o), lat = clamp(this.lane, -3, 3), bo = this.V ? this.V.ob[clamp(Math.round(clamp(s.s, 2, T.finishS - 20) / T.step), 0, T.N - 1)] : 0;
+    s.reset(o.x + o.lx * (lat + bo), o.z + o.lz * (lat + bo), o.h); s.hint = -1; s.vf = 6; s.ghost = 2.5; this.stuck = 0; this.off = 0; this.lat = lat; this.inp.brake = 0; this.respawns++;
   }
   decide(dt, X) {
     const s = this.sim, T = this.track, inp = this.inp, half = T.half, v = s.vf, sp = s.spec;
@@ -797,29 +864,30 @@ class Driver {
     if (!X.running) { inp.throttle = 0; inp.brake = 1; inp.steer = 0; return; }
     if (this.react > 0) { this.react -= dt; inp.throttle = 0; inp.brake = 0; inp.steer = 0; return; }
     if (Math.abs(v) < 1.5) this.stuck += dt; else this.stuck = 0;
-    if (Math.abs(s.d) > half + 2.5) this.off += dt; else this.off = Math.max(0, this.off - dt);
+    const V = this.V;
+    if (T.roadDist(s.hint, s.d) > half + 2.5) this.off += dt; else this.off = Math.max(0, this.off - dt);
     if (this.stuck > 2.5 || this.off > 3 || s.wrong > 1.5) { this.respawn(); return; }
     const i0 = Math.max(0, s.hint), Ld = clamp(9 + Math.abs(v) * 0.45, 11, 38), jb = Math.min(T.N - 1, i0 + Math.ceil((Ld + 22) / T.step));
-    const bend = angDiff(T.th[i0], T.th[jb]), maxOff = half - 2.2;
+    const TH = V ? V.bth : T.th, bo0 = V ? V.ob[Math.min(i0, T.N - 1)] : 0, dl = s.d - bo0, bend = angDiff(TH[i0], TH[jb]), maxOff = half - 2.2;   // dl: my lateral position on my own road
     let want = clamp(this.lane * 0.55 + clamp(bend * 2.2, -1, 1) * (half - 3.4) * 0.5, -maxOff, maxOff), capV = Infinity, urgent = false;
     // slower car (traffic or another racer) ahead in my path: go around on the free side, or follow it
     const look = 16 + Math.max(v, 0) * 0.8; let best = null, bg = 1e9;
-    const scan = (os, od, ov, len) => { const gap = os - s.s - len / 2 - (sp.length || 4.4) / 2; if (gap < -1.5 || gap > look || gap >= bg) return; const lt = od - s.d; if (Math.abs(lt) > 2.9) return; bg = gap; best = { od, ov, gap, lt }; };
+    const scan = (os, od, ov, len) => { const gap = os - s.s - len / 2 - (sp.length || 4.4) / 2; if (gap < -1.5 || gap > look || gap >= bg) return; const lt = od - s.d; if (Math.abs(lt) > 2.9) return; bg = gap; best = { od: od - bo0, ov, gap, lt }; };
     for (const c of X.traffic.cars) scan(c.s, c.lane, c.speed, c.length);
     for (const r of X.racers) if (r !== s && !(r.ghost > 0)) scan(r.s, r.d, r.vf, r.spec.length || 4.4);
     if (best) {
       let dir = Math.abs(best.lt) < 0.35 ? (best.od > 0 ? -1 : 1) : (best.lt > 0 ? -1 : 1), w = clamp(best.od + dir * 3.2, -maxOff, maxOff);
       if (Math.abs(w - best.od) < 2.3) { dir = -dir; w = clamp(best.od + dir * 3.2, -maxOff, maxOff); }
       if (Math.abs(w - best.od) >= 2.3) { want = w; urgent = true; }
-      if (v > best.ov && best.gap < 22 && (Math.abs(s.d - best.od) < 2.5 || best.gap < 6)) capV = best.ov + Math.max(0, best.gap - 3) * 0.7;
+      if (v > best.ov && best.gap < 22 && (Math.abs(dl - best.od) < 2.5 || best.gap < 6)) capV = best.ov + Math.max(0, best.gap - 3) * 0.7;
     }
     const rate = (urgent ? 7 : 3.2) * dt; this.lat += clamp(want - this.lat, -rate, rate);
-    T.at(s.s + Ld, this._o); const o = this._o, tx = o.x + o.lx * this.lat, tz = o.z + o.lz * this.lat;
+    T.at(s.s + Ld, this._o); const o = this._o, bo1 = V ? V.ob[clamp(Math.round((s.s + Ld) / T.step), 0, T.N - 1)] : 0, tx = o.x + o.lx * (this.lat + bo1), tz = o.z + o.lz * (this.lat + bo1);
     const al = angDiff(s.h, Math.atan2(tx - s.x, tz - s.z)), av = Math.max(Math.abs(v), 4), yawMax = Math.min(sp.steerRate, 0.95 * sp.maxLat / av) * Math.max(clamp(av / 6, 0, 1), 0.4);
     inp.steer = Math.abs(al) > 1.4 ? Math.sign(al) : clamp(0.9 * 2 * Math.sin(al) * av / Ld / yawMax, -1, 1);
     const ia = Math.min(T.N - 1, i0 + Math.ceil(Math.max(v, 0) * 0.12 / T.step)), gap = s.s - X.player.s;
     const rub = gap > 60 ? 1 - X.rubber * clamp((gap - 60) / 200, 0, 1) : gap < -60 ? 1 + X.rubber * clamp((-gap - 60) / 200, 0, 1) : 1;
-    let vt = this.prof[ia] * this.skill * rub; if (s.slip > 6) vt *= 0.85; if (Math.abs(s.d) > half + 0.9) vt = Math.min(vt, 16); vt = Math.min(vt, capV);
+    let vt = this.prof[ia] * this.skill * rub; if (s.slip > 6) vt *= 0.85; if (T.roadDist(s.hint, s.d) > half + 0.9) vt = Math.min(vt, 16); vt = Math.min(vt, capV);
     inp.throttle = v < vt ? 1 : 0; inp.brake = v > vt + 2 + 0.05 * v ? 1 : 0;
   }
 }
@@ -893,15 +961,15 @@ function noise(ctx, w, h, n, base, amt, r) {
 }
 // Strip along the track between lateral offsets a and b (left = +), at heights ya and yb. a, b, ya, yb: number or fn(i).
 // UV: u runs from o.uA to o.uB (a to b), v = distance along the track / o.vs.
-function band(T, a, b, ya, yb, o = {}) {
-  const f = v => typeof v === 'function' ? v : () => v, fa = f(a), fb = f(b), fya = f(ya), fyb = f(yb), fuA = f(o.uA == null ? 0 : o.uA), fuB = f(o.uB == null ? 1 : o.uB), vs = o.vs || 8;
-  const n = T.N, pos = new Float32Array(n * 6), uv = new Float32Array(n * 4), idx = [];
-  for (let i = 0; i < n; i++) {
-    const da = fa(i), db = fb(i), v = i * T.step / vs;
-    pos[i * 6] = T.cx[i] + T.lx[i] * da; pos[i * 6 + 1] = fya(i); pos[i * 6 + 2] = T.cz[i] + T.lz[i] * da;
-    pos[i * 6 + 3] = T.cx[i] + T.lx[i] * db; pos[i * 6 + 4] = fyb(i); pos[i * 6 + 5] = T.cz[i] + T.lz[i] * db;
-    uv[i * 4] = fuA(i); uv[i * 4 + 1] = v; uv[i * 4 + 2] = fuB(i); uv[i * 4 + 3] = v;
-    if (i < n - 1) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+function band(T, a, b, ya, yb, o = {}) {   // o.i0 / o.i1: only that range of samples, o.ok(i): leave a gap where false
+  const f = v => typeof v === 'function' ? v : () => v, fa = f(a), fb = f(b), fya = f(ya), fyb = f(yb), fuA = f(o.uA == null ? 0 : o.uA), fuB = f(o.uB == null ? 1 : o.uB), vs = o.vs || 8, ok = o.ok;
+  const i0 = o.i0 || 0, i1 = o.i1 == null ? T.N - 1 : o.i1, n = i1 - i0 + 1, pos = new Float32Array(n * 6), uv = new Float32Array(n * 4), idx = [];
+  for (let a2 = 0; a2 < n; a2++) {
+    const i = i0 + a2, da = fa(i), db = fb(i), v = i * T.step / vs;
+    pos[a2 * 6] = T.cx[i] + T.lx[i] * da; pos[a2 * 6 + 1] = fya(i); pos[a2 * 6 + 2] = T.cz[i] + T.lz[i] * da;
+    pos[a2 * 6 + 3] = T.cx[i] + T.lx[i] * db; pos[a2 * 6 + 4] = fyb(i); pos[a2 * 6 + 5] = T.cz[i] + T.lz[i] * db;
+    uv[a2 * 4] = fuA(i); uv[a2 * 4 + 1] = v; uv[a2 * 4 + 2] = fuB(i); uv[a2 * 4 + 3] = v;
+    if (a2 < n - 1 && (!ok || (ok(i) && ok(i + 1)))) { const k = a2 * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
   }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); return g;
 }
@@ -1040,6 +1108,7 @@ class World {
   }
   build() {
     const T = this.track, def = T.def, W = T.half, WALL = def.wall, sc = this.sc, theme = this.theme, scene = this.scene, G = this.group, add = o => { G.add(o); return o; };
+    const F = T.fork, eL = i => T.outer(i, 1), eR = i => T.outer(i, -1), BT = F && { N: T.N, step: T.step, cx: F.bx, cz: F.bz, lx: F.blx, lz: F.blz };   // F: fork (second road) or null; eL / eR: how far the outer scenery is pushed out beside the branch
     const tint = theme.tint || '#ffffff', mat = (map, o) => new THREE.MeshBasicMaterial(Object.assign({ map, side: THREE.DoubleSide, color: tint }, o));
     const over = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };   // flat overlays on the ground plane never z-fight
     const mesh = (g, m, ro) => { const o = add(new THREE.Mesh(g, m)); if (ro != null) o.renderOrder = ro; return o; };
@@ -1093,10 +1162,10 @@ class World {
     this.shore = null;
     if (wt) {
       const edge = wt.edge || 10, wob = wt.wobble || 0, land = sc.land || 120;
-      const shore = this.shore = i => WALL + edge + wob * Math.sin(i * T.step * 0.021 + 1.3) + wob * 0.5 * Math.sin(i * T.step * 0.057 + 0.4);
+      const shore = this.shore = i => WALL + edge + wob * Math.sin(i * T.step * 0.021 + 1.3) + wob * 0.5 * Math.sin(i * T.step * 0.057 + 0.4) + eR(i);
       const gBand = canvasTex(64, 64, drawGround, true), sand = canvasTex(64, 64, (c, w, h) => { c.fillStyle = wt.sand || '#e9d9a4'; c.fillRect(0, 0, w, h); noise(c, w, h, 500, 0, 40, rng(8)); }, true);
-      mesh(band(T, W + 1.1, land, -0.12, -0.12, { uA: (W + 1.1) / 14, uB: land / 14, vs: 14 }), mat(gBand, over));                    // land to the left
-      mesh(band(T, -(W + 1.1), i => -shore(i), -0.12, -0.12, { uA: (W + 1.1) / 14, uB: i => shore(i) / 14, vs: 14 }), mat(sand, over));  // beach to the right
+      mesh(band(T, i => W + 1.1 + eL(i), i => land + eL(i), -0.12, -0.12, { uA: (W + 1.1) / 14, uB: land / 14, vs: 14 }), mat(gBand, over));                    // land to the left
+      mesh(band(T, i => -(W + 1.1 + eR(i)), i => -shore(i), -0.12, -0.12, { uA: (W + 1.1) / 14, uB: i => shore(i) / 14, vs: 14 }), mat(sand, over));  // beach to the right
       const wTex = canvasTex(64, 64, (c, w, h) => { c.fillStyle = wt.color; c.fillRect(0, 0, w, h); const R = rng(4); c.fillStyle = 'rgba(255,255,255,.16)'; for (let i = 0; i < 26; i++) c.fillRect((R() * w) | 0, (R() * h) | 0, 6 + (R() * 8 | 0), 1); c.fillStyle = 'rgba(0,30,60,.12)'; for (let i = 0; i < 18; i++) c.fillRect((R() * w) | 0, (R() * h) | 0, 5 + (R() * 7 | 0), 1); }, true);
       this.waterTex = wTex;
       mesh(band(T, i => -shore(i), i => -(shore(i) + 800), wt.y, wt.y, { uA: 0, uB: 80, vs: 10 }), mat(wTex, over));
@@ -1114,19 +1183,31 @@ class World {
     }, true); aTex.wrapS = THREE.ClampToEdgeWrapping;
     const cTex = canvasTex(8, 16, (c, w, h) => { c.fillStyle = curbs[0]; c.fillRect(0, 0, w, h / 2); c.fillStyle = curbs[1]; c.fillRect(0, h / 2, w, h / 2); }, true); cTex.wrapS = THREE.ClampToEdgeWrapping;
     mesh(band(T, W, -W, 0, 0, { vs: 8 }), mat(aTex));
-    mesh(band(T, W, W + 1.1, 0.03, 0.03, { vs: 8 }), mat(cTex)); mesh(band(T, -W, -W - 1.1, 0.03, 0.03, { vs: 8 }), mat(cTex));
+    // no curb on the side facing the other road while the two roads overlap
+    const trunkOk = sg => F ? i => { const o = F.ob[i] * sg; return !(o > 0.5 && o < F.thr); } : null;
+    mesh(band(T, W, W + 1.1, 0.03, 0.03, { vs: 8, ok: trunkOk(1) }), mat(cTex)); mesh(band(T, -W, -W - 1.1, 0.03, 0.03, { vs: 8, ok: trunkOk(-1) }), mat(cTex));
+    if (F) {   // the branch roads: paved forks, and dirt shortcuts
+      const isCut = i => F.lobeOf[i] >= 0 && F.lobes[F.lobeOf[i]].cut, has = i => Math.abs(F.ob[i]) > 0.05, r = { i0: F.i0, i1: F.i1, vs: 8 };
+      if (F.lobes.some(l => !l.cut)) mesh(band(BT, W, -W, 0, 0, Object.assign({}, r, { ok: i => has(i) && !isCut(i) })), mat(aTex, over), 1);
+      if (F.lobes.some(l => l.cut)) mesh(band(BT, W * 0.9, -W * 0.9, 0.01, 0.01, Object.assign({}, r, { ok: i => has(i) && isCut(i) })), mat(aTex, over), 2);
+      for (const sg of [1, -1]) mesh(band(BT, sg * W, sg * (W + 1.1), 0.03, 0.03, Object.assign({}, r, { ok: i => { const o = F.ob[i], a = Math.abs(o); return a >= 0.5 && !isCut(i) && !((sg > 0) === (o < 0) && a < F.thr); } })), mat(cTex));
+    }
 
     // sidewalk (outside the barrier)
     if (sc.sidewalk) {
       const sw = sc.sidewalk, swTex = canvasTex(32, 32, (c, w, h) => { c.fillStyle = sw.color || '#9fa3aa'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, w, 1); c.fillRect(0, 0, 1, h); noise(c, w, h, 120, 0, 30, rng(6)); }, true);
-      for (const sg of [1, -1]) mesh(band(T, sg * (WALL + 0.7), sg * (WALL + 0.7 + sw.width), 0.04, 0.04, { uA: 0, uB: sw.width / 3, vs: 3 }), mat(swTex));
+      for (const sg of [1, -1]) mesh(band(T, i => sg * (WALL + 0.7 + T.outer(i, sg)), i => sg * (WALL + 0.7 + sw.width + T.outer(i, sg)), 0.04, 0.04, { uA: 0, uB: sw.width / 3, vs: 3 }), mat(swTex));
     }
 
     // barriers
     const bar = sc.barrier || { kind: 'band', colors: ['#c9ccd0', '#d4402e'], height: 0.95, top: true }, bh = bar.height || 0.95, bTex = barrierTex(bar), bMat = mat(bTex, bar.kind === 'planks' ? { alphaTest: 0.5 } : {});
     for (const sg of [1, -1]) {
-      mesh(band(T, sg * WALL, sg * WALL, 0, bh, { vs: 8 }), bMat);
-      if (bar.top) mesh(band(T, sg * WALL, sg * (WALL + 0.7), bh, bh, { vs: 8 }), bMat);
+      mesh(band(T, i => sg * (WALL + T.outer(i, sg)), i => sg * (WALL + T.outer(i, sg)), 0, bh, { vs: 8 }), bMat);
+      if (bar.top) mesh(band(T, i => sg * (WALL + T.outer(i, sg)), i => sg * (WALL + 0.7 + T.outer(i, sg)), bh, bh, { vs: 8 }), bMat);
+    }
+    if (F) {   // barrier between the two roads, from the point where they have separated
+      const r = { i0: F.i0, i1: F.i1, vs: 8, ok: i => Math.abs(F.ob[i]) >= F.thr };
+      mesh(band(T, i => F.ob[i] / 2, i => F.ob[i] / 2, 0, bh, r), bMat); mesh(band(T, i => F.ob[i] / 2 - 0.45, i => F.ob[i] / 2 + 0.45, bh, bh, r), bMat);
     }
 
     // rock walls
@@ -1140,8 +1221,8 @@ class World {
       }, true), top = canvasTex(64, 64, drawGround, true);
       const sides = cl.side === 'both' ? [1, -1] : [cl.side === 'right' ? -1 : 1];
       for (const sg of sides) {
-        mesh(band(T, i => sg * off, i => sg * (off + hf(i, sg) * 0.25), -0.2, i => hf(i, sg), { vs: 18 }), mat(rock));
-        mesh(band(T, i => sg * (off + hf(i, sg) * 0.25), i => sg * (off + hf(i, sg) * 0.25 + 40), i => hf(i, sg), i => hf(i, sg), { uA: 0, uB: 40 / 14, vs: 14 }), mat(top));
+        mesh(band(T, i => sg * (off + T.outer(i, sg)), i => sg * (off + T.outer(i, sg) + hf(i, sg) * 0.25), -0.2, i => hf(i, sg), { vs: 18 }), mat(rock));
+        mesh(band(T, i => sg * (off + T.outer(i, sg) + hf(i, sg) * 0.25), i => sg * (off + T.outer(i, sg) + hf(i, sg) * 0.25 + 40), i => hf(i, sg), i => hf(i, sg), { uA: 0, uB: 40 / 14, vs: 14 }), mat(top));
         this.cliffZone[sg] = { from: off - 2 };
       }
     }
@@ -1174,6 +1255,7 @@ class World {
   props() {
     const T = this.track, def = T.def, WALL = def.wall, sc = this.sc, rules = sc.props || [], probe = [];
     for (let i = 0; i < T.N; i += 2) probe.push(T.cx[i], T.cz[i]);
+    if (T.fork) for (let i = T.fork.i0; i <= T.fork.i1; i += 2) probe.push(T.fork.bx[i], T.fork.bz[i]);
     const clear = (x, z, min) => { const m2 = min * min; for (let k = 0; k < probe.length; k += 2) { const dx = x - probe[k], dz = z - probe[k + 1]; if (dx * dx + dz * dz < m2) return false; } return true; };
     const slots = new Map(), o = {}, buildings = [];
     rules.forEach((rule, ri) => {
@@ -1191,9 +1273,10 @@ class World {
             const spread = rule.spread || 0, ss = clamp(sp + (q ? (rr() - 0.5) * spread * 2 : 0), 0, T.length - 1); T.at(ss, o);
             let dist = lerp(rule.dist[0], rule.dist[1], rr()); if (q && spread) dist += (rr() - 0.5) * spread * 1.2;
             const vi = Math.floor(rr() * vars.length), V = vars[vi], scl = lerp(sc2[0], sc2[1], rr()), rad = V.fp * scl * st[0], ci = Math.floor(rr() * pal.length), jit = 0.9 + 0.2 * rr(), yawR = rr() * TAU;
-            if (this.shore && sg < 0 && !K.edge) { dist = Math.min(dist, this.shore(Math.round(ss / T.step)) - WALL - 1.2); if (dist < rule.dist[0] * 0.5) continue; }   // keep beach props off the water
-            const lat = WALL + dist + (K.edge ? V.half : 0), cz = this.cliffZone[sg], big = rule.kind === 'hill' || rule.kind === 'mesa';
-            if (cz && rule.kind !== 'hill' && rule.kind !== 'mesa' && lat + rad > cz.from - 0.5) continue;   // no trees inside the rock wall
+            const ex = T.outer(Math.round(ss / T.step), sg);   // the fork pushes the outer scenery away
+            if (this.shore && sg < 0 && !K.edge) { dist = Math.min(dist, this.shore(Math.round(ss / T.step)) - WALL - ex - 1.2); if (dist < rule.dist[0] * 0.5) continue; }   // keep beach props off the water
+            const lat = WALL + ex + dist + (K.edge ? V.half : 0), cz = this.cliffZone[sg], big = rule.kind === 'hill' || rule.kind === 'mesa';
+            if (cz && rule.kind !== 'hill' && rule.kind !== 'mesa' && lat + rad > cz.from + ex - 0.5) continue;   // no trees inside the rock wall
             const x = o.x + o.lx * sg * lat, z = o.z + o.lz * sg * lat;
             if (!clear(x, z, WALL + (big ? 4 : 0.9) + rad * (big ? 1 : rad > 8 ? 0.8 : 0.5))) continue;   // hills and mesas stay completely off the road (also off other stretches of it)
             if (this.tz.length && lat < WALL + 25 && !big && this.tz.some(([a, b]) => ss > a - 25 && ss < b + 25)) continue;   // keep the tunnel mounds clear
@@ -1239,7 +1322,7 @@ class World {
   }
   posts() {   // white markers beside the road
     if (!this.sc.posts) return; const T = this.track, list = [], o = {};
-    for (let s = 20; s < T.length; s += 24) { T.at(s, o); for (const sg of [-1, 1]) list.push([o.x + o.lx * sg * (T.def.wall + 1.5), o.z + o.lz * sg * (T.def.wall + 1.5), o.h]); }
+    for (let s = 20; s < T.length; s += 24) { T.at(s, o); for (const sg of [-1, 1]) { const w = T.def.wall + 1.5 + T.outer(Math.round(s / T.step), sg); list.push([o.x + o.lx * sg * w, o.z + o.lz * sg * w, o.h]); } }
     const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 1.5, 0.16), new THREE.MeshLambertMaterial({ color: 0xf0f0e8 }), list.length), d = new THREE.Object3D();
     list.forEach((t, i) => { d.position.set(t[0], 0.75, t[1]); d.rotation.set(0, t[2], 0); d.updateMatrix(); im.setMatrixAt(i, d.matrix); }); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; this.group.add(im);
   }
@@ -1341,7 +1424,7 @@ class World {
       if (this.tz.some(([a, b]) => s > a - 25 && s < b + 25)) return;   // not on a tunnel mound
       const fit = sgn => { const cz = this.cliffZone[sgn], room = cz ? cz.from + 2 - 0.4 - hwb - WALL : 1e9; return Math.min(dist, room); };   // never inside the rock wall
       let sg = k % 2 ? 1 : -1, dd = fit(sg); if (dd < 1.2) { sg = -sg; dd = fit(sg); } if (dd < 1.2) return;
-      const d = sg * (WALL + dd);
+      const d = sg * (WALL + T.outer(Math.round(s / T.step), sg) + dd);
       const tex = canvasTex(512, 192, (c, w, h) => drawAd(c, w, h, ad, null));
       if (ad.image) loadImg(ad.image).then(img => { const cv = tex.image; drawAd(cv.getContext('2d'), cv.width, cv.height, ad, img); tex.needsUpdate = true; }).catch(e => warnAsset(ad.image, e));
       const g = new THREE.Group(), steel = new THREE.MeshLambertMaterial({ color: 0x444851 });
@@ -1413,7 +1496,7 @@ function convertMaterials(scene) {   // PBR -> simple Lambert, to match the late
     if (!o.isMesh || o.userData.tufg) return; o.userData.tufg = true;
     const list = Array.isArray(o.material) ? o.material : [o.material];
     const out = list.map(m => {
-      const n = new THREE.MeshLambertMaterial({ color: m.color ? m.color.clone() : 0xffffff, map: m.map || null, transparent: !!m.transparent, opacity: m.opacity == null ? 1 : m.opacity, side: m.side, alphaTest: m.alphaTest || 0, vertexColors: !!m.vertexColors, emissive: m.emissive ? m.emissive.clone() : 0x000000, emissiveMap: m.emissiveMap || null });
+      const n = new THREE.MeshLambertMaterial({ name: m.name || '', color: m.color ? m.color.clone() : 0xffffff, map: m.map || null, transparent: !!m.transparent, opacity: m.opacity == null ? 1 : m.opacity, side: m.side, alphaTest: m.alphaTest || 0, vertexColors: !!m.vertexColors, emissive: m.emissive ? m.emissive.clone() : 0x000000, emissiveMap: m.emissiveMap || null });
       if (m.map) texList.push(m.map); return n;
     });
     o.material = Array.isArray(o.material) ? out : out[0]; o.frustumCulled = false;
@@ -1485,13 +1568,71 @@ function buildGlbExtras(spec, G) {
     for (const sx of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(B.w, B.h), mat); m.position.set(sx * B.x, B.y, B.z); m.rotation.y = Math.PI; brake.add(m); }
     group.add(brake);
   }
-  return { group, wheels, brake };
+  return { group, wheels, brake, cap };
+}
+/* ---- paint: each car can wear alternative textures (garage key C / swap button; bots with the same model get different ones) ----
+   vehicles.js:  paint: [ { name, color: '#hex' (the colour dot), texture: 'path/to/texture.png' }, ... ]  (entry 0 is always the original paint, dot = the car's  color ).
+   The texture replaces the base-colour map of the body material(s): the ones named in  paintParts  or, by default, those that use the car's largest texture.
+   An entry without  texture  tints a body material that has no texture. */
+const PAINT_SKIP = /glass|window|vidro|tire|tyre|pneu|wheel|rim|roda|light|lamp|farol|lanterna|chrome|cromo|interior|seat|banco|grill|plate|placa|mirror|brake|rubber|exhaust/i;
+function paletteOf(spec) {
+  if (spec._pal) return spec._pal;
+  const out = [{ name: 'Original', hex: hexCss(spec.color, '#888888'), tex: null }];
+  for (const e of (Array.isArray(spec.paint) ? spec.paint : [])) if (e && (e.texture || e.color != null)) out.push({ name: e.name || ('Cor ' + out.length), hex: hexCss(e.color, '#888888'), tex: e.texture || null, cap: e.capColor, rim: e.rimColor });
+  return (spec._pal = out);
+}
+const paintTex = new Map();
+function paintTexture(url, base, done) {   // loads an alternative body texture (cached); glTF textures are not flipped
+  let e = paintTex.get(url);
+  if (!e) {
+    e = { t: null, cbs: [], failed: false }; paintTex.set(url, e);
+    new THREE.TextureLoader().load(url, t => {
+      t.flipY = false; if (base) { t.wrapS = base.wrapS; t.wrapT = base.wrapT; t.encoding = base.encoding; t.minFilter = base.minFilter; t.magFilter = base.magFilter; } t.anisotropy = 4; texList.push(t); e.t = t; for (const f of e.cbs) f(t); e.cbs = [];
+    }, undefined, () => { e.failed = true; console.warn('Textura de pintura não carregou: ' + url); });
+  }
+  if (e.t) done(e.t); else if (!e.failed) e.cbs.push(done);
+}
+function paintTargets(src, spec) {   // uuids of the source materials that make up the car body
+  const names = spec.paintParts, area = new Map(), info = new Map();
+  src.traverse(o => {
+    if (!o.isMesh || !o.geometry) return; const g = o.geometry, pos = g.attributes.position, ix = g.index, mats = Array.isArray(o.material) ? o.material : [o.material]; if (!pos) return;
+    const tri = (i, j, k) => { const ax = pos.getX(j) - pos.getX(i), ay = pos.getY(j) - pos.getY(i), az = pos.getZ(j) - pos.getZ(i), bx = pos.getX(k) - pos.getX(i), by = pos.getY(k) - pos.getY(i), bz = pos.getZ(k) - pos.getZ(i); return 0.5 * Math.hypot(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx); };
+    const groups = g.groups && g.groups.length ? g.groups : [{ start: 0, count: ix ? ix.count : pos.count, materialIndex: 0 }];
+    for (const gr of groups) { const m = mats[gr.materialIndex] || mats[0]; if (!m) continue; info.set(m.uuid, m); let A = 0, e = Math.min(gr.start + gr.count, ix ? ix.count : pos.count); for (let t = gr.start; t + 2 < e; t += 3) A += ix ? tri(ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)) : tri(t, t + 1, t + 2); area.set(m.uuid, (area.get(m.uuid) || 0) + A); }
+  });
+  const out = new Set();
+  if (names && names.length) { const low = names.map(x => String(x).toLowerCase()); for (const [id, m] of info) if (low.some(x => (m.name || '').toLowerCase().includes(x))) out.add(id); }
+  if (!out.size) {   // the car's biggest texture: every material that uses it
+    let best = null, ba = -1; for (const [id, A] of area) { const m = info.get(id); if (!m.map || PAINT_SKIP.test(m.name || '')) continue; if (A > ba) { ba = A; best = m; } }
+    if (best) { for (const [id, m] of info) if (m.map === best.map) out.add(id); }
+    else { ba = -1; for (const [id, A] of area) { if (PAINT_SKIP.test(info.get(id).name || '')) continue; if (A > ba) { ba = A; best = info.get(id); } } if (best) out.add(best.uuid); }
+  }
+  return out;
+}
+function paintModel(m, spec) {   // applies m.paintIdx to the car model (simple model body and / or the .glb body material)
+  const pal = paletteOf(spec), idx = (m.paintIdx | 0) % pal.length, ent = pal[idx];
+  if (m.body && m.body.color) m.body.color.set(ent.hex || spec.color);
+  if (m.capMat) { const g = spec.glb || {}; m.capMat.map = capTexture(g.capShape, idx && ent.cap != null ? ent.cap : g.capColor, idx && ent.rim != null ? ent.rim : g.rimColor); m.capMat.needsUpdate = true; }   // the paint can override the hubcap colours
+  if (!m.glbRoot || !m.paintSel) return;
+  m.glbRoot.traverse(o => {
+    if (!o.isMesh) return;
+    for (const mt of (Array.isArray(o.material) ? o.material : [o.material])) {
+      const u = mt.userData; if (!u || !m.paintSel.has(u.srcId)) continue; const b = u.base;
+      mt.map = b.map; mt.color.copy(b.color); mt.needsUpdate = true;
+      if (idx === 0) continue;
+      if (ent.tex) paintTexture(ent.tex, b.map, t => { if ((m.paintIdx | 0) % pal.length === idx) { mt.map = t; mt.color.setHex(0xffffff); mt.needsUpdate = true; } });
+      else if (!b.map) mt.color.set(ent.hex);
+    }
+  });
 }
 function attachGlb(m, spec, src) {   // the .glb replaces the simple body; wheels / hubcaps / brake glow are laid over it
-  m.tilt.add(fitModel(src, spec, spec.length || 4.4)); m.base.visible = false;
+  const fit = fitModel(src, spec, spec.length || 4.4); m.tilt.add(fit); m.base.visible = false; m.glbRoot = fit;
+  fit.traverse(o => { if (!o.isMesh) return; const f = x => { const c = x.clone(); c.userData = { srcId: x.uuid, base: { color: x.color.clone(), map: x.map } }; return c; }; o.material = Array.isArray(o.material) ? o.material.map(f) : f(o.material); });   // own materials per instance, so each car can wear its own paint
+  m.paintSel = paintTargets(src, spec); paintModel(m, spec);
   const G = Object.assign({ wheels: true, caps: true, brake: true }, spec.glb || {});
   if (m.glbExtras) m.tilt.remove(m.glbExtras);
-  if (G.wheels || G.caps || G.brake) { const ex = buildGlbExtras(spec, G); m.glbExtras = ex.group; m.tilt.add(ex.group); if (G.wheels || G.caps) m.wheels = ex.wheels; m.brakeFx = ex.brake; }
+  if (G.wheels || G.caps || G.brake) { const ex = buildGlbExtras(spec, G); m.glbExtras = ex.group; m.capMat = ex.cap; m.tilt.add(ex.group); if (G.wheels || G.caps) m.wheels = ex.wheels; m.brakeFx = ex.brake; }
+  paintModel(m, spec);
 }
 const Assets = {
   cache: new Map(), n: 0, done: 0,
@@ -1799,6 +1940,18 @@ class Game {
     try { this.initGL(); this.ok = true; } catch (e) { console.error(e); const m = $('loaderr'); m.hidden = false; m.textContent = 'Não foi possível iniciar o 3D (' + (e && e.message || e) + '). O jogo precisa de WebGL e do Three.js carregado do cdnjs.'; $('bStart').disabled = true; }
     this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame);
   }
+  paintIdx(p, id) { if (!this._pt) { try { this._pt = JSON.parse(this.load('paints', '{}')) || {}; } catch (e) { this._pt = {}; } } const v = (this._pt[p] || {})[id]; return Number.isInteger(v) && v >= 0 ? v : 0; }
+  paintSet(p, id, i) { this.paintIdx(p, id); (this._pt[p] = this._pt[p] || {})[id] = i; this.save('paints', JSON.stringify(this._pt)); }
+  paintNext(dir) {   // garage: C = next colour, Shift+C = previous, for the car shown
+    if (this.state !== 'garage') return; const p = this.gp === 2 ? 2 : 1, id = p === 2 ? this.carId2 : this.carId, m = p === 2 ? this.carModel2 : this.carModel, spec = Config.cars[id]; if (!spec || !m) return;
+    const pal = paletteOf(spec); if (pal.length < 2) return; const i = (this.paintIdx(p, id) + dir + pal.length) % pal.length; this.paintSet(p, id, i); m.paintIdx = i; paintModel(m, spec); this.paintBtn();
+    const t = $('sndchip'); if (t) { t.textContent = 'COR · ' + pal[i].name.toUpperCase() + ' (' + (i + 1) + '/' + pal.length + ')'; t.hidden = false; clearTimeout(this._pcT); this._pcT = setTimeout(() => { t.hidden = true; }, 1400); }
+  }
+  paintBtn() {   // swap button + colour dot of the car shown (hidden when the car has no alternative paint)
+    const box = $('gPaintBox'); if (!box) return; const p = this.gp === 2 ? 2 : 1, id = p === 2 ? this.carId2 : this.carId, spec = Config.cars[id]; if (!spec) { box.hidden = true; return; }
+    const pal = paletteOf(spec), e = pal[this.paintIdx(p, id) % pal.length]; box.hidden = pal.length < 2;
+    $('gDot').style.background = e.hex; $('gPaint').title = 'Trocar cor (Espaço) · ' + e.name;
+  }
   load(k, d) { try { const v = localStorage.getItem('tufg.' + k); return v === null ? d : v; } catch (e) { return d; } }
   save(k, v) { try { localStorage.setItem('tufg.' + k, v); } catch (e) { /* storage unavailable */ } }
 
@@ -1833,14 +1986,14 @@ class Game {
   ensureModel(id) {   // one model per car, built on first use; .glb from vehicles.js replaces the simple model when it loads
     let m = this.models[id];
     if (!m) {
-      const spec = Config.cars[id]; m = this.models[id] = buildCar(spec);
+      const spec = Config.cars[id]; m = this.models[id] = buildCar(spec); m.paintIdx = this.paintIdx(1, id); paintModel(m, spec);
       if (spec.model) Assets.load(spec.model).then(src => { attachGlb(m, spec, src); setRetroFilter(this.retro); }).catch(e => this.warn(spec.model, e));
     }
     return m;
   }
   model2(id) {   // player 2 never shares a model object with player 1 (even with the same car)
     let m = this.models2[id];
-    if (!m) { const spec = Config.cars[id]; m = this.models2[id] = buildCar(spec);
+    if (!m) { const spec = Config.cars[id]; m = this.models2[id] = buildCar(spec); m.paintIdx = this.paintIdx(2, id); paintModel(m, spec);
       if (spec.model) Assets.load(spec.model).then(src => { attachGlb(m, spec, src); setRetroFilter(this.retro); }).catch(e => this.warn(spec.model, e)); }
     return m;
   }
@@ -1868,7 +2021,7 @@ class Game {
     return false;
   }
   hotkey(fn) {   // a menu hotkey letter: runs after a short pause, unless more letters follow (a code is being typed)
-    if (!this.menuLike()) { fn(); return; } if ((this._cb || '').length > 1) return; this._hk = setTimeout(fn, 320);
+    const run = () => { this._cb = ''; fn(); }; if (!this.menuLike()) { run(); return; } if ((this._cb || '').length > 1) return; this._hk = setTimeout(run, 320);
   }
   cheatMsg(title, sub) { const el = $('cheat'); el.textContent = title; if (sub) { const s2 = document.createElement('small'); s2.textContent = sub; el.appendChild(s2); } el.hidden = false; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; clearTimeout(this._cmt); this._cmt = setTimeout(() => { el.hidden = true; }, 3200); this.audio(); this.sfx.jingle(); }
   cheatCar(id) {
@@ -1928,7 +2081,7 @@ class Game {
     const cur = this.curSel(), lab = c => c === 'random' ? 'aleatório' : (Config.cars[c].name || c) + ' · ' + Config.cars[c].rating.letter;
     for (const b of $('gList').children) { const on = b.dataset.id === cur; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; }
     for (const b of $('gPl').children) b.setAttribute('aria-checked', +b.dataset.v === this.gp);
-    $('mCar').textContent = lab(this.sel); $('mCar2').textContent = 'J2 ' + lab(this.sel2); this.garageInfo();
+    $('mCar').textContent = lab(this.sel); $('mCar2').textContent = 'J2 ' + lab(this.sel2); this.garageInfo(); this.paintBtn();
   }
   garageInfo() {
     const id = this.curSel(), box = $('gInfo'), shop = this.gmode === 'shop', C = this.champ, pct = (v, a, b) => Math.round(clamp((v - a) / (b - a), 0.08, 1) * 100); box.textContent = '';
@@ -1963,10 +2116,10 @@ class Game {
     const C = this.champ, id = this.shopSel;
     if (!C.owned.includes(id)) {
       const p = this.price(id); if (C.cash < p) { this.sfx.beep(200, 0.18); return; }
-      C.cash -= p; C.owned.push(id); C.car = id; this.champSave(); this.buildGarage(); this.sfx.beep(880, 0.2); setTimeout(() => this.sfx.beep(1320, 0.3), 140); return;
+      C.cash -= p; C.owned.push(id); C.car = id; this.sel = id; this.save('car', id); this.champSave(); this.buildGarage(); this.sfx.beep(880, 0.2); setTimeout(() => this.sfx.beep(1320, 0.3), 140); return;
     }
     if (C.car === id) { this.closeGarage(); return; }
-    C.car = id; this.champSave(); this.buildGarage(); this.sfx.beep(990, 0.2);
+    C.car = id; this.sel = id; this.save('car', id); this.champSave(); this.buildGarage(); this.sfx.beep(990, 0.2);
   }
   openGarage() { this.gmode = 'pick'; this.gp = 1; this.$eyebrow(); this.buildGarage(); this._gt = 0; this.state = 'garage'; this.show('garage'); }
   openShop() {   // championship garage: only owned cars can be used, the others can be bought with prize money
@@ -2190,6 +2343,7 @@ class Game {
   buildMini() {
     const T = this.track; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
     for (let i = 0; i < T.N; i++) { x0 = Math.min(x0, T.cx[i]); x1 = Math.max(x1, T.cx[i]); z0 = Math.min(z0, T.cz[i]); z1 = Math.max(z1, T.cz[i]); }
+    if (T.fork) for (let i = T.fork.i0; i <= T.fork.i1; i++) { x0 = Math.min(x0, T.fork.bx[i]); x1 = Math.max(x1, T.fork.bx[i]); z0 = Math.min(z0, T.fork.bz[i]); z1 = Math.max(z1, T.fork.bz[i]); }
     const sc = 136 / Math.max(x1 - x0, z1 - z0); this.mm = { x0, x1, z0, sc, ox: 80 - (x1 - x0) * sc / 2, oz: 80 - (z1 - z0) * sc / 2 };
   }
   mmp(x, z) { const m = this.mm; return [m.ox + (m.x1 - x) * m.sc, 160 - (m.oz + (z - m.z0) * m.sc)]; }   // screen-up = +z, screen-right = -x (heading +z has +x on its left, so a left turn bends left on the map)
@@ -2198,6 +2352,13 @@ class Game {
     c.lineWidth = 4; c.lineJoin = 'round'; for (let pass = 0; pass < 2; pass++) {
       c.strokeStyle = pass ? '#ffb000' : '#5b616c'; c.beginPath(); const from = pass ? 0 : Math.floor(sim.s / T.step), to = pass ? Math.floor(clamp(sim.s, 0, T.finishS) / T.step) : fi;
       for (let i = from; i <= to; i += 2) { const [x, y] = this.mmp(T.cx[i], T.cz[i]); i === from ? c.moveTo(x, y) : c.lineTo(x, y); } c.stroke();
+    }
+    if (T.fork) {   // the branch road
+      const F = T.fork, onB = T.roadCentre(Math.max(0, sim.hint), sim.d) !== 0, cur = Math.min(F.i1, Math.max(F.i0, Math.floor(sim.s / T.step)));
+      for (let pass = 0; pass < 2; pass++) {
+        if (pass && !onB) break; c.strokeStyle = pass ? '#ffb000' : '#9aa3b2'; c.lineWidth = 3; c.beginPath(); const to = pass ? cur : F.i1;
+        let pen = false; for (let i = F.i0; i <= to; i += 2) { if (Math.abs(F.ob[i]) < 0.3) { pen = false; continue; } const [x, y] = this.mmp(T.cx[i] + (F.bx[i] - T.cx[i]) * 1.8, T.cz[i] + (F.bz[i] - T.cz[i]) * 1.8); pen ? c.lineTo(x, y) : c.moveTo(x, y); pen = true; } c.stroke();
+      }
     }
     let [fx, fy] = this.mmp(T.cx[fi], T.cz[fi]); c.fillStyle = '#eceff1'; c.fillRect(fx - 4, fy - 4, 8, 8);
     for (const t of this.traffic ? this.traffic.cars : []) { const [x, y] = this.mmp(t.x, t.z); c.fillStyle = '#7d8590'; c.fillRect(x - 2, y - 2, 4, 4); }
@@ -2209,14 +2370,14 @@ class Game {
 
   bindUI() {
     const on = (id, fn) => $(id).addEventListener('click', () => { this.audio(); fn(); });
-    on('bStart', () => this.go(1)); on('bTwo', () => this.go(2)); on('bGarage', () => this.openGarage()); on('bTracks', () => this.openTracks()); on('tGo', () => this.go(1)); on('tBack', () => this.closeTracks()); on('gGo', () => this.garageOk()); on('gPrev', () => this.garageMove(-1)); on('gNext', () => this.garageMove(1)); on('cGarage', () => this.openShop()); on('rGarage', () => this.openShop()); on('gBack', () => this.closeGarage());
+    on('gPaint', () => this.paintNext(1)); on('bStart', () => this.go(1)); on('bTwo', () => this.go(2)); on('bGarage', () => this.openGarage()); on('bTracks', () => this.openTracks()); on('tGo', () => this.go(1)); on('tBack', () => this.closeTracks()); on('gGo', () => this.garageOk()); on('gPrev', () => this.garageMove(-1)); on('gNext', () => this.garageMove(1)); on('cGarage', () => this.openShop()); on('rGarage', () => this.openShop()); on('gBack', () => this.closeGarage());
     on('pResume', () => this.resume()); on('pRestart', () => this.startRace(true)); on('pMenu', () => this.leave()); on('bChamp', () => this.openChamp()); on('cGo', () => this.startChamp()); on('cBack', () => this.closeChamp()); on('cReset', () => this.champResetAsk());
     on('rAgain', () => this.again()); on('rMenu', () => this.leave());
     for (const id of ['tRetro', 'tRetro2']) on(id, () => this.setRetro(!this.retro));
     for (const id of ['tRes', 'tRes2']) on(id, () => this.setHires(!this.hires));
     for (const id of ['tSound', 'tSound2']) on(id, () => this.setSound(!this.snd)); on('tGrid', () => this.setGrid(!this.gridLow));
     for (const b of $('gPl').children) b.addEventListener('click', () => { this.audio(); this.gp = +b.dataset.v; this.markSel(); const c = this.curSel(); this.gp === 2 ? this.useCar2(c === 'random' ? this.pickRandom2() : c) : this.useCar(c === 'random' ? this.pickRandom() : c); });
-    addEventListener('keydown', e => this.onKey(e)); addEventListener('pointerdown', () => document.body.classList.remove('kn'), true); this.bindTouch();
+    addEventListener('keydown', e => this.onKey(e)); addEventListener('keyup', e => { if (e.code === 'Space' && this.state === 'garage') e.preventDefault(); }); addEventListener('pointerdown', () => document.body.classList.remove('kn'), true); this.bindTouch();
     for (const ev of ['pointerdown', 'click', 'touchstart', 'touchend']) addEventListener(ev, () => this.audio(), { passive: true, capture: true });
     addEventListener('focus', () => { if (this.state !== 'paused') this.audio(); });
     addEventListener('beforeunload', e => { if (this.two && !this.menuLike() && this.state !== 'result') { e.preventDefault(); e.returnValue = ''; } });   // Ctrl+W (P2 handbrake + P1 throttle) must not close the tab silently
@@ -2234,6 +2395,7 @@ class Game {
       return;
     }
     if ((st === 'menu' || st === 'paused' || st === 'result') && c.startsWith('Arrow')) { document.body.classList.add('kn'); this.menuArrows(c, e); return; }
+    if (c === 'Space' && st === 'garage') { e.preventDefault(); if (!e.repeat) this.paintNext(e.shiftKey ? -1 : 1); return; }   // Space: next paint (Shift: previous) instead of pressing the focused button
     if (c === 'Space' || c.startsWith('Arrow') || (this.two && racing && (e.ctrlKey || c === 'ControlRight' || c === 'ShiftRight'))) { if (racing) e.preventDefault(); }
     if (e.repeat) { this.input.down(c); return; }
     this.input.down(c); this.audio();
@@ -2356,13 +2518,13 @@ class Game {
   }
   playerIdx(h = 0) { const n = this.gridN(); if (this.two) return h ? 1 : 0; let p = Config.grid.playerSlot; if (p === 'random') p = this._rslot || 0; else if (p == null) p = n - 4; return clamp(Math.floor(p), 0, n - 1); }
   clearBots() { this.bots = []; this.racers = this.two ? [this.sim, this.sim2] : [this.sim]; for (const m of this.botModels.values()) m.root.visible = false; }
-  botModel(k, id, color) {
+  botModel(k, id, color, paint) {
     if (!this.scene) return null; const key = k + ':' + id, spec = Config.cars[id]; let m = this.botModels.get(key);
     if (!m) {
       m = buildCar(spec); this.botModels.set(key, m); this.scene.add(m.root);
       if (spec.model) Assets.load(spec.model).then(src => { attachGlb(m, spec, src); setRetroFilter(this.retro); }).catch(e => this.warn(spec.model, e));
     }
-    if (!spec.model) m.body.color.setHex(color); m.root.visible = true; return m;
+    if (!spec.model) m.body.color.setHex(color); m.paintIdx = paint | 0; if (paint != null && (spec.model || paint)) paintModel(m, spec); m.root.visible = true; return m;
   }
   setupGrid(keep) {   // fills the grid with AI drivers; keep=true (restart with R) repeats the same field
     const G = Config.grid, n = this.gridN(), T = this.track, ids = this.raceIds(), me = this.carSpec, myK = this.playerIdx(0), myK2 = this.two ? this.playerIdx(1) : -1, hum = this.two ? 2 : 1, L = 'CBAS';
@@ -2376,13 +2538,18 @@ class Game {
       this.roster = { n, two: this.two, me: this.carId, list: [] };
       for (let i = 0; i < n - hum; i++) this.roster.list.push({ carId: pick(), skill: lerp(G.skill[0], G.skill[1], Math.random()), name: names[i % Math.max(1, names.length)] || 'Piloto ' + (i + 1), color: cols[i % Math.max(1, cols.length)], lane: (Math.random() * 2 - 1) * 3 });
     }
+    // paint: bots wearing the same model as another car on the grid (the players included) get a different colour
+    const used = new Map(), mark = (id, i) => { if (!used.has(id)) used.set(id, new Set()); used.get(id).add(i); };
+    mark(this.carId, this.paintIdx(1, this.carId)); if (this.two) mark(this.carId2, this.paintIdx(2, this.carId2));
+    const hash = str => { let h = 7; for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+    for (const r of this.roster.list) { const N = paletteOf(Config.cars[r.carId]).length, u = used.get(r.carId); let i = 0; if (u && u.size) { i = hash(r.rid || r.name) % N; for (let t = 0; t < N && u.has(i); t++) i = (i + 1) % N; } r.paint = i; mark(r.carId, i); }
     this.bots = []; let bi = 0;
     for (let k = 0; k < n; k++) {
       if (k === myK || k === myK2) continue; const r = this.roster.list[bi++], sl = this.slotOf(k), base = Config.cars[r.carId], o = T.at(sl.s), spec = Object.assign({}, base);
       for (const f of ['maxSpeed', 'accel', 'brake', 'maxLat', 'steerRate']) spec[f] = lerp(base[f], me[f], rv ? G.champBalance : G.balance);
       const sim = new CarSim(spec); sim.reset(o.x + o.lx * sl.lat, o.z + o.lz * sl.lat, o.h); sim.grip = this.atm.grip;
       const Lc = T.locate(sim.x, sim.z, -1, {}); sim.s = Lc.s; sim.d = Lc.d; sim.hint = Lc.i;
-      const d = new Driver(sim, T, { name: r.name, rid: r.rid, skill: r.skill, slot: k, lane: r.lane, lat: sl.lat, carId: r.carId, color: r.color }); d.model = this.botModel(k, r.carId, r.color); this.bots.push(d);
+      const d = new Driver(sim, T, { name: r.name, rid: r.rid, skill: r.skill, slot: k, lane: r.lane, lat: sl.lat, carId: r.carId, color: r.color }); d.model = this.botModel(k, r.carId, r.color, r.paint); this.bots.push(d);
     }
     this.racers = [this.sim, ...(this.two ? [this.sim2] : []), ...this.bots.map(b => b.sim)];
     this.botEv = this.botEv || { hit: (imp, x, z, nx, nz) => { if (this.fx && Math.hypot(x - this.sim.x, z - this.sim.z) < 45) this.fx.spark(x, z, nx, nz, imp, Math.min(14, 4 + imp)); } };
@@ -2415,8 +2582,8 @@ class Game {
   resume() { this.state = this.prevState || 'race'; this.show(null); this.sfx.suspend(false); this.input.keys.clear(); }
   toMenu() { this.mode = 'quick'; this.resetRace(); this.state = 'menu'; this.show('menu'); this.silence(); this.sfx.suspend(false); }
   recover(n = 0) {
-    const hm = this.H[n], s = hm.sim, T = this.track, L = T.locate(s.x, s.z, -1, {}), o = T.at(Math.max(this.slotS, L.s));
-    s.reset(o.x, o.z, o.h); s.hint = -1; s.grip = this.atm.grip; if (hm.cam) { hm.cam.yaw = o.h; }
+    const hm = this.H[n], s = hm.sim, T = this.track, L = T.locate(s.x, s.z, -1, {}), o = T.at(Math.max(this.slotS, L.s)), rc = T.roadCentre(L.i, L.d);   // back onto the road it was on (main or branch)
+    s.reset(o.x + o.lx * rc, o.z + o.lz * rc, o.h); s.hint = -1; s.grip = this.atm.grip; if (hm.cam) { hm.cam.yaw = o.h; }
   }
   finishHum(n) {
     const hm = this.H[n]; hm.done = true; hm.final = this.raceTime; hm.finClock = this.clock; hm.sfx.beep(880, 0.5);
@@ -2481,7 +2648,7 @@ class Game {
     for (const hm of hs) {
       const sim = hm.sim; let inp;
       if (race && !hm.done) inp = this.input.get(two ? hm.n + 1 : undefined);
-      else inp = { throttle: 0, brake: sim.vf > 0.3 ? 1 : 0, steer: clamp(angDiff(sim.h, T.th[Math.max(0, sim.hint)]) * 1.5 - sim.d * 0.05, -1, 1), handbrake: 0 };
+      else inp = { throttle: 0, brake: sim.vf > 0.3 ? 1 : 0, steer: clamp(angDiff(sim.h, T.th[Math.max(0, sim.hint)]) * 1.5 - (sim.d - T.roadCentre(sim.hint, sim.d)) * 0.05, -1, 1), handbrake: 0 };
       sim.step(dt, inp, T, this.traffic, this.events(hm.n));
     }
     this.clock += dt; this.botsStep(dt);
@@ -2532,6 +2699,7 @@ class Game {
       [-0.93, 0.93].forEach((lx, wi) => this.fx.skidAt(w0 + wi, q.x - sh * 1.3 + ch * lx, q.z - ch * 1.3 - sh * lx, sk && q.surface === 'road'));
     });
     this.fx.update(dt);
+    if (this.state === 'garage') { const pk = this.gp + ':' + this.carId + ':' + this.carId2 + ':' + this.paintIdx(1, this.carId) + ':' + this.paintIdx(2, this.carId2); if (pk !== this._pk) { this._pk = pk; this.paintBtn(); } }
     if (this.state === 'garage' && this.gmode !== 'shop' && this.curSel() === 'random') { this._gt = (this._gt || 0) + dt; if (this._gt > 2.6) { this._gt = 0; this.gdir = 1; if (this.gp === 2) this.useCar2(this.pickRandom2()); else this.useCar(this.pickRandom()); return; } }   // random slot: preview cycles through the cars
     if (this.menuLike()) this.cam.attract(H[gv].sim, dt, this.state === 'garage'); else { this.cam.back = !!this.input.back(this.two ? 1 : undefined); this.cam2.back = !!this.input.back(2); this.cam.update(dt, sim); if (split) this.cam2.update(dt, sim2); }
     this.world.update(dt);
@@ -2618,6 +2786,6 @@ class Game {
   }
 }
 
-window.TUFG = { game: new Game(), drawCap, CAP_SHAPES, Config, Track, CarSim, Driver, Assets, World, PROPS, Sfx };
+window.TUFG = { game: new Game(), drawCap, CAP_SHAPES, attachGlb, paintModel, Config, Track, CarSim, Driver, Assets, World, PROPS, Sfx };
 })();
 </script>

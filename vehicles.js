@@ -91,10 +91,23 @@
                       Aparência da calota (só quando  caps  está ligado):
                         capColor  cor de fundo da calota em hexadecimal, ex.: '#c9ccd2' (padrão cinza prata)
                         rimColor  cor do aro / desenho em hexadecimal, ex.: '#14161a' (padrão grafite)
-                        capShape  formato do desenho do aro. 8 tipos:  'star5' (estrela de 5 raios, padrão)  'spoke10' (raios finos, 10)
+                        capShape  formato do desenho do aro. 9 tipos:  'star5' (estrela de 5 raios, padrão)  'spoke10' (raios finos, 10)
                                   'turbine' (pás curvas)  'mesh' (grade em cruz)  'disc' (disco liso com furo)  'dish' (prato com aro grosso)
                                   'twin5' (5 raios duplos)  'hex6' (6 parafusos / hexagonal)  'ninja3' (estrela ninja, 3 pontas grossas)
                     Exemplo: glb: { capShape: 'turbine', capColor: '#e8e8ea', rimColor: '#c1121f', wheelRF: 0.40, wheelRR: 0.46, wheelWF: 0.24, wheelWR: 0.30 }
+
+   PINTURA ALTERNATIVA (texturas)
+     paint        (opcional, só carros com .glb) lista de pinturas extras, cada uma com uma textura alternativa que você mesmo mapeia:
+                    paint: [ { name: 'Azul', color: '#1d4ed8', texture: 'assets/cars/fun/monster/mature_azul.png' }, ... ]
+                      name     nome mostrado ao trocar de cor
+                      color    cor hexadecimal do quadrado no botão de troca (a pintura "Original" usa o campo  color  do carro)
+                      texture  caminho (relativo ao index.html) da textura que SUBSTITUI a textura base do .glb. Use o mesmo mapeamento UV da original
+                               (copie a textura embutida do .glb e pinte por cima). .png ou .jpg. Se faltar o arquivo, o carro continua com a pintura original.
+                               Sem  texture , a pintura só tinge a carroceria quando ela não tem textura (cor lisa).
+     paintParts   (opcional) trechos do NOME do material do .glb que recebem a textura alternativa. Sem isso o jogo usa todos os materiais que compartilham a
+                  maior textura do modelo (sem vidro, pneu, roda, farol etc.). Só use se a pintura trocar a peça errada.
+     Na Garagem: barra de espaço (Shift+Espaço volta) ou o botão com ícone de troca e um quadrado preenchido com a cor, antes do seletor de jogador. A escolha fica salva por jogador e por carro.
+     Bots que sorteiam o mesmo modelo de outro carro do grid (o seu incluído) usam pinturas diferentes. Carro sem  paint  fica só com a original e o botão some.
 
    CÓDIGOS SECRETOS (cheat codes)
      class: 'X'   carro SECRETO. Não aparece na garagem, no sorteio, nos rivais nem no tráfego até ser liberado.
@@ -133,6 +146,8 @@ window.TUFG_VEHICLES = {
     mature: {
       name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 4.4, width: 2.2,
       color: 0x112950, trim: 0x262725,
+      // Exemplo de pinturas alternativas (descomente e aponte para as suas texturas):
+      // paint: [ { name: 'Vermelho', color: '#d62828', texture: 'assets/cars/fun/monster/cars_monster_mature_red.png' }, { name: 'Branco', color: '#f2f2f2', texture: 'assets/cars/fun/monster/cars_monster_mature_white.png' } ],
       // Exemplo de ajuste das peças sobre o .glb (tudo opcional; sem o campo glb valem os padrões). Valores em metros a partir do centro do carro:
       // glb: { wheels: true, caps: true, brake: { x: 0.8, y: 0.8, z: -2.25, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.26, wheelFront: 1.4, wheelRear: -1.3, wheelR: 0.36, wheelW: 0.26, capOut: 0.03, capSize: 0.72 },
       glb: { 
@@ -180,6 +195,10 @@ window.TUFG_VEHICLES = {
     },
     daemon: {
       name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 4.5, width: 2.2,
+      paint: [ 
+        { name: 'Cinza', color: '#7B7B7B', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_gray.jpg' },
+        { name: 'Preto', color: '#222222', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_black.jpg' } 
+      ],
       color: 0x5E2762, trim: 0xA8915C,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.22, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.235, wheelRear: -1.36, wheelR: 0.38, wheelW: 0.26, 
@@ -259,39 +278,70 @@ window.TUFG_VEHICLES = {
     },
     
     // Class C
-     blonde: {
-        name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.1, width: 2.2,
-        color: 0x717070, trim: 0x000000,
-        glb: { 
-          wheels: true, caps: true, brake: { x: 0.65, y: 0.87, z: -2.15, w: 0.65, h: 0.42 }, limitX: 1.3, wheelIn: 0.3015, wheelFront: 1.17, wheelRear: -1.08, wheelR: 0.37, wheelW: 0.26, 
-          capOut: 0.001, capSize: 0.65, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xAFB3B2
-        },
-        sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
-        maxSpeed: 40, accel: 10, brake: 42, reverseAccel: 10, maxLat: 30, steerRate: 1.5,
-        class: 'C'
-     },
-     lunar: {
-        name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.4, width: 2.2,
-        color: 0x5A8C1C, trim: 0xFFFFFF,
-        glb: { 
-          wheels: true, caps: true, brake: { x: 0.5, y: 0.98, z: -2.2, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.4012, wheelFront: 1.25, wheelRear: -1.25, wheelR: 0.35, wheelW: 0.26, 
-          capOut: 0.001, capSize: 0.82, capColor: 0x000000
-        },
-        sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
-        maxSpeed: 48, accel: 8, brake: 48, reverseAccel: 8, maxLat: 32, steerRate: 1.8,
-        class: 'C'
-     },
-     redhead: {
+    blonde: {
+      name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.1, width: 2.2,
+      paint: [ 
+        { name: 'Dourado', color: 0xE99811, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_golden.jpg' },
+        { name: 'Ciano', color: 0x00E4EB, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_cyan.jpg' },
+        { name: 'Preto', color: 0x1A1817, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_black.jpg' }
+      ],
+      color: 0xCAC7C1, trim: 0x000000,
+      glb: { 
+        wheels: true, caps: true, brake: { x: 0.65, y: 0.87, z: -2.15, w: 0.65, h: 0.42 }, limitX: 1.3, wheelIn: 0.3015, wheelFront: 1.17, wheelRear: -1.08, wheelR: 0.37, wheelW: 0.26, 
+        capOut: 0.001, capSize: 0.65, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xAFB3B2
+      },
+      sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
+      maxSpeed: 40, accel: 10, brake: 42, reverseAccel: 10, maxLat: 30, steerRate: 1.5,
+      class: 'C'
+    },
+    lunar: {
+      name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.4, width: 2.2,
+      paint: [ 
+        { name: 'Vermelho', color: 0xCB0201, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_red.jpg' }, 
+        { name: 'Branco', color: 0xEFF5FB, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_white.jpg' },
+        { name: 'Preto', color: 0x0D1011, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_black.jpg' }
+      ],
+      color: 0x91DB30, trim: 0xFFFFFF,
+      glb: { 
+        wheels: true, caps: true, brake: { x: 0.5, y: 0.98, z: -2.2, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.4012, wheelFront: 1.25, wheelRear: -1.25, wheelR: 0.35, wheelW: 0.26, 
+        capOut: 0.001, capSize: 0.82, capColor: 0x000000
+      },
+      sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
+      maxSpeed: 48, accel: 8, brake: 48, reverseAccel: 8, maxLat: 32, steerRate: 1.8,
+      class: 'C'
+    },
+    redhead: {
       name: 'Warmblood Redhead', model: 'assets/cars/fun/warmblood/cars_warmblood_redhead.glb', modelRot: 90, length: 4.5, width: 2.2,
+      paint: [ 
+        { name: 'Amarelo', color: 0xFFC401, texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_yellow.jpg' }, 
+        { name: 'Azul', color: 0x61A0FC, rimColor: '#776044', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_blue.jpg' }, 
+        { name: 'Prata', color: 0xB3BABD, rimColor: '#B3BABD', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_silver.jpg' } 
+      ],
       color: 0xE10A0A, trim: 0x000000,
       glb: { 
         wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.215, wheelRear: -1.32, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.379,
-        capOut: 0.001, capSize: 0.82, capColor: 0x000000, rimColor: 0x674022
+        capOut: 0.001, capSize: 0.6, capColor: 0x000000, rimColor: 0x674022
       },
       sound: { synth: 'rotary', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
-      maxSpeed: 54, accel: 10, brake: 48, reverseAccel: 8, maxLat: 22, steerRate: 2.2,
+      maxSpeed: 54, accel: 10, brake: 32, reverseAccel: 8, maxLat: 20, steerRate: 2.2,
       class: 'C'
-   },
+    },
+    soul: {
+      name: 'Magnolia Soul', model: 'assets/cars/fun/magnolia/cars_magnolia_soul.glb', modelRot: 90, length: 4.5, width: 2.2,
+      paint: [ 
+        { name: 'Verde', color: 0x3C571D, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_green.jpg' }, 
+        { name: 'Amarelo', color: 0x9F620C, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_yellow.jpg' },
+        { name: 'Azul', color: 0x0A1129, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_blue.jpg' }
+      ],
+      color: 0xFFEFBC, trim: 0x000000,
+      glb: { 
+        wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.23, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
+        capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0x6A3A20
+      },
+      sound: { synth: 'v6', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
+      maxSpeed: 48, accel: 10, brake: 36, reverseAccel: 8, maxLat: 22, steerRate: 1.8,
+      class: 'C'
+    },
 
 /*
     vento: {
