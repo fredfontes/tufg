@@ -73,6 +73,13 @@
      parts        peças do modelo simples: { size:[largura,altura,comprimento], pos:[x,y,z],
                   color:'body' | hex, basic:true (sem sombreamento, para luzes) }
      wheelR       raio das rodas do modelo simples (padrão 0.34)
+     like         (opcional) copia o visual de um carro de  cars  (modelo .glb, rotação, escala, deslocamento, comprimento e largura), por exemplo like: 'quadrado'.
+                  Serve inclusive para carros secretos: o jogador vê o carro andando no tráfego sem poder escolhê-lo. O que você escrever na própria entrada vence o que vem do  like .
+                  No tráfego o .glb aparece sem as rodas giratórias, calotas e luz de freio dos carros jogáveis.
+     variants     (opcional) transforma a entrada numa CATEGORIA com variantes: variants: [ { like: 'quadrado' }, { model: 'caminho.glb', length: 4.0 }, { color: [...], parts: [...] } ]
+                  Cada carro do tráfego dessa categoria sorteia uma variante. As variantes herdam os campos da categoria (speed, color, parts, wheelR...) e podem trocar qualquer um deles.
+                  O  weight  da categoria é dividido entre as variantes; uma variante pode ter  weight  próprio, como peso relativo dentro da categoria (padrão 1).
+                  Em trafficPool (tracks.js) vale o nome da categoria (ex.: 'hatch').
      glb          (opcional, só carros jogáveis com model .glb) peças desenhadas pelo jogo POR CIMA do .glb, já que as rodas do .glb não giram nem esterçam:
                     glb: { wheels: true, caps: true, brake: true }     (tudo ligado por padrão; use false para desligar só uma parte)
                       wheels   rodas simples (pneu) sobre o .glb; as dianteiras esterçam e todas giram
@@ -114,7 +121,7 @@
      code         palavra que o jogador digita nos menus para liberar o carro (só letras, sem espaço), ex.: code: 'fantasma'.
                   Também libera pelo endereço:  index.html#fantasma  (o id do carro). Depois de liberado, fica salvo no navegador.
      O mesmo campo  code  funciona em pistas secretas (tracks.js, pista fora de  order ). Tempo secreto: digite  neve  (ou use  #neve ) para ligar/desligar a neve.
-   Quais tipos aparecem em cada pista: campo  trafficPool  da pista (null = todos).
+   Quais tipos aparecem em cada pista: campo  trafficPool  da pista (null = todos; aceita ids e nomes de categoria).
    ===================================================================== */
 window.TUFG_VEHICLES = {
   // Regra de classe: índice = média ponderada de velocidade e aceleração, cada uma normalizada dentro do seu intervalo (0 a 100).
@@ -159,11 +166,11 @@ window.TUFG_VEHICLES = {
       class: 'S'
     },
     cat: {
-      name: 'Gemini Cat', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.1, width: 2.2,
+      name: 'Gemini Cat', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.5, width: 2.2,
       color: 0xE75912, trim: 0x836D41,
       glb: { 
-        wheels: true, caps: true, brake: { x: 0.55, y: 0.85, z: -2.15, w: 0.95, h: 0.5 }, limitX: 1.3, wheelIn: 0.36, wheelFront: 1.16, wheelRear: -1.175, wheelR: 0.415, wheelW: 0.26, wheelRR: 0.445,
-        capOut: 0.001, capSize: 0.7, capShape: 'mesh', capColor: 0x000000, rimColor: 0x846D41,
+        wheels: true, caps: true, brake: { x: 0.55, y: 0.85, z: -2.15, w: 0.95, h: 0.5 }, limitX: 1.3, wheelIn: 0.298, wheelFront: 1.285, wheelRear: -1.288, wheelR: 0.35, wheelW: 0.26, wheelRR: 0.355,
+        capOut: 0.001, capSize: 0.7, capShape: 'mesh', capColor: 0x000000, rimColor: 0xA7AEA3,
       },
       sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
       maxSpeed: 83, accel: 15, brake: 48, reverseAccel: 7, maxLat: 20, steerRate: 2.4,
@@ -369,11 +376,28 @@ window.TUFG_VEHICLES = {
 */
 
     // Classe X: carro secreto (libere digitando o code nos menus ou abrindo index.html#fantasma)
-    fantasma: {
-      name: 'Fantasma X', model: null, modelRot: 0, length: 4.5, width: 1.95, color: 0xb04dff, trim: 0x14161a, wing: true,
-      code: 'fantasma',
+    quadrado: {
+      name: 'Popular Quadrado', model: 'assets/cars/fun/popular/cars_popular_quadrado.glb', modelRot: 90, length: 4.5, width: 1.95, 
+      color: 0x222222, trim: 0xFEE204, wing: true,
+      code: 'quadrado',
+      glb: { 
+        wheels: true, caps: true, brake: { x: 0.7, y: 0.7, z: -2.2, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.32, wheelRear: -1.345, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.36, 
+        capOut: 0.001, capSize: 0.75, capShape: 'hex6', capColor: 0x000000, rimColor: 0xFEE204
+      },
       maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
-      sound: { synth: 'v8' },
+      sound: { synth: 'v6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
+      class: 'X'
+    },
+    firma: {
+      name: 'Willforce Firma', model: 'assets/cars/fun/willforce/cars_willforce_firma.glb', modelRot: 90, length: 4.2, width: 1.95, 
+      color: 0xFFFFFF, trim: 0x222222, wing: true,
+      code: 'firma',
+      glb: { 
+        wheels: true, caps: true, brake: { x: 0.7, y: 0.8, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.16, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
+        capOut: 0.001, capSize: 0.6, capShape: 'hex6', capColor: 0x000000, rimColor: 0xC7CBD3
+      },
+      maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
+      sound: { synth: 'flat6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
       class: 'X'
     },
 
@@ -387,12 +411,15 @@ window.TUFG_VEHICLES = {
 
   traffic: {
     sedan: {
-      name: 'Sedã', model: null, modelRot: 0, length: 4.3, width: 1.9, weight: 3, speed: [20, 29],
+      name: 'Sedã', model: null, modelRot: 0, length: 4.3, width: 1.9, weight: 3, speed: [20, 30],
       color: [0x2f6fb5, 0xe8e2d0, 0x3f8a52, 0xc9a227, 0x7a4aa8, 0x444851, 0xd0762c],
       parts: [
         { size: [1.9, .75, 4.3], pos: [0, .6, 0], color: 'body' },
         { size: [1.6, .6, 2.1], pos: [0, 1.25, -.2], color: 0x1b2733 },
         { size: [1.5, .12, .05], pos: [0, .75, -2.16], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Crossing Company',  model: 'assets/cars/fun/crossing/cars_crossing_company.glb', modelRot: 90 },
       ]
     },
     van: {
@@ -402,6 +429,53 @@ window.TUFG_VEHICLES = {
         { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
         { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
         { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Goat Van',  model: 'assets/cars/fun/goat/cars_goat_van.glb',  modelRot: 90 },
+        { name: 'Popular Family', model: 'assets/cars/fun/popular/cars_popular_family.glb', modelRot: 90 },
+        // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
+      ]
+    },
+    pickup: {
+      name: 'Pickup', model: null, modelRot: 0, length: 5.2, width: 2.0, weight: 1, speed: [18, 28],
+      color: [0xe8e2d0, 0xb8bcc4, 0x2f6fb5],
+      parts: [
+        { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
+        { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
+        { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Crossing Brabo',  model: 'assets/cars/fun/crossing/cars_crossing_brabo.glb',  modelRot: 90 },
+        { name: 'Crossing Thousand', model: 'assets/cars/fun/crossing/cars_crossing_thousand.glb', modelRot: 90 },
+        // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
+      ]
+    },
+    // Categoria com variantes: cada carro sorteia uma. Variante 1 = visual do carro secreto 'quadrado'. Para mais modelos, acrescente variantes (model: '....glb').
+    hatch: {
+      name: 'Hatch', weight: 3, speed: [22, 31], length: 3.9, width: 1.8,
+      color: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0xe9c32a, 0x2e8b57, 0x7a4aa8],
+      parts: [  // modelo simples (reserva enquanto o .glb carrega, ou se não houver .glb)
+        { size: [1.8, .7, 3.9], pos: [0, .58, 0], color: 'body' },
+        { size: [1.55, .62, 2.3], pos: [0, 1.22, -.3], color: 0x1b2733 },
+        { size: [1.4, .12, .05], pos: [0, .75, -1.96], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Popular Quadrado', like: 'quadrado' },
+        { name: 'Popular Club', model: 'assets/cars/fun/popular/cars_popular_club.glb', modelRot: 90, length: 4.0, width: 1.8 },
+        //{ name: 'Hatch Compacto' }  // sem .glb: usa o modelo simples acima. Troque por  model: 'assets/....glb'
+      ]
+    },
+    povao: {
+      name: 'Povão', weight: 3, speed: [19, 26], length: 4.2, width: 1.85,
+      color: [0xe8e2d0, 0xb8bcc4, 0x7a7d82, 0x9a2b2b, 0x3a6ea5],
+      parts: [
+        { size: [1.85, .8, 4.2], pos: [0, .62, 0], color: 'body' },
+        { size: [1.6, .68, 2.5], pos: [0, 1.3, -.1], color: 0x1b2733 },
+        { size: [1.5, .12, .05], pos: [0, .78, -2.11], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Povão Firma', like: 'firma' },
+        //{ name: 'Povão Sedã' }                      // sem .glb: usa o modelo simples acima
       ]
     },
     truck: {
@@ -412,6 +486,13 @@ window.TUFG_VEHICLES = {
         { size: [2.3, 1.7, 2.4], pos: [0, 1.35, 2.8], color: 'body' },
         { size: [2.0, .6, .1], pos: [0, 1.9, 4.0], color: 0x1b2733 },
         { size: [1.8, .16, .05], pos: [0, .8, -4.02], color: 0xcc2010, basic: true }
+      ],
+      variants: [
+        { name: 'Truck Bignose', model: 'assets/cars/fun/truck/cars_truck_bignose.glb', modelRot: 90, length: 10.0, width: 4.0 },
+        { name: 'Truck Fridge', model: 'assets/cars/fun/truck/cars_truck_fridge.glb', modelRot: 90, length: 6.0, width: 3.0 },
+        { name: 'Truck Dump', model: 'assets/cars/fun/truck/cars_truck_dump.glb', modelRot: 90, length: 7.0, width: 3.0 },
+        { name: 'Bus School', model: 'assets/cars/fun/truck/cars_truck_schoolbus.glb', modelRot: 90, width: 3.0 },
+        { name: 'Bus Travel', model: 'assets/cars/fun/truck/cars_truck_travelbus.glb', modelRot: 90, length: 9.0, width: 3.0 },
       ]
     }
   }
