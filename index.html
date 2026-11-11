@@ -342,6 +342,24 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 @keyframes pfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes pfloat{50%{transform:translateY(-4px) rotate(1.5deg)}}
 @media (prefers-reduced-motion:reduce){.ptrophy svg,#pOrigami svg{animation:none}}
+
+/* ---- tela de carregamento: chama da logo preenchendo um relevo na chapa xadrez ---- */
+#loadscr{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background-color:#0b0c0e;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='%2327292e' stroke='%23454950' stroke-width='1'%3E%3Cellipse cx='11' cy='11' rx='9' ry='3' transform='rotate(45 11 11)'/%3E%3Cellipse cx='33' cy='33' rx='9' ry='3' transform='rotate(45 33 33)'/%3E%3C/g%3E%3Cg fill='%2327292e' stroke='%23454950' stroke-width='1'%3E%3Cellipse cx='33' cy='11' rx='9' ry='3' transform='rotate(-45 33 11)'/%3E%3Cellipse cx='11' cy='33' rx='9' ry='3' transform='rotate(-45 11 33)'/%3E%3C/g%3E%3C/svg%3E");
+  transition:opacity .35s ease}
+#loadscr::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 20%,rgba(0,0,0,.78) 100%);pointer-events:none}
+#loadscr.out{opacity:0;pointer-events:none}
+#loadscr[hidden]{display:none}
+#loadscr svg{position:relative;width:clamp(150px,34vmin,300px);height:auto;margin-bottom:6vh;overflow:visible}
+#lvWave1{animation:lvw 1.7s linear infinite}#lvWave2{animation:lvw 2.6s linear infinite reverse}
+#lvSlosh{transform-origin:96px 96px;animation:lvs 2.8s ease-in-out infinite}
+@keyframes lvw{to{transform:translateX(-96px)}}
+@keyframes lvs{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
+#lvInfo{position:absolute;left:32px;right:32px;bottom:60px;display:flex;justify-content:space-between;gap:16px;font:600 12px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+#lvInfo b{color:var(--hazard);font-weight:600}
+#lvBar{position:absolute;left:32px;right:32px;bottom:32px;height:16px;border:2px solid #3a3e46;background:#08090a;box-shadow:inset 0 2px 5px #000,0 1px 0 #50545c}
+#lvBar i{display:block;height:100%;width:0;background:linear-gradient(#ffcb45,var(--hazard) 55%,#d98f00);box-shadow:0 0 14px rgba(255,176,0,.55)}
+@media (prefers-reduced-motion:reduce){#lvWave1,#lvWave2,#lvSlosh{animation:none}}
 </style>
 </head>
 <body>
@@ -384,6 +402,26 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
   <div id="divider"></div>
   <div id="sndchip" hidden></div>
 <div id="cheat" hidden></div>
+<div id="loadscr">
+  <svg viewBox="0 0 192 192" aria-hidden="true">
+    <defs>
+      <path id="lvFl" d="M45.9155 74.7728L46.1656 74.9823C41.974 77.9385 38.0381 81.6966 34.7788 85.7693L32.8506 88.1015C16.9862 109.163 17.4352 138.089 31.8919 159.683C45.0866 179.044 67.6947 188.905 90.2702 191.517C111.64 194.127 133.831 186.004 149.114 171.006C153.716 166.378 158.061 160.947 161.02 155.027C164.131 150.327 165.929 145.451 167.619 140.4C174.362 118.419 171.069 92.4855 157.283 74.3083C160.97 93.098 153.965 113.684 138.865 125.477L136.857 126.903C134.457 128.084 131.904 128.045 129.868 126.509C127.941 125.147 126.747 122.636 127.362 120.128L129.108 117.307C149.541 88.0629 148.275 47.7043 126.916 19.8276C121.1 12.1869 113.442 4.68281 104.64 0C109.662 21.3358 100.456 45.3691 81.3073 56.4584C73.163 61.3953 64.2857 63.787 55.9595 68.2357L45.9155 74.7728ZM62.4829 147.425L62.6592 147.321C57.5938 140.309 56.3278 130.096 58.661 121.805L60.1803 117.451C66.4383 104.217 79.9331 102.668 90.3868 94.4586C93.5548 91.9889 96.6433 88.6129 99.1632 85.0967C100.583 92.8356 99.2626 99.4552 96.1391 106.665C92.7711 114.257 87.8282 120.279 87.5193 128.921C87.5742 138.54 92.6047 149.386 104.54 155.433C95.7585 160.508 82.9119 163.103 72.3531 156.361C68.896 154.474 64.8536 150.67 62.4829 147.425Z"/>
+      <clipPath id="lvClip"><use href="#lvFl"/></clipPath>
+      <linearGradient id="lvGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd45a"/><stop offset=".5" stop-color="#ffb000"/><stop offset="1" stop-color="#e07c00"/></linearGradient>
+    </defs>
+    <use href="#lvFl" transform="translate(0 3)" fill="#8a9099" opacity=".55"/>
+    <use href="#lvFl" fill="#050506"/>
+    <g clip-path="url(#lvClip)">
+      <g id="lvSlosh"><g id="lvLevel" transform="translate(0 200)">
+        <g id="lvWave2" opacity=".55"><path d="M-96 4Q-72 -6 -48 4T0 4T48 4T96 4T144 4T192 4T240 4T288 4V300H-96Z" fill="#ff8a00"/></g>
+        <g id="lvWave1"><path d="M-96 6Q-72 -4 -48 6T0 6T48 6T96 6T144 6T192 6T240 6T288 6V300H-96Z" fill="url(#lvGrad)"/></g>
+      </g></g>
+      <use href="#lvFl" fill="none" stroke="#000" stroke-width="7" opacity=".85"/>
+    </g>
+  </svg>
+  <div id="lvInfo"><span id="lvTxt">Carregando</span><b id="lvPct">0%</b></div>
+  <div id="lvBar"><i id="lvFill"></i></div>
+</div>
 <div id="mload" hidden><i></i><span>MODELOS 3D</span></div>
   <div id="banner"></div>
   <div id="podium" hidden><canvas id="fw"></canvas>
@@ -430,7 +468,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.52</summary>
+        <summary>Estado do projeto · v0.53</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1704,15 +1742,26 @@ function attachGlb(m, spec, src) {   // the .glb replaces the simple body; wheel
   paintModel(m, spec);
 }
 const Assets = {
-  cache: new Map(), n: 0, done: 0,
+  cache: new Map(), st: new Map(), n: 0, done: 0,
   note() {   // micro-loading chip: shown while .glb models are still downloading (the simple model is used in the meantime)
     const el = document.getElementById('mload'); if (!el) return; const busy = this.done < this.n; el.hidden = !busy; if (busy) el.lastChild.textContent = 'MODELOS 3D ' + this.done + '/' + this.n; else { this.n = this.done = 0; }
   },
-  load(url) {   // fetch + GLTFLoader.parse (avoids XHR); cached per url
-    if (!this.cache.has(url)) { this.n++; this.note(); const fin = () => { this.done++; this.note(); }; this.cache.set(url, (async () => {
+  isDone(url) { const s = this.st.get(url); return !!(s && s.done); },
+  fraction(urls) {   // 0..1 over a list of urls, by downloaded bytes (a file counts fully only after it was parsed)
+    if (!urls.length) return 1; let sum = 0;
+    for (const u of urls) { const s = this.st.get(u); sum += !s ? 0 : s.done ? 1 : s.t ? Math.min(0.9, s.l / s.t * 0.9) : 0.1; }
+    return sum / urls.length;
+  },
+  load(url) {   // fetch (streamed, to count bytes) + GLTFLoader.parse; cached per url
+    if (!this.cache.has(url)) { this.n++; this.note(); const s = { l: 0, t: 0, done: false }; this.st.set(url, s); const fin = () => { this.done++; s.done = true; this.note(); }; this.cache.set(url, (async () => {
       if (!THREE.GLTFLoader) throw new Error('GLTFLoader não carregou');
       const res = await fetch(url); if (!res.ok) throw new Error('HTTP ' + res.status);
-      const buf = await res.arrayBuffer();
+      s.t = +res.headers.get('content-length') || 0; let buf;
+      if (res.body && res.body.getReader) {
+        const rd = res.body.getReader(), parts = []; let n = 0;
+        for (;;) { const r = await rd.read(); if (r.done) break; parts.push(r.value); n += r.value.length; s.l = n; }
+        const all = new Uint8Array(n); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; } buf = all.buffer;
+      } else buf = await res.arrayBuffer();
       const gltf = await new Promise((ok, no) => new THREE.GLTFLoader().parse(buf, url.replace(/[^/]*$/, ''), ok, no));
       convertMaterials(gltf.scene); return gltf.scene;
     })().then(v => { fin(); return v; }, e => { fin(); throw e; })); }
@@ -2007,7 +2056,7 @@ class Game {
     this.buildHudBits(); this.buildMini(); this.bindUI(); this.refreshToggles(); this.buildGarage(); this.buildTracks(); this.updateTrackLabels();
     this.ok = false;
     try { this.initGL(); this.ok = true; } catch (e) { console.error(e); const m = $('loaderr'); m.hidden = false; m.textContent = 'Não foi possível iniciar o 3D (' + (e && e.message || e) + '). O jogo precisa de WebGL e do Three.js carregado do cdnjs.'; $('bStart').disabled = true; }
-    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); if (this.ok) this.preload();
+    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); this.bootLoad();
   }
   paintIdx(p, id) { if (!this._pt) { try { this._pt = JSON.parse(this.load('paints', '{}')) || {}; } catch (e) { this._pt = {}; } } const v = (this._pt[p] || {})[id]; return Number.isInteger(v) && v >= 0 ? v : 0; }
   paintSet(p, id, i) { this.paintIdx(p, id); (this._pt[p] = this._pt[p] || {})[id] = i; this.save('paints', JSON.stringify(this._pt)); }
@@ -2117,16 +2166,37 @@ class Game {
     });
     await Promise.all(jobs);
   }
-  // ---- first-race smoothness: pre-parse the .glb files while the menu is idle, and warm the GPU (shaders + textures) before the lights go out ----
-  preload() {
-    if (this._pre || typeof Assets === 'undefined') return; this._pre = true;
+  // ---- loading: the glb files are big, so only what is about to be seen is loaded (boot: your car · garage: the neighbours · race: grid + traffic) ----
+  preloadNear(id) {   // garage: while you look at a car, fetch the previous and the next one in the background
     try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) { /* ignore */ }
-    const urls = [], add = d => { if (d && d.model && !urls.includes(d.model)) urls.push(d.model); };
-    for (const id of Object.keys(Config.cars)) if (this.carOk(id)) add(Config.cars[id]);
-    for (const d of Object.values(Config.traffic)) add(d);
-    const next = () => { if (this.state === 'race' || this.state === 'countdown' || this.state === 'finishing') { setTimeout(next, 1500); return; } const u = urls.shift(); if (!u) return; Assets.load(u).catch(() => { /* the car falls back to the simple model and warns when used */ }).then(() => setTimeout(next, 200)); };
-    setTimeout(next, 1500);
+    const ids = this.raceIds(), i = ids.indexOf(id); if (i < 0) return;
+    for (const k of [1, -1]) { const c = Config.cars[ids[(i + k + ids.length) % ids.length]]; if (c && c.model && !Assets.cache.has(c.model)) Assets.load(c.model).catch(() => { /* simple model + warning when used */ }); }
   }
+  raceUrls() {   // every .glb this race will show: your car(s), the rivals' cars and this track's traffic
+    const set = new Set(), add = id => { const sp = Config.cars[id]; if (sp && sp.model) set.add(sp.model); };
+    add(this.carId); if (this.two) add(this.carId2);
+    if (this.roster) for (const r of this.roster.list) add(r.carId);
+    if (this.traffic) for (const c of this.traffic.cars) { const d = Config.traffic[c.type]; if (d && d.model) set.add(d.model); }
+    return [...set];
+  }
+  loadScreen(urls, label, tok) {   // shows the flame screen until every url is loaded (errors do not block: that car falls back to the simple model)
+    const el = $('loadscr'), fill = $('lvFill'), lvl = $('lvLevel'), pct = $('lvPct'); $('lvTxt').textContent = label; el.classList.remove('out'); el.hidden = false;
+    let shown = 0, fin = false; const t0 = performance.now();
+    const draw = () => {
+      const target = Assets.fraction(urls); shown += (target - shown) * 0.18; if (fin || target >= 1 && shown > 0.995) shown = fin ? 1 : shown;
+      const p = Math.max(0, Math.min(1, shown)); fill.style.width = (p * 100).toFixed(1) + '%'; pct.textContent = Math.round(p * 100) + '%'; lvl.setAttribute('transform', 'translate(0 ' + (206 * (1 - p) - 12).toFixed(1) + ')');
+      if (!fin && !(tok && this._ld !== tok)) requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+    const jobs = urls.map(u => Assets.load(u).catch(() => { /* ignore */ }));
+    return Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 120000))]).then(() => new Promise(r => { fin = true; draw(); setTimeout(r, Math.max(0, 450 - (performance.now() - t0))); })).then(() => { el.classList.add('out'); setTimeout(() => { if (el.classList.contains('out')) el.hidden = true; }, 400); });
+  }
+  bootLoad() {   // first screen: only your selected car; everything else comes when needed
+    const sp = this.ok && this.carSpec, urls = sp && sp.model ? [sp.model] : [];
+    if (!urls.length) { $('loadscr').hidden = true; return; }
+    this.loadScreen(urls, 'Carregando', null).then(() => { try { this.warm(); } catch (e) { /* ignore */ } });
+  }
+  cancelLoad() { this._ld = null; $('loadscr').hidden = true; this.leave(); }
   warm() {   // compiles every shader and uploads every texture of the scene now, instead of in the first frames of the race
     if (!this.renderer || !this.scene) return; const t0 = performance.now(), R = this.renderer;
     try {
@@ -2141,7 +2211,7 @@ class Game {
   useCar(id) {
     if (!Config.cars[id]) return; this.carId = id; this.carSpec = Config.cars[id]; this.sim = new CarSim(this.carSpec); this.sfx.setVoice(this.carSpec.sound);
     if (this.scene) {
-      const old = this.carModel, nm = this.ensureModel(id); this.endSlide(nm);
+      const old = this.carModel, nm = this.ensureModel(id); this.endSlide(nm); if (this.state === 'garage') this.preloadNear(id);
       if (old && old !== nm) { if (this.state === 'garage' && this.gp !== 2) { const dir = this.gdir || 1; this._out = { m: old, base: old.root.position.clone(), t: 0, dir }; this._in = { t: 0, dir }; } else this.scene.remove(old.root); }
       this.carModel = nm; this.scene.add(nm.root);
     }
@@ -2525,6 +2595,7 @@ class Game {
     if (!e.repeat) this.cheatKey(e);
     document.body.classList.add('kn');   // keyboard in use: the focused menu item is always marked (mouse click turns it off)
     const c = e.code, st = this.state, racing = st === 'race' || st === 'countdown' || st === 'finishing';
+    if (st === 'loading') { if (c === 'Escape') { e.preventDefault(); this.cancelLoad(); } return; }   // flame loading screen: Esc goes back to the menu
     if (this.podiumOn) { if (c === 'Escape') { e.preventDefault(); this.podiumHome(); } else if (c === 'ArrowDown' || c === 'ArrowUp') { e.preventDefault(); const b = document.activeElement && document.activeElement.id === 'pHome' ? $('pRetry') : $('pHome'); b.focus(); } return; }
     if ((st === 'garage' || st === 'tracks') && c.startsWith('Arrow')) { e.preventDefault(); const dd = c === 'ArrowUp' || c === 'ArrowLeft' ? -1 : 1; if (st === 'garage') { if (c === 'ArrowUp' || c === 'ArrowDown') this.garagePlayer(dd); else this.garageMove(dd); } else if (c === 'ArrowUp' || c === 'ArrowDown') this.tracksRow(dd); else this.tracksOpt(dd); return; }
     if (st === 'champ' && c.startsWith('Arrow')) {   // championship: up / down move through the buttons, left / right pick a stage already reached (completed ones can be replayed; locked ones do nothing)
@@ -2639,7 +2710,7 @@ class Game {
     if (this._sp !== sp) { this._sp = sp; this.mixSfx(); if (!sp) this.sfx2.silence(); if (this.renderer) this.applyQuality(); }
   }
   silence() { this.sfx.silence(); this.sfx2.silence(); if (this.bv) for (const v of this.bv) v.mute(); }
-  show(which) { this.syncSplit(); this.syncTouch(); if (which === 'menu' || which === 'result') { clearTimeout(this._bt); $('banner').className = ''; } if (which === 'menu' || which === 'result' || which === 'garage' || which === 'tracks' || which === 'champ') $('carTag').className = ''; for (const id of ['menu', 'garage', 'tracks', 'champ', 'pause', 'result']) $(id).hidden = id !== which; $('hud').hidden = !(which === null || which === 'pause'); $('hud2').hidden = $('hud').hidden || !this.isSplit(); const b = which === 'garage' ? document.querySelector('#gList .car[aria-checked="true"]') : which === 'tracks' ? document.querySelector('#tList .car[aria-checked="true"]') : which && $({ menu: 'bStart', champ: 'cGo', pause: 'pResume', result: 'rAgain' }[which]); try { window.focus(); } catch (_) { /* embedded */ } if (b) b.focus({ preventScroll: true }); else if (which) { const sc = $(which); sc.tabIndex = -1; sc.focus({ preventScroll: true }); } }
+  show(which) { this.syncSplit(); this.syncTouch(); if (which === 'menu' || which === 'result') { clearTimeout(this._bt); $('banner').className = ''; } if (which === 'menu' || which === 'result' || which === 'garage' || which === 'tracks' || which === 'champ') $('carTag').className = ''; for (const id of ['menu', 'garage', 'tracks', 'champ', 'pause', 'result']) $(id).hidden = id !== which; $('hud').hidden = !(which === null || which === 'pause'); $('hud2').hidden = $('hud').hidden || !this.isSplit(); const b = which === 'garage' ? document.querySelector('#gList .car[aria-checked="true"]') : which === 'tracks' ? document.querySelector('#tList .car[aria-checked="true"]') : which && $({ menu: 'bStart', champ: 'cGo', pause: 'pResume', result: 'rAgain' }[which]); try { window.focus(); } catch (_) { /* embedded */ } if (b) b.focus({ preventScroll: true }); else if (which && $(which)) { const sc = $(which); sc.tabIndex = -1; sc.focus({ preventScroll: true }); } }
 
   // ---- flow ----
   resetRace() {
@@ -2714,9 +2785,16 @@ class Game {
     const tag = $('carTag'); tag.textContent = ''; tag.append(this.two ? 'J1 ' + (this.carSpec.name || id) + '  ·  J2 ' + (this.carSpec2.name || this.carId2) : (this.carSpec.name || id)); { const sm = document.createElement('small'); sm.textContent = this.two ? 'classes ' + this.carSpec.rating.letter + ' e ' + this.carSpec2.rating.letter : 'classe ' + this.carSpec.rating.letter + (this.sel === 'random' ? ' · sorteado' : ''); tag.appendChild(sm); const s2 = document.createElement('small'); s2.textContent = (this.mode === 'champ' ? (this.cRound >= this.cRounds().length ? 'Final · ' : 'Etapa ' + (this.cRound + 1) + '/' + this.cRounds().length + ' · ') : '') + this.trackDef.name + ' · ' + this.atmLabel(this.atm); tag.appendChild(s2); }
     tag.className = 'show'; clearTimeout(this._ct); this._ct = setTimeout(() => { tag.className = ''; }, 4200);
     if (!keep || this._rslot == null) this._rslot = Math.floor(Math.random() * this.gridN());
-    this.resetRace(); this.setupGrid(keep); this.state = 'countdown'; this.show(null); document.activeElement && document.activeElement.blur(); if (this.cam) { this.cam.begin(); this.cam2.begin(); } this.sfx.suspend(false);
-    $('hBest').textContent = fmt(this.best); $('hBest2').textContent = fmt(this.best); this.hitFlash(false);
-    this.warm(); clearTimeout(this._wt); this._wt = setTimeout(() => { if (this.state === 'countdown') this.warm(); }, 700);   // again once the rivals' .glb files have been attached
+    this.resetRace(); this.setupGrid(keep);
+    const go = () => {
+      this.state = 'countdown'; this.show(null); document.activeElement && document.activeElement.blur(); if (this.cam) { this.cam.begin(); this.cam2.begin(); } this.sfx.suspend(false);
+      $('hBest').textContent = fmt(this.best); $('hBest2').textContent = fmt(this.best); this.hitFlash(false);
+      this.warm(); clearTimeout(this._wt); this._wt = setTimeout(() => { if (this.state === 'countdown') this.warm(); }, 700);   // again once the rivals' .glb files have been attached
+    };
+    const urls = this.ok ? this.raceUrls() : [];
+    if (!urls.some(u => !Assets.isDone(u))) { this._ld = null; go(); return; }   // everything is already in memory (restart, same cars): no loading screen
+    this.state = 'loading'; this.show('loading'); this.sfx.suspend(true); const tok = this._ld = {};
+    this.loadScreen(urls, 'Carregando carros e tráfego', tok).then(() => { if (this._ld !== tok) return; this._ld = null; go(); });
   }
   pause() { this.prevState = this.state; this.state = 'paused'; this.show('pause'); this.silence(); this.sfx.suspend(true); }
   resume() { this.state = this.prevState || 'race'; this.show(null); this.sfx.suspend(false); this.input.keys.clear(); }
