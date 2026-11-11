@@ -468,7 +468,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.53</summary>
+        <summary>Estado do projeto · v0.54</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -2041,7 +2041,10 @@ class Game {
     this.unlocked = new Set(); try { for (const u of JSON.parse(this.load('unlock', '[]'))) this.unlocked.add(u); } catch (e) { /* none */ }
     for (const u of this.unlocked) if (u.startsWith('track:') && Config.tracks[u.slice(6)] && !Config.trackOrder.includes(u.slice(6))) Config.trackOrder.push(u.slice(6));
     let toks = []; try { toks = location.hash.slice(1).split(/[,&;]/).filter(Boolean); } catch (e) { /* no hash */ }   // e.g. index.html#falcao,serra
-    const hid = toks.find(t => Config.cars[t]), htr = toks.find(t => Config.tracks[t] || t === 'random'), htm = toks.find(t => Config.times[t] || t === 'padrao'), hwx = toks.find(t => Config.weathers[t]), saved = this.load('track', '');
+    const hid = toks.find(t => Config.cars[t]), htr = toks.find(t => Config.tracks[t] || t === 'random'), htm = toks.find(t => Config.times[t] || t === 'padrao'), hwx = toks.find(t => Config.weathers[t]);
+    // very first visit (nothing saved yet): track, time, weather and car are all drawn at random; the choice is then saved like any other setting
+    const first = ['track', 'time', 'wx', 'car'].every(k => this.load(k, null) === null); if (first) { for (const k of ['track', 'time', 'wx', 'car']) this.save(k, 'random'); }
+    const saved = this.load('track', '');
     for (const t of toks) if (this.secretOf(t)) { this.unlockId(t); this._pj = true; }   // a secret car / track / weather named in the URL is a cheat code
     const st = this.load('time', 'padrao'), sw = this.load('wx', 'limpo');
     this.timeSel = htm || (Config.times[st] || st === 'padrao' || st === 'random' ? st : 'padrao'); this.wxSel = hwx || ((Config.weathers[sw] && !Config.weathers[sw].secret) || sw === 'random' ? sw : 'limpo');
