@@ -359,6 +359,8 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 #lvInfo b{color:var(--hazard);font-weight:600}
 #lvBar{position:absolute;left:32px;right:32px;bottom:32px;height:16px;border:2px solid #3a3e46;background:#08090a;box-shadow:inset 0 2px 5px #000,0 1px 0 #50545c}
 #lvBar i{display:block;height:100%;width:0;background:linear-gradient(#ffcb45,var(--hazard) 55%,#d98f00);box-shadow:0 0 14px rgba(255,176,0,.55)}
+#nowp{position:fixed;left:32px;top:24px;z-index:700;max-width:60vw;padding:7px 12px 7px 10px;font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:rgba(8,9,10,.72);border-left:3px solid var(--hazard);opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nowp.on{opacity:1;transform:none}#nowp b{color:var(--hazard);font-weight:600}
 @media (prefers-reduced-motion:reduce){#lvWave1,#lvWave2,#lvSlosh{animation:none}}
 </style>
 </head>
@@ -468,7 +470,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.54</summary>
+        <summary>Estado do projeto · v0.56</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -568,6 +570,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 <script src="vehicles.js"></script>
 <script src="ads.js"></script>
 <script src="tracks.js"></script>
+<script src="music.js"></script>
 <script>
 (() => {
 'use strict';
@@ -627,7 +630,7 @@ for (const id of Object.keys(TR.tracks)) {
   TR.tracks[id] = Object.assign(o, d, { variantOf: d.base });
 }
 const Config = {
-  retroHeight: 240,
+  retroHeight: 360,
   trackOrder: (TR.order || Object.keys(TR.tracks)).filter(id => TR.tracks[id]),
   tracks: TR.tracks, sceneries: TR.sceneries, ads: (window.TUFG_ADS && window.TUFG_ADS.ads) || {},
   playerCar: V.playerCar, cars: V.cars, traffic: null, 
@@ -2034,6 +2037,42 @@ class Hum {
 
 /* ============================ Game ============================ */
 const GEARS = [16, 28, 40, 51, 60, 70];
+/* ============================ JUKEBOX ============================ */
+class Jukebox {   // radio: streams the songs of music.js through two <audio> elements (cross-fade); the game tells it when a race starts
+  constructor(cfg, game) {
+    cfg = cfg || {}; this.g = game; this.list = (cfg.tracks || []).filter(t => t && t.file); this.vol = cfg.volume == null ? 0.6 : cfg.volume; this.fade = Math.max(0.1, cfg.fade == null ? 1.2 : cfg.fade); this.duckTo = cfg.duck == null ? 0.3 : cfg.duck;
+    this.on = true; this.duckV = 1; this.dv = 1; this.cur = null; this.el = null; this.unlocked = false; this.bad = new Set(); this.ok = this.list.length > 0; if (!this.ok) return;
+    this.els = [0, 1].map(() => { const a = new Audio(); a.preload = 'auto'; a._m = 0; a._t = 0; a._kill = false; a.onended = () => { if (a === this.el) this.next(); }; a.onerror = () => this.failed(a); return a; });
+    this.chip = document.createElement('div'); this.chip.id = 'nowp'; document.body.appendChild(this.chip);
+    const unlock = () => { removeEventListener('pointerdown', unlock, true); removeEventListener('keydown', unlock, true); this.unlocked = true; if (!this.el) this.auto(); };
+    addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);
+    document.addEventListener('visibilitychange', () => { if (!this.el) return; if (document.hidden) this.el.pause(); else if (this.on && this.unlocked) this.el.play().catch(() => { /* blocked */ }); });
+    setInterval(() => this.tick(), 50);
+  }
+  eff() { return this.on ? Math.max(0, Math.min(1, this.vol * this.dv)) : 0; }
+  tick() {
+    this.dv += (this.duckV - this.dv) * 0.12; const step = 0.05 / this.fade, e = this.eff();
+    for (const a of this.els) { if (a._m < a._t) a._m = Math.min(a._t, a._m + step); else if (a._m > a._t) a._m = Math.max(a._t, a._m - step); try { a.volume = Math.max(0, Math.min(1, a._m * e)); } catch (x) { /* ignore */ } if (a._kill && a._m <= 0.001) { a._kill = false; a.pause(); } }
+  }
+  pick(exclude) { const pool = this.list.filter(t => !this.bad.has(t.id) && (this.list.length < 2 || !exclude || t.id !== exclude.id)); return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; }
+  songFor(def) { const base = def && (def.variantOf || def.id), t = this.list.find(x => x.track === base && !this.bad.has(x.id)); return t || this.pick(this.cur); }
+  play(t, fast) {   // cross-fade to song t
+    if (!this.ok || !t) return; const old = this.el, a = this.els[old === this.els[0] ? 1 : 0];
+    if (old) { old._t = 0; old._kill = true; }
+    a.src = t.file; a.currentTime = 0; a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; if (fast) a._m = 0.4;
+    const pr = a.play(); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key: unlock() starts it */ });
+    this.say(t.title);
+  }
+  say(title) { clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
+  auto() { if (!this.ok || !this.on) return; const g = this.g, racing = g.state === 'race'; this.play(racing ? this.songFor(g.trackDef) : this.pick(this.cur)); }
+  next() { if (this.ok && this.on && this.unlocked) this.play(this.pick(this.cur)); }   // end of a song / skip key: any other song
+  failed(a) { if (a !== this.el || !this.cur) return; this.bad.add(this.cur.id); const t = this.pick(null); this.el = null; if (t && this.bad.size < this.list.length) setTimeout(() => { if (this.unlocked && this.on) this.play(t); }, 300); }
+  countdown() { if (!this.ok) return; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; this.chip.classList.remove('on'); }   // menu music fades out while the lights count down
+  raceStart(def) { if (this.ok && this.on && this.unlocked) this.play(this.songFor(def)); }
+  duck(v) { this.duckV = v ? this.duckTo : 1; }
+  setOn(v) { this.on = v; if (!this.ok) return; if (v && this.unlocked && !this.el) this.auto(); if (!v) this.chip.classList.remove('on'); }
+}
+
 class Game {
   constructor() {
     this.state = 'menu'; this.mode = 'quick'; this.prev = null; this.input = new Input(); this.sfx = new Sfx(); this.sfx2 = new Sfx(); this.two = false; this.gp = 1; this.H = [new Hum(this, 0), new Hum(this, 1)]; this.carModel2 = null; this.waitT = 0; this.last = performance.now(); this.acc = 0;
@@ -2048,7 +2087,10 @@ class Game {
     for (const t of toks) if (this.secretOf(t)) { this.unlockId(t); this._pj = true; }   // a secret car / track / weather named in the URL is a cheat code
     const st = this.load('time', 'padrao'), sw = this.load('wx', 'limpo');
     this.timeSel = htm || (Config.times[st] || st === 'padrao' || st === 'random' ? st : 'padrao'); this.wxSel = hwx || ((Config.weathers[sw] && !Config.weathers[sw].secret) || sw === 'random' ? sw : 'limpo');
-    this.trackSel = htr || (Config.tracks[saved] || saved === 'random' ? saved : Config.trackOrder[0]); this.trackDef = Config.tracks[this.trackSel] || Config.tracks[Config.trackOrder[0]]; this.atm = this.pickAtm(this.trackDef, false); this.theme = this.atm;
+    this.trackSel = htr || (Config.tracks[saved] || saved === 'random' ? saved : Config.trackOrder[0]); this.trackDef = Config.tracks[this.trackSel] || Config.tracks[Config.trackOrder[0]];
+    // random track / time / weather: the world behind the first menu is already a drawn one (and the first race starts on it, with no reload)
+    this._bgPick = this.trackSel === 'random'; if (this._bgPick && Config.baseOrder.length) this.trackDef = Config.tracks[Config.baseOrder[Math.floor(Math.random() * Config.baseOrder.length)]];
+    this.atm = this.pickAtm(this.trackDef, true); this.theme = this.atm;
     this.sel = hid || this.load('car', 'random'); if (this.sel !== 'random' && !this.carOk(this.sel)) this.sel = 'random';   // 'random' or a car id
     this.carId = this.sel === 'random' ? this.pickRandom() : this.sel; this.carSpec = Config.cars[this.carId]; this.warns = new Set(); this.sfx.onWarn = this.sfx2.onWarn = (u, e) => this.warn(u, e); this.sfx.setVoice(this.carSpec.sound);
     this.sel2 = this.load('car2', 'random'); if (this.sel2 !== 'random' && !this.carOk(this.sel2)) this.sel2 = 'random';   // player 2 garage pick
@@ -2059,7 +2101,7 @@ class Game {
     this.buildHudBits(); this.buildMini(); this.bindUI(); this.refreshToggles(); this.buildGarage(); this.buildTracks(); this.updateTrackLabels();
     this.ok = false;
     try { this.initGL(); this.ok = true; } catch (e) { console.error(e); const m = $('loaderr'); m.hidden = false; m.textContent = 'Não foi possível iniciar o 3D (' + (e && e.message || e) + '). O jogo precisa de WebGL e do Three.js carregado do cdnjs.'; $('bStart').disabled = true; }
-    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); this.bootLoad();
+    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); this.music = new Jukebox(window.TUFG_MUSIC, this); this.music.on = this.snd; this.bootLoad();
   }
   paintIdx(p, id) { if (!this._pt) { try { this._pt = JSON.parse(this.load('paints', '{}')) || {}; } catch (e) { this._pt = {}; } } const v = (this._pt[p] || {})[id]; return Number.isInteger(v) && v >= 0 ? v : 0; }
   paintSet(p, id, i) { this.paintIdx(p, id); (this._pt[p] = this._pt[p] || {})[id] = i; this.save('paints', JSON.stringify(this._pt)); }
@@ -2308,7 +2350,7 @@ class Game {
   }
   setRetro(v) { this.retro = v; this.save('retro', v ? '1' : '0'); this.refreshToggles(); this.applyQuality(); }
   setHires(v) { if (!this.retro) return; this.hires = v; this.save('hires', v ? '1' : '0'); this.refreshToggles(); this.applyQuality(); }
-  setSound(v) { this.snd = v; this.save('snd', v ? '1' : '0'); this.sfx.setOn(v); this.sfx2.setOn(v); this.refreshToggles(); if (v) { this.audio(); this.sfx.beep(660, 0.14); } }
+  setSound(v) { this.snd = v; this.save('snd', v ? '1' : '0'); this.sfx.setOn(v); this.sfx2.setOn(v); if (this.music) this.music.setOn(v); this.refreshToggles(); if (v) { this.audio(); this.sfx.beep(660, 0.14); } }
   audio() {   // unlocks WebAudio on any user gesture; the second player's voice shares the first one's context
     this.sfx.init(); if (this.sfx.ctx && !this.sfx2.ctx) { this.sfx2.init(this.sfx.ctx); this.mixSfx(); }
     if (this._pj && this.sfx.ctx) { this._pj = false; setTimeout(() => this.sfx.jingle(), 120); }   // a code from the URL: the jingle plays at the first click / key
@@ -2626,6 +2668,7 @@ class Game {
     else if (c === 'ShiftRight') { if (st === 'race' && this.two) this.recover(1); }
     else if (c === 'Digit2' || c === 'Numpad2') { if (st === 'menu' && this.ok && !this.touchMode) this.go(2); }
     else if (c === 'KeyM') this.hotkey(() => this.setSound(!this.snd));
+    else if (c === 'KeyN') this.hotkey(() => { if (this.music) this.music.next(); });
     else if (c === 'KeyF') this.hotkey(() => this.setRetro(!this.retro));
     else if (c === 'KeyH') this.hotkey(() => this.setHires(!this.hires));
   }
@@ -2779,9 +2822,10 @@ class Game {
     else if (!keep) {
       tid = this.trackSel; if (tid === 'random') { const ids = Config.baseOrder, pool = ids.length > 1 ? ids.filter(i => i !== this.lastTrack) : ids; tid = pool[Math.floor(Math.random() * pool.length)]; }
       atm = this.pickAtm(Config.tracks[tid], true);
+      if (this._bgPick && this.trackSel === 'random') { tid = this.trackDef.id; atm = this.timeSel === 'random' && this.wxSel === 'random' ? this.atm : this.pickAtm(Config.tracks[tid], true); }   // first race: the track already shown behind the menu
     }
     if (tid !== this.trackDef.id || !this.sameAtm(atm, this.atm)) this.loadTrack(tid, atm);
-    this.lastTrack = tid;
+    this.lastTrack = tid; this._bgPick = false;
     const id = this.mode === 'champ' ? this.champ.car : this.sel === 'random' ? (keep && this.carId ? this.carId : this.pickRandom()) : this.sel;
     if (id !== this.carId || !keep) this.useCar(id);
     if (this.two) { const id2 = this.sel2 === 'random' ? (keep && this.carId2 ? this.carId2 : this.pickRandom2()) : this.sel2; if (id2 !== this.carId2 || !keep) this.useCar2(id2); }
@@ -2790,7 +2834,7 @@ class Game {
     if (!keep || this._rslot == null) this._rslot = Math.floor(Math.random() * this.gridN());
     this.resetRace(); this.setupGrid(keep);
     const go = () => {
-      this.state = 'countdown'; this.show(null); document.activeElement && document.activeElement.blur(); if (this.cam) { this.cam.begin(); this.cam2.begin(); } this.sfx.suspend(false);
+      this.state = 'countdown'; this.show(null); if (this.music) this.music.countdown(); document.activeElement && document.activeElement.blur(); if (this.cam) { this.cam.begin(); this.cam2.begin(); } this.sfx.suspend(false);
       $('hBest').textContent = fmt(this.best); $('hBest2').textContent = fmt(this.best); this.hitFlash(false);
       this.warm(); clearTimeout(this._wt); this._wt = setTimeout(() => { if (this.state === 'countdown') this.warm(); }, 700);   // again once the rivals' .glb files have been attached
     };
@@ -2799,8 +2843,8 @@ class Game {
     this.state = 'loading'; this.show('loading'); this.sfx.suspend(true); const tok = this._ld = {};
     this.loadScreen(urls, 'Carregando carros e tráfego', tok).then(() => { if (this._ld !== tok) return; this._ld = null; go(); });
   }
-  pause() { this.prevState = this.state; this.state = 'paused'; this.show('pause'); this.silence(); this.sfx.suspend(true); }
-  resume() { this.state = this.prevState || 'race'; this.show(null); this.sfx.suspend(false); this.input.keys.clear(); }
+  pause() { this.prevState = this.state; this.state = 'paused'; this.show('pause'); this.silence(); this.sfx.suspend(true); if (this.music) this.music.duck(true); }
+  resume() { this.state = this.prevState || 'race'; this.show(null); this.sfx.suspend(false); if (this.music) this.music.duck(false); this.input.keys.clear(); }
   toMenu() { this.mode = 'quick'; this.resetRace(); this.state = 'menu'; this.show('menu'); this.silence(); this.sfx.suspend(false); }
   recover(n = 0) {
     const hm = this.H[n], s = hm.sim, T = this.track, L = T.locate(s.x, s.z, -1, {}), o = T.at(Math.max(this.slotS, L.s)), rc = T.roadCentre(L.i, L.d);   // back onto the road it was on (main or branch)
@@ -2882,7 +2926,7 @@ class Game {
     if (this.state === 'countdown') {
       this.cd -= dt; const n = Math.ceil(this.cd);
       if (n !== this.lastCount && n >= 1 && n <= 3) { this.lastCount = n; this.banner(String(n)); this.sfx.beep(520, 0.15); }
-      if (this.cd <= 0) { this.state = 'race'; this.banner('GO!', true); this.sfx.beep(1040, 0.4); this.raceTime = 0; }
+      if (this.cd <= 0) { this.state = 'race'; this.banner('GO!', true); this.sfx.beep(1040, 0.4); this.raceTime = 0; if (this.music) this.music.raceStart(this.trackDef); }
       return;
     }
     if (this.state !== 'race' && this.state !== 'finishing') return;
