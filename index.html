@@ -361,6 +361,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 #lvBar i{display:block;height:100%;width:0;background:linear-gradient(#ffcb45,var(--hazard) 55%,#d98f00);box-shadow:0 0 14px rgba(255,176,0,.55)}
 #nowp{position:fixed;left:32px;top:24px;z-index:700;max-width:60vw;padding:7px 12px 7px 10px;font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:rgba(8,9,10,.72);border-left:3px solid var(--hazard);opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #nowp.on{opacity:1;transform:none}#nowp b{color:var(--hazard);font-weight:600}
+#loadscr.wait #lvTxt{color:var(--hazard);animation:lvb 1s steps(2,jump-none) infinite}@keyframes lvb{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){#lvWave1,#lvWave2,#lvSlosh{animation:none}}
 </style>
 </head>
@@ -470,7 +471,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.56</summary>
+        <summary>Estado do projeto · v0.58</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -2041,10 +2042,15 @@ const GEARS = [16, 28, 40, 51, 60, 70];
 class Jukebox {   // radio: streams the songs of music.js through two <audio> elements (cross-fade); the game tells it when a race starts
   constructor(cfg, game) {
     cfg = cfg || {}; this.g = game; this.list = (cfg.tracks || []).filter(t => t && t.file); this.vol = cfg.volume == null ? 0.6 : cfg.volume; this.fade = Math.max(0.1, cfg.fade == null ? 1.2 : cfg.fade); this.duckTo = cfg.duck == null ? 0.3 : cfg.duck;
-    this.on = true; this.duckV = 1; this.dv = 1; this.cur = null; this.el = null; this.unlocked = false; this.bad = new Set(); this.ok = this.list.length > 0; if (!this.ok) return;
+    this.on = true; this.duckV = 1; this.dv = 1; this.cur = null; this.el = null; this.unlocked = false; this._gate = null; this._played = false; this.bad = new Set(); this.ok = this.list.length > 0; if (!this.ok) return;
     this.els = [0, 1].map(() => { const a = new Audio(); a.preload = 'auto'; a._m = 0; a._t = 0; a._kill = false; a.onended = () => { if (a === this.el) this.next(); }; a.onerror = () => this.failed(a); return a; });
     this.chip = document.createElement('div'); this.chip.id = 'nowp'; document.body.appendChild(this.chip);
-    const unlock = () => { removeEventListener('pointerdown', unlock, true); removeEventListener('keydown', unlock, true); this.unlocked = true; if (!this.el) this.auto(); };
+    const unlock = e => {   // first click/key: the browser now allows sound. While the flame screen waits for it, this gesture is consumed (it does not start a race)
+      removeEventListener('pointerdown', unlock, true); removeEventListener('keydown', unlock, true); this.unlocked = true;
+      if (this._gate) { const r = this._gate; this._gate = null; try { e.stopImmediatePropagation(); e.preventDefault(); } catch (x) { /* ignore */ } if (!this.el) this.auto(); r(); return; }
+      if (!this.el) this.auto();
+    };
+    const f0 = this.list.find(t => t.first); if (f0) { this.els[0]._f = f0.file; this.els[0].src = f0.file; }   // starts buffering the opening song while the game loads
     addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);
     document.addEventListener('visibilitychange', () => { if (!this.el) return; if (document.hidden) this.el.pause(); else if (this.on && this.unlocked) this.el.play().catch(() => { /* blocked */ }); });
     setInterval(() => this.tick(), 50);
@@ -2054,21 +2060,33 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
     this.dv += (this.duckV - this.dv) * 0.12; const step = 0.05 / this.fade, e = this.eff();
     for (const a of this.els) { if (a._m < a._t) a._m = Math.min(a._t, a._m + step); else if (a._m > a._t) a._m = Math.max(a._t, a._m - step); try { a.volume = Math.max(0, Math.min(1, a._m * e)); } catch (x) { /* ignore */ } if (a._kill && a._m <= 0.001) { a._kill = false; a.pause(); } }
   }
-  pick(exclude) { const pool = this.list.filter(t => !this.bad.has(t.id) && (this.list.length < 2 || !exclude || t.id !== exclude.id)); return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; }
-  songFor(def) { const base = def && (def.variantOf || def.id), t = this.list.find(x => x.track === base && !this.bad.has(x.id)); return t || this.pick(this.cur); }
+  racing() { const st = this.g.state; return st === 'race' || st === 'countdown' || st === 'paused' || st === 'loading'; }
+  pick(exclude, race) { const pool = this.list.filter(t => !this.bad.has(t.id) && !(race && t.menuOnly) && (this.list.length < 2 || !exclude || t.id !== exclude.id)); return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; }
+  songFor(def) { const base = def && (def.variantOf || def.id), t = this.list.find(x => x.track === base && !this.bad.has(x.id)); return t || this.pick(this.cur, true); }
   play(t, fast) {   // cross-fade to song t
     if (!this.ok || !t) return; const old = this.el, a = this.els[old === this.els[0] ? 1 : 0];
     if (old) { old._t = 0; old._kill = true; }
-    a.src = t.file; a.currentTime = 0; a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; if (fast) a._m = 0.4;
-    const pr = a.play(); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key: unlock() starts it */ });
-    this.say(t.title);
+    if (a._f !== t.file) { a._f = t.file; a.src = t.file; } else if (a.currentTime > 0) a.currentTime = 0;
+    a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; this._played = true; if (fast) a._m = 0.4;
+    const pr = a.play(); this.say(t.title); return pr;
   }
   say(title) { clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
-  auto() { if (!this.ok || !this.on) return; const g = this.g, racing = g.state === 'race'; this.play(racing ? this.songFor(g.trackDef) : this.pick(this.cur)); }
-  next() { if (this.ok && this.on && this.unlocked) this.play(this.pick(this.cur)); }   // end of a song / skip key: any other song
+  firstSong() { return !this._played && this.list.find(t => t.first && !this.bad.has(t.id)) || null; }
+  auto() { if (!this.ok || !this.on) return; const g = this.g; const p = g.state === 'race' ? this.songFor(g.trackDef) : (this.firstSong() || this.pick(this.cur, this.racing())); const pr = this.play(p); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key */ }); }
+  next() { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.pick(this.cur, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
+  gate(prompt) {   // boot: resolves once music is playing. If the browser blocks autoplay, asks for a click/key (the loading screen waits for it)
+    if (!this.ok || !this.on) return Promise.resolve();
+    return new Promise(res => {
+      const t = this.firstSong() || this.pick(null, false); if (!t) { res(); return; }
+      const pr = this.play(t); if (!pr || !pr.then) { res(); return; }
+      pr.then(() => { this.unlocked = true; res(); }, err => {
+        if (err && err.name === 'NotAllowedError') { this.el = null; this.cur = null; this._played = false; this._gate = res; prompt && prompt(); } else res();
+      });
+    });
+  }   // end of a song / skip key: any other song
   failed(a) { if (a !== this.el || !this.cur) return; this.bad.add(this.cur.id); const t = this.pick(null); this.el = null; if (t && this.bad.size < this.list.length) setTimeout(() => { if (this.unlocked && this.on) this.play(t); }, 300); }
   countdown() { if (!this.ok) return; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; this.chip.classList.remove('on'); }   // menu music fades out while the lights count down
-  raceStart(def) { if (this.ok && this.on && this.unlocked) this.play(this.songFor(def)); }
+  raceStart(def) { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.songFor(def)); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
   duck(v) { this.duckV = v ? this.duckTo : 1; }
   setOn(v) { this.on = v; if (!this.ok) return; if (v && this.unlocked && !this.el) this.auto(); if (!v) this.chip.classList.remove('on'); }
 }
@@ -2224,7 +2242,7 @@ class Game {
     if (this.traffic) for (const c of this.traffic.cars) { const d = Config.traffic[c.type]; if (d && d.model) set.add(d.model); }
     return [...set];
   }
-  loadScreen(urls, label, tok) {   // shows the flame screen until every url is loaded (errors do not block: that car falls back to the simple model)
+  loadScreen(urls, label, tok, gate) {   // shows the flame screen until every url is loaded (errors do not block: that car falls back to the simple model)
     const el = $('loadscr'), fill = $('lvFill'), lvl = $('lvLevel'), pct = $('lvPct'); $('lvTxt').textContent = label; el.classList.remove('out'); el.hidden = false;
     let shown = 0, fin = false; const t0 = performance.now();
     const draw = () => {
@@ -2234,12 +2252,12 @@ class Game {
     };
     requestAnimationFrame(draw);
     const jobs = urls.map(u => Assets.load(u).catch(() => { /* ignore */ }));
-    return Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 120000))]).then(() => new Promise(r => { fin = true; draw(); setTimeout(r, Math.max(0, 450 - (performance.now() - t0))); })).then(() => { el.classList.add('out'); setTimeout(() => { if (el.classList.contains('out')) el.hidden = true; }, 400); });
+    return Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 120000))]).then(() => new Promise(r => { fin = true; draw(); setTimeout(r, Math.max(0, 450 - (performance.now() - t0))); }))
+      .then(() => gate ? gate(() => { $('lvTxt').textContent = 'Pronto · aperte uma tecla ou clique'; el.classList.add('wait'); }) : null).then(() => { el.classList.remove('wait'); el.classList.add('out'); setTimeout(() => { if (el.classList.contains('out')) el.hidden = true; }, 400); });
   }
   bootLoad() {   // first screen: only your selected car; everything else comes when needed
     const sp = this.ok && this.carSpec, urls = sp && sp.model ? [sp.model] : [];
-    if (!urls.length) { $('loadscr').hidden = true; return; }
-    this.loadScreen(urls, 'Carregando', null).then(() => { try { this.warm(); } catch (e) { /* ignore */ } });
+    this.loadScreen(urls, 'Carregando', null, () => this.music.gate(() => { $('lvTxt').textContent = 'Pronto · aperte uma tecla ou clique'; $('loadscr').classList.add('wait'); })).then(() => { try { this.warm(); } catch (e) { /* ignore */ } });
   }
   cancelLoad() { this._ld = null; $('loadscr').hidden = true; this.leave(); }
   warm() {   // compiles every shader and uploads every texture of the scene now, instead of in the first frames of the race
