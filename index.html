@@ -493,7 +493,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.58</summary>
+        <summary>Estado do projeto · v0.63</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -2067,13 +2067,9 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
     this.on = true; this.duckV = 1; this.dv = 1; this.cur = null; this.el = null; this.unlocked = false; this._gate = null; this._played = false; this.bad = new Set(); this.ok = this.list.length > 0; if (!this.ok) return;
     this.els = [0, 1].map(() => { const a = new Audio(); a.preload = 'auto'; a._m = 0; a._t = 0; a._kill = false; a.onended = () => { if (a === this.el) this.next(); }; a.onerror = () => this.failed(a); return a; });
     this.chip = document.createElement('div'); this.chip.id = 'nowp'; document.body.appendChild(this.chip); this.hist = []; this.stopped = false; this.buildDeck();
-    const unlock = e => {   // first click/key: the browser now allows sound. While the flame screen waits for it, this gesture is consumed (it does not start a race)
-      removeEventListener('pointerdown', unlock, true); removeEventListener('keydown', unlock, true); this.unlocked = true;
-      if (this._gate) { const r = this._gate; this._gate = null; try { e.stopImmediatePropagation(); e.preventDefault(); } catch (x) { /* ignore */ } if (!this.el) this.auto(); r(); return; }
-      if (!this.el) this.auto();
-    };
+    this._unl = () => { if (!this.el && this.on && !this.stopped) this.auto(); };   // first tap/click/key; on phones only touchend/click count as a user gesture (pointerdown/touchstart do not)
     const f0 = this.list.find(t => t.first); if (f0) { this.els[0]._f = f0.file; this.els[0].src = f0.file; }   // starts buffering the opening song while the game loads
-    addEventListener('pointerdown', unlock, true); addEventListener('keydown', unlock, true);
+    this.armUnlock();
     document.addEventListener('visibilitychange', () => { if (!this.el) return; if (document.hidden) this.el.pause(); else if (this.on && this.unlocked) this.el.play().catch(() => { /* blocked */ }); });
     setInterval(() => this.tick(), 50);
   }
@@ -2088,11 +2084,15 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
   songFor(def) { const base = def && (def.variantOf || def.id), t = this.list.find(x => x.track === base && !this.bad.has(x.id)); return t || this.pick(this.cur, true); }
   play(t, fast, noHist) {   // cross-fade to song t
     if (!this.ok || !t) return; this.stopped = false; if (this.cur && this.cur !== t && !noHist) { this.hist.push(this.cur); if (this.hist.length > 20) this.hist.shift(); }
-    const old = this.el, a = this.els[old === this.els[0] ? 1 : 0];
+    const old = this.el, a = this.els[old === this.els[0] ? 1 : 0], prevCur = this.cur, prevPlayed = this._played;
     if (old) { old._t = 0; old._kill = true; }
     if (a._f !== t.file) { a._f = t.file; a.src = t.file; } else if (a.currentTime > 0) a.currentTime = 0;
     a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; this._played = true; if (fast) a._m = 0.4;
-    const pr = a.play(); this.say(t.title); return pr;
+    const pr = a.play(); this.say(t.title);
+    if (pr && pr.then) pr.then(() => { if (a === this.el) { this.unlocked = true; this.disarmUnlock(); } }, err => {   // blocked (no gesture yet): undo, so the next real tap/click/key starts it
+      if (err && err.name === 'NotAllowedError' && a === this.el) { this.el = null; this.cur = prevCur; this._played = prevPlayed; this.unlocked = false; a._t = 0; a._kill = true; try { this.chip.classList.remove('on'); } catch (x) { /* ignore */ } this.armUnlock(); }
+    });
+    return pr;
   }
   say(title) { const ls = document.getElementById('loadscr'); if (this.deckOn() || (this.g.state === 'menu' && ls && !ls.hidden)) return; clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
   firstSong() { return !this._played && this.list.find(t => t.first && !this.bad.has(t.id)) || null; }
@@ -2108,6 +2108,8 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
       });
     });
   }   // end of a song / skip key: any other song
+  armUnlock() { if (this._armed) return; this._armed = true; for (const ev of ['click', 'touchend', 'keydown']) addEventListener(ev, this._unl, true); }
+  disarmUnlock() { if (!this._armed) return; this._armed = false; for (const ev of ['click', 'touchend', 'keydown']) removeEventListener(ev, this._unl, true); }
   deckOn() { const m = document.getElementById('menu'); const ls = document.getElementById('loadscr'); return !!(this.deck && this.g.state === 'menu' && m && !m.hidden && ls && ls.hidden && innerWidth > 900); }
   buildDeck() {   // old record-player style deck on the home screen: LCD with scrolling title + keys  |◀◀  ■  ▶  ▶▶|
     const ic = { prev: '<path fill="currentColor" d="M5 5h2.4v14H5zM20 5v14L8.5 12z"/>', stop: '<path fill="currentColor" d="M6 6h12v12H6z"/>', play: '<path fill="currentColor" d="M7 4v16l13-8z"/>', next: '<path fill="currentColor" d="M16.6 5H19v14h-2.4zM4 5l11.5 7L4 19z"/>' };
