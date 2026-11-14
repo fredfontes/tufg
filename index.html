@@ -2131,8 +2131,13 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
   }
   stop() { if (!this.ok) return; this.stopped = true; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; }
   resume() { if (!this.ok || !this.on || (this.el && !this.stopped)) return; this.stopped = false; const pr = this.play(this.cur || this.firstSong() || this.pick(null, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); }
-  skip() { this.stopped = false; this.next(); }
-  prev() { if (!this.ok || !this.on) return; this.unlocked = true; const t = this.hist.pop() || this.cur; if (!t) { this.resume(); return; } const pr = this.play(t, false, true); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); }
+  step(dir) {   // deck keys: next / previous song in the music.js order (wraps around); the N key and the end of a song still pick at random
+    if (!this.ok || !this.on) return; this.unlocked = true; const n = this.list.length; let i = this.cur ? this.list.indexOf(this.cur) : (dir > 0 ? -1 : 0), t = null;
+    for (let k = 0; k < n && !t; k++) { i = (i + dir + n) % n; if (!this.bad.has(this.list[i].id)) t = this.list[i]; }
+    if (!t) return; const pr = this.play(t); if (pr && pr.catch) pr.catch(() => { /* ignore */ });
+  }
+  skip() { this.step(1); }
+  prev() { this.step(-1); }
   failed(a) { if (a !== this.el || !this.cur) return; this.bad.add(this.cur.id); const t = this.pick(null); this.el = null; if (t && this.bad.size < this.list.length) setTimeout(() => { if (this.unlocked && this.on) this.play(t); }, 300); }
   countdown() { if (!this.ok) return; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; this.chip.classList.remove('on'); }   // menu music fades out while the lights count down
   raceStart(def) { if (this.ok && this.on && this.unlocked && !this.stopped) { const pr = this.play(this.songFor(def)); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
