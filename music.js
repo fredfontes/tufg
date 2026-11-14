@@ -30,12 +30,12 @@
    window.TUFG_MUSIC = {
     volume: 0.6, fade: 1.2, duck: 0.3,
     tracks: [
-      { id: 'the_urge_for_gas', title: 'The Urge for Gas', file: 'assets/music/the_urge_for_gas.mp3', first: true, menuOnly: true },   // tema: sempre a primeira a tocar; só nos menus
-      { id: 'golden_coast',  title: 'Golden Coast',  file: 'assets/music/golden_coast.mp3',  track: 'litoral' },   // Costa Dourada
-      { id: 'neon_downtown', title: 'Neon Downtown', file: 'assets/music/neon_downtown.mp3', track: 'urbana' },    // Centro Neon
-      { id: 'valley_fields', title: 'Valley Fields', file: 'assets/music/valley_fields.mp3', track: 'fazenda' },   // Campos do Vale
-      { id: 'green_mountain', title: 'Green Mountain', file: 'assets/music/green_mountain.mp3', track: 'serra' },  // Serra Verde
-      { id: 'canyon_road',   title: 'Canyon Road',   file: 'assets/music/canyon_road.mp3',   track: 'canion' },    // Estrada do Cânion
-      { id: 'tepui_oasis',   title: 'Tepui Oasis',   file: 'assets/music/tepui_oasis.mp3',   track: 'oasis' }      // Oásis do Tepui (final)
+      { id: 'the_urge_for_gas', title: 'kurtabble - The Urge for Gas', file: 'assets/music/the_urge_for_gas.mp3', first: true, menuOnly: true },   // tema: sempre a primeira a tocar; só nos menus
+      { id: 'golden_coast',  title: 'kurtabble - Golden Coast',  file: 'assets/music/golden_coast.mp3',  track: 'litoral' },   // Costa Dourada
+      { id: 'neon_downtown', title: 'kurtabble - Neon Downtown', file: 'assets/music/neon_downtown.mp3', track: 'urbana' },    // Centro Neon
+      { id: 'valley_fields', title: 'kurtabble - Valley Fields', file: 'assets/music/valley_fields.mp3', track: 'fazenda' },   // Campos do Vale
+      { id: 'green_mountain', title: 'kurtabble - Green Mountain', file: 'assets/music/green_mountain.mp3', track: 'serra' },  // Serra Verde
+      { id: 'canyon_road',   title: 'kurtabble - Canyon Road',   file: 'assets/music/canyon_road.mp3',   track: 'canion' },    // Estrada do Cânion
+      { id: 'tepui_oasis',   title: 'kurtabble - Tepui Oasis',   file: 'assets/music/tepui_oasis.mp3',   track: 'oasis' }      // Oásis do Tepui (final)
     ]
   };
