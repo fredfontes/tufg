@@ -2094,7 +2094,7 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
     a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; this._played = true; if (fast) a._m = 0.4;
     const pr = a.play(); this.say(t.title); return pr;
   }
-  say(title) { if (this.deckOn()) return; clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
+  say(title) { const ls = document.getElementById('loadscr'); if (this.deckOn() || (this.g.state === 'menu' && ls && !ls.hidden)) return; clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
   firstSong() { return !this._played && this.list.find(t => t.first && !this.bad.has(t.id)) || null; }
   auto() { if (!this.ok || !this.on) return; const g = this.g; const p = g.state === 'race' ? this.songFor(g.trackDef) : (this.firstSong() || this.pick(this.cur, this.racing())); const pr = this.play(p); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key */ }); }
   next() { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.pick(this.cur, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
@@ -2108,7 +2108,7 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
       });
     });
   }   // end of a song / skip key: any other song
-  deckOn() { const m = document.getElementById('menu'); return !!(this.deck && this.g.state === 'menu' && m && !m.hidden && innerWidth > 900); }
+  deckOn() { const m = document.getElementById('menu'); const ls = document.getElementById('loadscr'); return !!(this.deck && this.g.state === 'menu' && m && !m.hidden && ls && ls.hidden && innerWidth > 900); }
   buildDeck() {   // old record-player style deck on the home screen: LCD with scrolling title + keys  |◀◀  ■  ▶  ▶▶|
     const ic = { prev: '<path fill="currentColor" d="M5 5h2.4v14H5zM20 5v14L8.5 12z"/>', stop: '<path fill="currentColor" d="M6 6h12v12H6z"/>', play: '<path fill="currentColor" d="M7 4v16l13-8z"/>', next: '<path fill="currentColor" d="M16.6 5H19v14h-2.4zM4 5l11.5 7L4 19z"/>' };
     const d = this.deck = document.createElement('div'); d.id = 'deck'; d.hidden = true;
@@ -2120,7 +2120,7 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
     d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; this.unlocked = true; const k = b.dataset.k; if (k === 'prev') this.prev(); else if (k === 'next') this.skip(); else if (k === 'stop') this.stop(); else this.resume(); this.refresh(); try { b.blur(); } catch (x) { /* ignore */ } });
   }
   refresh() {
-    const d = this.deck; if (!d) return; const m = document.getElementById('menu'), vis = this.g.state === 'menu' && !!m && !m.hidden; if (d.hidden === vis) d.hidden = !vis; if (!vis) return;
+    const d = this.deck; if (!d) return; const m = document.getElementById('menu'), ls = document.getElementById('loadscr'), vis = this.g.state === 'menu' && !!m && !m.hidden && !!ls && ls.hidden; /* not over the flame loading screen / Continue button */ if (d.hidden === vis) d.hidden = !vis; if (!vis) return;
     const t = this.cur, a = this.el, k = this.dk, title = t ? String(t.title) : 'TUFG Radio', playing = !!a && !this.stopped && !a.paused;
     if (this._mqT !== title) { this._mqT = title; const h = title.replace(/[<>&]/g, ''); k.in.innerHTML = '<span>' + h + '</span><span>' + h + '</span>'; k.mq.classList.remove('mq'); k.in.style.animation = 'none'; this._mqM = false; }
     if (!this._mqM && k.mq.clientWidth > 0) { this._mqM = true; const w = k.in.firstChild.offsetWidth, over = w - 44 > k.mq.clientWidth; k.mq.classList.toggle('mq', over); k.in.style.animation = ''; if (over) k.mq.style.setProperty('--mqd', (w / 38).toFixed(1) + 's'); }
