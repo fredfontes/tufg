@@ -2074,13 +2074,13 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
   firstSong() { return !this._played && this.list.find(t => t.first && !this.bad.has(t.id)) || null; }
   auto() { if (!this.ok || !this.on) return; const g = this.g; const p = g.state === 'race' ? this.songFor(g.trackDef) : (this.firstSong() || this.pick(this.cur, this.racing())); const pr = this.play(p); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key */ }); }
   next() { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.pick(this.cur, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
-  gate(prompt) {   // boot: resolves once music is playing. If the browser blocks autoplay, asks for a click/key (the loading screen waits for it)
+  gate(prompt) {   // boot: resolves once music is playing. If the browser blocks autoplay, the first click/key later starts it (nothing waits)
     if (!this.ok || !this.on) return Promise.resolve();
     return new Promise(res => {
       const t = this.firstSong() || this.pick(null, false); if (!t) { res(); return; }
       const pr = this.play(t); if (!pr || !pr.then) { res(); return; }
       pr.then(() => { this.unlocked = true; res(); }, err => {
-        if (err && err.name === 'NotAllowedError') { this.el = null; this.cur = null; this._played = false; this._gate = res; prompt && prompt(); } else res();
+        if (err && err.name === 'NotAllowedError') { this.el = null; this.cur = null; this._played = false; try { this.chip.classList.remove('on'); } catch (x) { /* ignore */ } res(); } else res();   // blocked: no prompt — the opening song starts on the very first click/key in the menu (not consumed)
       });
     });
   }   // end of a song / skip key: any other song
@@ -2257,7 +2257,7 @@ class Game {
   }
   bootLoad() {   // first screen: only your selected car; everything else comes when needed
     const sp = this.ok && this.carSpec, urls = sp && sp.model ? [sp.model] : [];
-    this.loadScreen(urls, 'Carregando', null, () => this.music.gate(() => { $('lvTxt').textContent = 'Pronto · aperte uma tecla ou clique'; $('loadscr').classList.add('wait'); })).then(() => { try { this.warm(); } catch (e) { /* ignore */ } });
+    this.loadScreen(urls, 'Carregando', null, () => this.music.gate()).then(() => { try { this.warm(); } catch (e) { /* ignore */ } });
   }
   cancelLoad() { this._ld = null; $('loadscr').hidden = true; this.leave(); }
   warm() {   // compiles every shader and uploads every texture of the scene now, instead of in the first frames of the race
