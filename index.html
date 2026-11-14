@@ -360,6 +360,26 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 #lvInfo b{color:var(--hazard);font-weight:600}
 #lvBar{position:absolute;left:32px;right:32px;bottom:32px;height:16px;border:2px solid #3a3e46;background:#08090a;box-shadow:inset 0 2px 5px #000,0 1px 0 #50545c}
 #lvBar i{display:block;height:100%;width:0;background:linear-gradient(#ffcb45,var(--hazard) 55%,#d98f00);box-shadow:0 0 14px rgba(255,176,0,.55)}
+#deck{position:fixed;right:32px;bottom:32px;z-index:650;width:264px;padding:8px;background:linear-gradient(#262a31,#0f1114);border:2px solid #3a3e46;box-shadow:0 0 0 2px #000,0 8px 24px rgba(0,0,0,.55),inset 0 1px 0 #5a5f68;font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hazard);user-select:none}
+#deck[hidden]{display:none}
+#dkLcd{background:#050a04;border:2px solid #000;box-shadow:inset 0 0 14px #000;padding:7px 9px 8px;text-shadow:0 0 7px rgba(255,176,0,.65)}
+#dkTop{display:flex;justify-content:space-between;font-size:8px;opacity:.8}
+#dkMq{overflow:hidden;white-space:nowrap;margin:7px 0 7px;font-size:15px;letter-spacing:.1em;line-height:1.2}
+#dkMq .in{display:inline-block;white-space:nowrap}#dkMq .in span{display:inline-block;padding-right:44px}#dkMq .in span+span{display:none}
+#dkMq.mq .in span+span{display:inline-block}#dkMq.mq .in{animation:dkmq var(--mqd,8s) linear infinite}
+@keyframes dkmq{to{transform:translateX(-50%)}}
+#dkRow{display:flex;gap:8px;align-items:center}
+#dkEq{display:flex;gap:2px;align-items:flex-end;height:12px;flex:none}#dkEq i{display:block;width:3px;height:3px;background:var(--hazard)}
+#deck.playing #dkEq i{animation:dkeq .7s ease-in-out infinite alternate}#dkEq i:nth-child(2){animation-delay:-.2s!important}#dkEq i:nth-child(3){animation-delay:-.45s!important}#dkEq i:nth-child(4){animation-delay:-.1s!important}#dkEq i:nth-child(5){animation-delay:-.33s!important}
+@keyframes dkeq{from{height:2px}to{height:12px}}
+#dkBar{flex:1;height:5px;background:#1a1200;border:1px solid #4a3300}#dkBar i{display:block;height:100%;width:0;background:linear-gradient(#ffcb45,#d98f00)}
+#dkTm{font-size:9px;min-width:28px;text-align:right}
+#dkKeys{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+#dkKeys button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;place-items:center;height:30px;color:#cfd3d9;background:linear-gradient(#3a3f47,#1b1e23);border:1px solid #000;border-bottom-width:3px;box-shadow:inset 0 1px 0 #6a707a}
+#dkKeys button:hover{color:#fff;filter:brightness(1.2)}#dkKeys button:active,#dkKeys button.lit{border-bottom-width:1px;margin-top:2px;height:28px}
+#dkKeys button.lit{color:var(--hazard-ink);background:linear-gradient(#ffcb45,var(--hazard) 55%,#d98f00);box-shadow:0 0 10px rgba(255,176,0,.5)}
+#dkKeys svg{width:14px;height:14px;display:block}
+@media (max-width:900px){#deck{display:none}}
 #nowp{position:fixed;left:32px;top:24px;z-index:700;max-width:60vw;padding:7px 12px 7px 10px;font:600 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:rgba(8,9,10,.72);border-left:3px solid var(--hazard);opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .4s;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #nowp.on{opacity:1;transform:none}#nowp b{color:var(--hazard);font-weight:600}
 #loadscr.wait #lvTxt{color:var(--hazard);animation:lvb 1s steps(2,jump-none) infinite}@keyframes lvb{50%{opacity:.25}}
@@ -2046,7 +2066,7 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
     cfg = cfg || {}; this.g = game; this.list = (cfg.tracks || []).filter(t => t && t.file); this.vol = cfg.volume == null ? 0.6 : cfg.volume; this.fade = Math.max(0.1, cfg.fade == null ? 1.2 : cfg.fade); this.duckTo = cfg.duck == null ? 0.3 : cfg.duck;
     this.on = true; this.duckV = 1; this.dv = 1; this.cur = null; this.el = null; this.unlocked = false; this._gate = null; this._played = false; this.bad = new Set(); this.ok = this.list.length > 0; if (!this.ok) return;
     this.els = [0, 1].map(() => { const a = new Audio(); a.preload = 'auto'; a._m = 0; a._t = 0; a._kill = false; a.onended = () => { if (a === this.el) this.next(); }; a.onerror = () => this.failed(a); return a; });
-    this.chip = document.createElement('div'); this.chip.id = 'nowp'; document.body.appendChild(this.chip);
+    this.chip = document.createElement('div'); this.chip.id = 'nowp'; document.body.appendChild(this.chip); this.hist = []; this.stopped = false; this.buildDeck();
     const unlock = e => {   // first click/key: the browser now allows sound. While the flame screen waits for it, this gesture is consumed (it does not start a race)
       removeEventListener('pointerdown', unlock, true); removeEventListener('keydown', unlock, true); this.unlocked = true;
       if (this._gate) { const r = this._gate; this._gate = null; try { e.stopImmediatePropagation(); e.preventDefault(); } catch (x) { /* ignore */ } if (!this.el) this.auto(); r(); return; }
@@ -2061,18 +2081,20 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
   tick() {
     this.dv += (this.duckV - this.dv) * 0.12; const step = 0.05 / this.fade, e = this.eff();
     for (const a of this.els) { if (a._m < a._t) a._m = Math.min(a._t, a._m + step); else if (a._m > a._t) a._m = Math.max(a._t, a._m - step); try { a.volume = Math.max(0, Math.min(1, a._m * e)); } catch (x) { /* ignore */ } if (a._kill && a._m <= 0.001) { a._kill = false; a.pause(); } }
+    this._dk = (this._dk || 0) + 1; if (this._dk % 4 === 0) this.refresh();
   }
   racing() { const st = this.g.state; return st === 'race' || st === 'countdown' || st === 'paused' || st === 'loading'; }
   pick(exclude, race) { const pool = this.list.filter(t => !this.bad.has(t.id) && !(race && t.menuOnly) && (this.list.length < 2 || !exclude || t.id !== exclude.id)); return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; }
   songFor(def) { const base = def && (def.variantOf || def.id), t = this.list.find(x => x.track === base && !this.bad.has(x.id)); return t || this.pick(this.cur, true); }
-  play(t, fast) {   // cross-fade to song t
-    if (!this.ok || !t) return; const old = this.el, a = this.els[old === this.els[0] ? 1 : 0];
+  play(t, fast, noHist) {   // cross-fade to song t
+    if (!this.ok || !t) return; this.stopped = false; if (this.cur && this.cur !== t && !noHist) { this.hist.push(this.cur); if (this.hist.length > 20) this.hist.shift(); }
+    const old = this.el, a = this.els[old === this.els[0] ? 1 : 0];
     if (old) { old._t = 0; old._kill = true; }
     if (a._f !== t.file) { a._f = t.file; a.src = t.file; } else if (a.currentTime > 0) a.currentTime = 0;
     a._m = 0; a._t = 1; a._kill = false; this.el = a; this.cur = t; this._played = true; if (fast) a._m = 0.4;
     const pr = a.play(); this.say(t.title); return pr;
   }
-  say(title) { clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
+  say(title) { if (this.deckOn()) return; clearTimeout(this._ct); this.chip.innerHTML = '<b>♪</b> ' + String(title).replace(/[<>&]/g, ''); this.chip.classList.add('on'); this._ct = setTimeout(() => this.chip.classList.remove('on'), 4500); }
   firstSong() { return !this._played && this.list.find(t => t.first && !this.bad.has(t.id)) || null; }
   auto() { if (!this.ok || !this.on) return; const g = this.g; const p = g.state === 'race' ? this.songFor(g.trackDef) : (this.firstSong() || this.pick(this.cur, this.racing())); const pr = this.play(p); if (pr && pr.catch) pr.catch(() => { /* blocked until the first click/key */ }); }
   next() { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.pick(this.cur, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
@@ -2086,11 +2108,36 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
       });
     });
   }   // end of a song / skip key: any other song
+  deckOn() { const m = document.getElementById('menu'); return !!(this.deck && this.g.state === 'menu' && m && !m.hidden && innerWidth > 900); }
+  buildDeck() {   // old record-player style deck on the home screen: LCD with scrolling title + keys  |◀◀  ■  ▶  ▶▶|
+    const ic = { prev: '<path fill="currentColor" d="M5 5h2.4v14H5zM20 5v14L8.5 12z"/>', stop: '<path fill="currentColor" d="M6 6h12v12H6z"/>', play: '<path fill="currentColor" d="M7 4v16l13-8z"/>', next: '<path fill="currentColor" d="M16.6 5H19v14h-2.4zM4 5l11.5 7L4 19z"/>' };
+    const d = this.deck = document.createElement('div'); d.id = 'deck'; d.hidden = true;
+    d.innerHTML = '<div id="dkLcd"><div id="dkTop"><span>\u266a TUFG Radio</span><span id="dkNo"></span></div><div id="dkMq"><div class="in"></div></div><div id="dkRow"><div id="dkEq"><i></i><i></i><i></i><i></i><i></i></div><div id="dkBar"><i></i></div><span id="dkTm">0:00</span></div></div><div id="dkKeys">' +
+      ['prev|Anterior', 'stop|Parar', 'play|Tocar', 'next|Próxima'].map(x => { const [k, t] = x.split('|'); return '<button type="button" tabindex="-1" data-k="' + k + '" title="' + t + '" aria-label="' + t + '"><svg viewBox="0 0 24 24">' + ic[k] + '</svg></button>'; }).join('') + '</div>';
+    document.body.appendChild(d);
+    this.dk = { mq: d.querySelector('#dkMq'), in: d.querySelector('#dkMq .in'), no: d.querySelector('#dkNo'), bar: d.querySelector('#dkBar i'), tm: d.querySelector('#dkTm'), stop: d.querySelector('[data-k=stop]'), play: d.querySelector('[data-k=play]') };
+    d.addEventListener('mousedown', e => e.preventDefault());
+    d.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; this.unlocked = true; const k = b.dataset.k; if (k === 'prev') this.prev(); else if (k === 'next') this.skip(); else if (k === 'stop') this.stop(); else this.resume(); this.refresh(); try { b.blur(); } catch (x) { /* ignore */ } });
+  }
+  refresh() {
+    const d = this.deck; if (!d) return; const m = document.getElementById('menu'), vis = this.g.state === 'menu' && !!m && !m.hidden; if (d.hidden === vis) d.hidden = !vis; if (!vis) return;
+    const t = this.cur, a = this.el, k = this.dk, title = t ? String(t.title) : 'TUFG Radio', playing = !!a && !this.stopped && !a.paused;
+    if (this._mqT !== title) { this._mqT = title; const h = title.replace(/[<>&]/g, ''); k.in.innerHTML = '<span>' + h + '</span><span>' + h + '</span>'; k.mq.classList.remove('mq'); k.in.style.animation = 'none'; this._mqM = false; }
+    if (!this._mqM && k.mq.clientWidth > 0) { this._mqM = true; const w = k.in.firstChild.offsetWidth, over = w - 44 > k.mq.clientWidth; k.mq.classList.toggle('mq', over); k.in.style.animation = ''; if (over) k.mq.style.setProperty('--mqd', (w / 38).toFixed(1) + 's'); }
+    k.no.textContent = t ? String(this.list.indexOf(t) + 1).padStart(2, '0') + '/' + String(this.list.length).padStart(2, '0') : '';
+    const cur = a && !this.stopped ? a.currentTime || 0 : 0, dur = a && isFinite(a.duration) ? a.duration : 0; k.bar.style.width = (dur ? Math.min(100, cur / dur * 100) : 0).toFixed(1) + '%';
+    k.tm.textContent = Math.floor(cur / 60) + ':' + String(Math.floor(cur % 60)).padStart(2, '0');
+    d.classList.toggle('playing', playing); k.play.classList.toggle('lit', playing); k.stop.classList.toggle('lit', !playing);
+  }
+  stop() { if (!this.ok) return; this.stopped = true; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; }
+  resume() { if (!this.ok || !this.on || (this.el && !this.stopped)) return; this.stopped = false; const pr = this.play(this.cur || this.firstSong() || this.pick(null, this.racing())); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); }
+  skip() { this.stopped = false; this.next(); }
+  prev() { if (!this.ok || !this.on) return; this.unlocked = true; const t = this.hist.pop() || this.cur; if (!t) { this.resume(); return; } const pr = this.play(t, false, true); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); }
   failed(a) { if (a !== this.el || !this.cur) return; this.bad.add(this.cur.id); const t = this.pick(null); this.el = null; if (t && this.bad.size < this.list.length) setTimeout(() => { if (this.unlocked && this.on) this.play(t); }, 300); }
   countdown() { if (!this.ok) return; for (const a of this.els) { a._t = 0; a._kill = true; } this.el = null; this.chip.classList.remove('on'); }   // menu music fades out while the lights count down
-  raceStart(def) { if (this.ok && this.on && this.unlocked) { const pr = this.play(this.songFor(def)); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
+  raceStart(def) { if (this.ok && this.on && this.unlocked && !this.stopped) { const pr = this.play(this.songFor(def)); if (pr && pr.catch) pr.catch(() => { /* ignore */ }); } }
   duck(v) { this.duckV = v ? this.duckTo : 1; }
-  setOn(v) { this.on = v; if (!this.ok) return; if (v && this.unlocked && !this.el) this.auto(); if (!v) this.chip.classList.remove('on'); }
+  setOn(v) { this.on = v; if (!this.ok) return; if (v && this.unlocked && !this.el && !this.stopped) this.auto(); if (!v) this.chip.classList.remove('on'); }
 }
 
 class Game {
