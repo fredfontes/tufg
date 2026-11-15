@@ -230,6 +230,7 @@ body.split #carTag small{font-size:9px;margin-top:3px}
 }
 
 /* ---- touch mode (vertical / phone screens): no 2-player, on-screen controls for player 1 ---- */
+body.tm kbd,body.tm .kh{display:none!important}   /* touch: no keyboard hints */
 body.tm #bTwo,body.tm #gPl,body.tm .pcard,body.tm .mkeys,body.tm .hint{display:none!important}
 #touch{position:absolute;inset:0;z-index:5;pointer-events:none;-webkit-tap-highlight-color:transparent;touch-action:none}
 #touch[hidden]{display:none}
@@ -470,7 +471,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
           <div class="mhidden" hidden><p class="lede" id="mBlurb"></p>
           <p class="lede lede2">Cruze a linha de chegada no menor tempo, desvie do tráfego e use o freio de mão para derrapar nas curvas fechadas.</p></div></div>
       </div>
-      <div class="btns mbtns"><button class="btn primary" id="bStart" type="button">Corrida rápida <small>Enter</small></button><button class="btn" id="bChamp" type="button">Campeonato <small>X</small></button><button class="btn" id="bTwo" type="button">Tela dividida <small id="mCar2">2</small></button><button class="btn" id="bTracks" type="button">Pista <small id="mTrack"></small></button><button class="btn" id="bGarage" type="button">Garagem <small id="mCar">aleatório</small></button></div>
+      <div class="btns mbtns"><button class="btn primary" id="bStart" type="button">Corrida rápida <small class="kh">Enter</small></button><button class="btn" id="bChamp" type="button">Campeonato <small class="kh">X</small></button><button class="btn" id="bTwo" type="button">Tela dividida <small id="mCar2">2</small></button><button class="btn" id="bTracks" type="button">Pista <small id="mTrack"></small></button><button class="btn" id="bGarage" type="button">Garagem <small id="mCar">aleatório</small></button></div>
       <div class="pcard"><h3>Jogador 1</h3>
         <div class="pk"><span>Dirigir</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span></div>
         <div class="pk"><span>Freio de mão</span><span><kbd>Espaço</kbd></span></div>
@@ -493,7 +494,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.63</summary>
+        <summary>Estado do projeto · v0.64</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -505,13 +506,13 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 
   <section id="garage" class="screen gscreen" hidden>
     <div class="gdock">
-      <div class="gtop"><div class="eyebrow" id="gEye">Escolha seu carro · <kbd>←</kbd><kbd>→</kbd> navegar</div><div class="gtr"><div class="seg" id="gPaintBox" hidden><button type="button" id="gPaint" aria-label="Trocar cor do carro (Espaço)" title="Trocar cor (Espaço)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg><i class="pdot" id="gDot"></i></button></div><div class="seg" id="gPl" role="radiogroup" aria-label="Jogador"><button type="button" role="radio" data-v="1" aria-checked="true">Jogador 1</button><button type="button" role="radio" data-v="2" aria-checked="false">Jogador 2</button></div><div class="cash" id="gCash" hidden></div></div></div>
+      <div class="gtop"><div class="eyebrow" id="gEye">Escolha seu carro<span class="kh"> · <kbd>←</kbd><kbd>→</kbd> navegar</span></div><div class="gtr"><div class="seg" id="gPaintBox" hidden><button type="button" id="gPaint" aria-label="Trocar cor do carro (Espaço)" title="Trocar cor (Espaço)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg><i class="pdot" id="gDot"></i></button></div><div class="seg" id="gPl" role="radiogroup" aria-label="Jogador"><button type="button" role="radio" data-v="1" aria-checked="true">Jogador 1</button><button type="button" role="radio" data-v="2" aria-checked="false">Jogador 2</button></div><div class="cash" id="gCash" hidden></div></div></div>
       <div class="gmain"><button class="garr" id="gPrev" type="button" aria-label="Carro anterior">◀</button><div class="ginfo" id="gInfo" aria-live="polite"></div><button class="garr" id="gNext" type="button" aria-label="Próximo carro">▶</button></div>
       <div class="gbot">
         <div id="gList" class="gstrip" role="radiogroup" aria-label="Carros"></div>
         <div class="btns">
-          <button class="btn primary" id="gGo" type="button">Correr <small>Enter</small></button>
-          <button class="btn" id="gBack" type="button">Voltar <small>Esc</small></button>
+          <button class="btn primary" id="gGo" type="button">Correr <small class="kh">Enter</small></button>
+          <button class="btn" id="gBack" type="button">Voltar <small class="kh">Esc</small></button>
         </div>
       </div>
     </div>
@@ -519,7 +520,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 
   <section id="tracks" class="screen" hidden>
     <div class="slab">
-      <div class="eyebrow">Escolha a pista · <kbd>↑</kbd><kbd>↓</kbd> seção · <kbd>←</kbd><kbd>→</kbd> opção</div>
+      <div class="eyebrow">Escolha a pista<span class="kh"> · <kbd>↑</kbd><kbd>↓</kbd> seção · <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       <h2>Pistas</h2>
       <div id="tList" class="glist" role="radiogroup" aria-label="Pistas"></div>
       <div class="opts">
@@ -527,8 +528,8 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="opt"><span class="lbl">Clima</span><div id="tWx" class="seg" role="radiogroup" aria-label="Clima"></div></div>
       </div>
       <div class="btns">
-        <button class="btn primary" id="tGo" type="button">Correr <small>Enter</small></button>
-        <button class="btn" id="tBack" type="button">Voltar <small>Esc</small></button>
+        <button class="btn primary" id="tGo" type="button">Correr <small class="kh">Enter</small></button>
+        <button class="btn" id="tBack" type="button">Voltar <small class="kh">Esc</small></button>
       </div>
     </div>
   </section>
@@ -542,10 +543,10 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       <details id="cRiv"><summary>Rivais · garagem</summary><ul id="cRivList"></ul></details>
       <div id="cGrid" class="glist" role="group" aria-label="Etapas do campeonato"></div>
       <div class="btns">
-        <button class="btn primary" id="cGo" type="button">Começar <small>Enter</small></button>
+        <button class="btn primary" id="cGo" type="button">Começar <small class="kh">Enter</small></button>
         <button class="btn" id="cGarage" type="button">Garagem <small id="cCash"></small></button>
         <button class="btn" id="cReset" type="button">Reiniciar campeonato</button>
-        <button class="btn" id="cBack" type="button">Voltar <small>Esc</small></button>
+        <button class="btn" id="cBack" type="button">Voltar <small class="kh">Esc</small></button>
       </div>
     </div>
   </section>
@@ -555,8 +556,8 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       <div class="eyebrow">Corrida em espera</div>
       <h2>Pausado</h2>
       <div class="btns">
-        <button class="btn primary" id="pResume" type="button">Continuar <small>P</small></button>
-        <button class="btn" id="pRestart" type="button">Reiniciar <small>R</small></button>
+        <button class="btn primary" id="pResume" type="button">Continuar <small class="kh">P</small></button>
+        <button class="btn" id="pRestart" type="button">Reiniciar <small class="kh">R</small></button>
         <button class="btn" id="pMenu" type="button">Menu</button>
       </div>
       <div class="toggles">
@@ -580,9 +581,9 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       </div>
       <ol class="board" id="rPos" hidden></ol>
       <div class="btns">
-        <button class="btn primary" id="rAgain" type="button">Correr de novo <small>Enter</small></button>
+        <button class="btn primary" id="rAgain" type="button">Correr de novo <small class="kh">Enter</small></button>
         <button class="btn" id="rGarage" type="button" hidden>Garagem <small id="rCashB"></small></button>
-        <button class="btn" id="rMenu" type="button">Menu <small>Esc</small></button>
+        <button class="btn" id="rMenu" type="button">Menu <small class="kh">Esc</small></button>
       </div>
     </div>
   </section>
@@ -2409,7 +2410,7 @@ class Game {
   openShop() {   // championship garage: only owned cars can be used, the others can be bought with prize money
     this.mode = 'champ'; this.gmode = 'shop'; this.gp = 1; this.shopSel = this.champ.car; this.useCar(this.champ.car); this.$eyebrow(); this.buildGarage(); this.state = 'garage'; this.show('garage'); this.silence(); this.gdir = 1;
   }
-  $eyebrow() { const e = $('gEye'); e.textContent = ''; e.append(this.gmode === 'shop' ? 'Garagem do campeonato · classe ' + Config.champ.startClass + ' liberada · ' : 'Escolha seu carro · ↑↓ jogador · ', ...['←', '→'].map(k => { const x = document.createElement('kbd'); x.textContent = k; return x; })); }
+  $eyebrow() { const e = $('gEye'), shop = this.gmode === 'shop', h = document.createElement('span'); h.className = 'kh'; e.textContent = ''; h.append(' · ' + (shop ? '' : '↑↓ jogador · '), ...['←', '→'].map(k => { const x = document.createElement('kbd'); x.textContent = k; return x; })); e.append(shop ? 'Garagem do campeonato · classe ' + Config.champ.startClass + ' liberada' : 'Escolha seu carro', h); }
   closeGarage() { this.endSlide(null); if (this.gmode === 'shop') { this.gmode = 'pick'; this.openChamp(); return; } this.state = 'menu'; this.show('menu'); }
   // ---- carousel: the old car slides out sideways while the next one slides in ----
   endSlide(keep) { const o = this._out; if (o && o.m !== keep && this.scene) this.scene.remove(o.m.root); this._out = null; this._in = null; }
@@ -2519,7 +2520,7 @@ class Game {
     this.champNew(); this.cSel = 0; this.renderChamp(); this.champPreview();
   }
   startChamp() { this.mode = 'champ'; this.two = false; this.cRound = this.cSel; this.startRace(); }
-  setBtn(id, text, key) { const b = $(id); b.textContent = text + ' '; if (key) { const m = document.createElement('small'); m.textContent = key; b.appendChild(m); } }
+  setBtn(id, text, key) { const b = $(id); b.textContent = text + ' '; if (key) { const m = document.createElement('small'); m.className = 'kh'; m.textContent = key; b.appendChild(m); } }
   plainButtons() { this.setBtn('rAgain', 'Correr de novo', 'Enter'); this.setBtn('rMenu', 'Menu', 'Esc'); $('rGarage').hidden = true; $('rCash').hidden = true; }
   again() { if (this.mode === 'champ') { if (this.cRound >= this.cRounds().length) { this.openChamp(); return; } this.cRound = this.cNext == null ? this.cRound : this.cNext; } this.startRace(); }
   leave() { if (this.mode === 'champ') this.openChamp(); else this.toMenu(); }
