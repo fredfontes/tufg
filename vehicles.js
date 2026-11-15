@@ -127,7 +127,7 @@ window.TUFG_VEHICLES = {
   // Regra de classe: índice = média ponderada de velocidade e aceleração, cada uma normalizada dentro do seu intervalo (0 a 100).
   // Índice >= limite da classe define a letra; abaixo de B é C.
   grid: {
-    cars: 12, reduced: 8, versus: null, rowGap: 9, laneOffset: 2.6, playerSlot: null,
+    cars: 12, reduced: 6, versus: null, rowGap: 18, laneOffset: 2.6, playerSlot: null,
     balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
     names: ['Faísca', 'Trovão', 'Nitro', 'Cobra', 'Raio', 'Tubarão', 'Mestre Marcha', 'Sombra', 'Ferrugem', 'Dona Gasolina', 'Pé de Chumbo', 'Furacão', 'Pisca-Alerta', 'Zé do Turbo'],
     colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8, 0xe8761c, 0xe9c32a, 0x1fa3a3, 0xd6528f, 0x9aa3ad, 0x7a4e2d]

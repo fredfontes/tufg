@@ -495,7 +495,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       <details class="mdet">
         <summary>Estado do projeto · v0.63</summary>
         <ul>
-          <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 12 carros (11 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 8), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
+          <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
           <li><b>Não suportado:</b> multiplayer online (exige servidor), controle por giroscópio.</li>
         </ul>
@@ -722,7 +722,7 @@ Config.baseOrder = Config.trackOrder.slice();
 Config.champTracks = Config.trackOrder.filter(id => !Config.tracks[id].variantOf);   // championship stays on the original tracks   // tracks of the championship / random pick (secret tracks unlocked by cheat codes are appended to trackOrder only)
 for (const c of Object.values(Config.cars)) c.rating = rateCar(c);
 // Starting grid (single player): the player plus AI drivers. Defaults here; edit the `grid` block in vehicles.js.
-Config.grid = Object.assign({ cars: 12, reduced: 8, rowGap: 9, laneOffset: 2.6, playerSlot: null, balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
+Config.grid = Object.assign({ cars: 10, reduced: 5, rowGap: 18, laneOffset: 2.6, playerSlot: null, balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
   names: [], colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8] }, V.grid || {});
 
 /* ============================ Track ============================ */
