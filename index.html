@@ -64,6 +64,7 @@ body.kn .btn:not(.primary):focus{border-color:var(--hazard);color:var(--hazard)}
 .btn:disabled{opacity:.4;cursor:default;pointer-events:none}
 .btn small{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.05em;margin-left:8px;opacity:.7}
 .toggles{display:flex;flex-wrap:wrap;gap:8px}
+.tbr{flex-basis:100%;height:0}
 .tog{appearance:none;display:inline-flex;align-items:center;gap:10px;background:var(--asphalt-2);border:1px solid var(--line);color:var(--chalk);font-family:var(--mono);font-size:12px;padding:8px 12px;cursor:pointer}
 .tog i{width:30px;height:14px;border:1px solid var(--dim);position:relative;display:inline-block}
 .tog i::after{content:"";position:absolute;top:1px;left:1px;width:10px;height:10px;background:var(--dim);transition:transform .12s}
@@ -268,6 +269,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
 #menu .logotxt span{display:block;color:var(--hazard)}
 #menu .toggles{gap:6px}
 #menu .tog{font-size:11px;padding:6px 8px;gap:6px}
+#pause .toggles{gap:6px}#pause .tog{font-size:11px;padding:6px 8px;gap:6px}@media (max-width:380px){#pause .tog{font-size:10px;padding:5px 6px;gap:4px;letter-spacing:0}}   /* Filtro retrô + Alta resolução cabem na mesma linha (celular); Som + Música na linha de baixo */
 #menu .tog i{width:24px;height:12px}
 #menu .tog i::after{width:8px;height:8px}
 #menu .tog[aria-pressed="true"] i::after{transform:translateX(12px)}
@@ -495,7 +497,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.67</summary>
+        <summary>Estado do projeto · v0.70</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -564,7 +566,9 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
       <div class="toggles">
         <button class="tog" id="tRetro2" type="button" aria-pressed="true"><i></i>Filtro retrô <kbd>F</kbd></button>
         <button class="tog" id="tRes2" type="button" aria-pressed="false"><i></i>Alta resolução <kbd>H</kbd></button>
+        <span class="tbr"></span>
         <button class="tog" id="tSound2" type="button" aria-pressed="true"><i></i>Som <kbd>M</kbd></button>
+        <button class="tog" id="tMusic2" type="button" aria-pressed="true"><i></i>Música</button>
       </div>
     </div>
   </section>
@@ -2197,7 +2201,7 @@ class Jukebox {   // radio: streams the songs of music.js through two <audio> el
 class Game {
   constructor() {
     this.state = 'menu'; this.mode = 'quick'; this.prev = null; this.input = new Input(); this.sfx = new Sfx(); this.sfx2 = new Sfx(); this.two = false; this.gp = 1; this.H = [new Hum(this, 0), new Hum(this, 1)]; this.carModel2 = null; this.waitT = 0; this.last = performance.now(); this.acc = 0;
-    this.retro = this.load('retro', '1') === '1'; this.hires = this.load('hires', '0') === '1'; this.snd = this.load('snd', '1') === '1'; this.sfx.on = this.snd; this.sfx2.on = this.snd;
+    this.retro = this.load('retro', '1') === '1'; this.hires = this.load('hires', '0') === '1'; this.snd = this.load('snd', '1') === '1'; this.mus = this.load('mus', '1') === '1'; this.sfx.on = this.snd; this.sfx2.on = this.snd;
     this.unlocked = new Set(); try { for (const u of JSON.parse(this.load('unlock', '[]'))) this.unlocked.add(u); } catch (e) { /* none */ }
     for (const u of this.unlocked) if (u.startsWith('track:') && Config.tracks[u.slice(6)] && !Config.trackOrder.includes(u.slice(6))) Config.trackOrder.push(u.slice(6));
     let toks = []; try { toks = location.hash.slice(1).split(/[,&;]/).filter(Boolean); } catch (e) { /* no hash */ }   // e.g. index.html#falcao,serra
@@ -2222,7 +2226,7 @@ class Game {
     this.buildHudBits(); this.buildMini(); this.bindUI(); this.refreshToggles(); this.buildGarage(); this.buildTracks(); this.updateTrackLabels();
     this.ok = false;
     try { this.initGL(); this.ok = true; } catch (e) { console.error(e); const m = $('loaderr'); m.hidden = false; m.textContent = 'Não foi possível iniciar o 3D (' + (e && e.message || e) + '). O jogo precisa de WebGL e do Three.js carregado do cdnjs.'; $('bStart').disabled = true; }
-    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); this.music = new Jukebox(window.TUFG_MUSIC, this); this.music.on = this.snd; this.bootLoad();
+    this.resetRace(); this.show('menu'); this.frame = this.frame.bind(this); requestAnimationFrame(this.frame); this.music = new Jukebox(window.TUFG_MUSIC, this); this.music.on = this.snd && this.mus; this.bootLoad();
   }
   paintIdx(p, id) { if (!this._pt) { try { this._pt = JSON.parse(this.load('paints', '{}')) || {}; } catch (e) { this._pt = {}; } } const v = (this._pt[p] || {})[id]; return Number.isInteger(v) && v >= 0 ? v : 0; }
   paintSet(p, id, i) { this.paintIdx(p, id); (this._pt[p] = this._pt[p] || {})[id] = i; this.save('paints', JSON.stringify(this._pt)); }
@@ -2476,13 +2480,14 @@ class Game {
   }
   setRetro(v) { this.retro = v; this.save('retro', v ? '1' : '0'); this.refreshToggles(); this.applyQuality(); }
   setHires(v) { if (!this.retro) return; this.hires = v; this.save('hires', v ? '1' : '0'); this.refreshToggles(); this.applyQuality(); }
-  setSound(v) { this.snd = v; this.save('snd', v ? '1' : '0'); this.sfx.setOn(v); this.sfx2.setOn(v); if (this.music) this.music.setOn(v); this.refreshToggles(); if (v) { this.audio(); this.sfx.beep(660, 0.14); } }
+  setMusic(v) { this.mus = v; this.save('mus', v ? '1' : '0'); if (this.music) this.music.setOn(this.snd && v); this.refreshToggles(); }   // pause menu: only the jukebox; engine and effects stay
+  setSound(v) { this.snd = v; this.save('snd', v ? '1' : '0'); this.sfx.setOn(v); this.sfx2.setOn(v); if (this.music) this.music.setOn(v && this.mus); this.refreshToggles(); if (v) { this.audio(); this.sfx.beep(660, 0.14); } }
   audio() {   // unlocks WebAudio on any user gesture; the second player's voice shares the first one's context
     this.sfx.init(); if (this.sfx.ctx && !this.sfx2.ctx) { this.sfx2.init(this.sfx.ctx); this.mixSfx(); }
     if (this._pj && this.sfx.ctx) { this._pj = false; setTimeout(() => this.sfx.jingle(), 120); }   // a code from the URL: the jingle plays at the first click / key
   }
   mixSfx() { const sp = !!this._sp; this.sfx.setMix(sp ? 0.5 : 0.7, sp ? -0.6 : 0); this.sfx2.setMix(0.5, 0.6); }
-  refreshToggles() { for (const id of ['tRetro', 'tRetro2']) $(id).setAttribute('aria-pressed', this.retro); for (const id of ['tRes', 'tRes2']) { $(id).hidden = !this.retro; $(id).setAttribute('aria-pressed', this.hires); } for (const id of ['tSound', 'tSound2']) $(id).setAttribute('aria-pressed', this.snd); $('tGrid').setAttribute('aria-pressed', this.gridLow); $('tGridT').textContent = 'Grid reduzido (' + Config.grid.reduced + ')'; }
+  refreshToggles() { for (const id of ['tRetro', 'tRetro2']) $(id).setAttribute('aria-pressed', this.retro); for (const id of ['tRes', 'tRes2']) { $(id).hidden = !this.retro; $(id).setAttribute('aria-pressed', this.hires); } for (const id of ['tSound', 'tSound2']) $(id).setAttribute('aria-pressed', this.snd); $('tMusic2').setAttribute('aria-pressed', this.mus); $('tGrid').setAttribute('aria-pressed', this.gridLow); $('tGridT').textContent = 'Grid reduzido (' + Config.grid.reduced + ')'; }
   dragOrbit() {   // home screen + garage: hold the mouse button on the empty area and drag left/right to turn the car (the slow auto-turn resumes after a moment)
     let drag = null;
     addEventListener('pointerdown', e => {
@@ -2768,7 +2773,7 @@ class Game {
     on('rAgain', () => this.again()); on('rMenu', () => this.leave());
     for (const id of ['tRetro', 'tRetro2']) on(id, () => this.setRetro(!this.retro));
     for (const id of ['tRes', 'tRes2']) on(id, () => this.setHires(!this.hires));
-    for (const id of ['tSound', 'tSound2']) on(id, () => this.setSound(!this.snd)); on('tGrid', () => this.setGrid(!this.gridLow));
+    for (const id of ['tSound', 'tSound2']) on(id, () => this.setSound(!this.snd)); on('tGrid', () => this.setGrid(!this.gridLow)); on('tMusic2', () => this.setMusic(!this.mus));
     for (const b of $('gPl').children) b.addEventListener('click', () => { this.audio(); this.gp = +b.dataset.v; this.markSel(); const c = this.curSel(); this.gp === 2 ? this.useCar2(c === 'random' ? this.pickRandom2() : c) : this.useCar(c === 'random' ? this.pickRandom() : c); });
     addEventListener('keydown', e => this.onKey(e)); addEventListener('keyup', e => { if (e.code === 'Space' && this.state === 'garage') e.preventDefault(); }); addEventListener('pointerdown', () => document.body.classList.remove('kn'), true); this.bindTouch();
     for (const ev of ['pointerdown', 'click', 'touchstart', 'touchend']) addEventListener(ev, () => this.audio(), { passive: true, capture: true });
