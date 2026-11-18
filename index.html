@@ -230,6 +230,7 @@ body.split #carTag small{font-size:9px;margin-top:3px}
 }
 
 /* ---- touch mode (vertical / phone screens): no 2-player, on-screen controls for player 1 ---- */
+body.orbiting,body.orbiting *{cursor:grabbing!important;user-select:none}
 body.tm kbd,body.tm .kh{display:none!important}   /* touch: no keyboard hints */
 body.tm #bTwo,body.tm #gPl,body.tm .pcard,body.tm .mkeys,body.tm .hint{display:none!important}
 #touch{position:absolute;inset:0;z-index:5;pointer-events:none;-webkit-tap-highlight-color:transparent;touch-action:none}
@@ -494,7 +495,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.64</summary>
+        <summary>Estado do projeto · v0.67</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -703,7 +704,7 @@ Config.atmosphere = function (timeId, wxId) {   // time of day x weather -> ever
 };
 // Traffic: an entry may copy the look of a playable car (like: 'quadrado') and a category may list variants: [ {...}, {...} ] (one of them is drawn for every car of the category)
 Config.traffic = (function () {
-  const out = {}, LIKE = ['model', 'modelRot', 'modelScale', 'modelOffset', 'length', 'width'], skip = ['variants', 'like'];
+  const out = {}, LIKE = ['model', 'modelRot', 'modelScale', 'modelOffset', 'length', 'width', 'pilot'], skip = ['variants', 'like'];
   const build = (base, v, cat, key) => {
     const e = Object.assign({}, base, v); for (const k of skip) delete e[k];
     const like = v.like || (!v.variants && base.like), car = like && Config.cars[like];
@@ -1611,7 +1612,51 @@ function buildCar(spec) {
   }
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 5.6), new THREE.MeshBasicMaterial({ map: canvasTex(64, 64, (c, w, h) => { const g = c.createRadialGradient(32, 32, 4, 32, 32, 32); g.addColorStop(0, 'rgba(0,0,0,.65)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }), transparent: true, depthWrite: false }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06; root.add(shadow);
-  return { root, tilt, base, wheels, tail, body };
+  const m = { root, tilt, base, wheels, tail, body }; if (spec.pilot) addPilot(m, spec.pilot);
+  return m;
+}
+/* ---- pilot (cars.<id>.pilot in vehicles.js): a bust seated in the driver's seat. A .glb if given, otherwise a procedural bust with blonde hair that blows back with speed ---- */
+const PILOT_DEF = { pos: [0.4, 0.78, -0.25], rot: 0, scale: 1, height: 0.6, hair: 0xe3b94d, skin: 0xe0ac8a, shirt: 0xf2f2f2, strands: 18, sway: 1 };
+let pilotShared = null;
+function pilotGeo() {
+  return pilotShared || (pilotShared = { head: new THREE.SphereGeometry(0.105, 12, 10), torso: new THREE.BoxGeometry(0.4, 0.3, 0.2), neck: new THREE.CylinderGeometry(0.04, 0.045, 0.08, 8), arm: new THREE.BoxGeometry(0.09, 0.09, 0.3), cap: new THREE.SphereGeometry(0.118, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), strand: new THREE.BoxGeometry(0.05, 0.012, 1).translate(0, 0, -0.5) });
+}
+function buildPilotFallback(P) {
+  const g = pilotGeo(), group = new THREE.Group(), skin = new THREE.MeshLambertMaterial({ color: P.skin }), shirt = new THREE.MeshLambertMaterial({ color: P.shirt }), hair = new THREE.MeshLambertMaterial({ color: P.hair, side: THREE.DoubleSide });
+  const torso = new THREE.Mesh(g.torso, shirt); torso.position.y = 0.17; group.add(torso);
+  for (const sx of [-0.225, 0.225]) { const a = new THREE.Mesh(g.arm, shirt); a.position.set(sx, 0.2, 0.17); a.rotation.x = -0.25; group.add(a); }
+  const neck = new THREE.Mesh(g.neck, skin); neck.position.y = 0.36; group.add(neck);
+  const head = new THREE.Group(); head.position.y = 0.46; group.add(head);
+  const skull = new THREE.Mesh(g.head, skin); skull.scale.set(0.95, 1.08, 1); head.add(skull);
+  const cap = new THREE.Mesh(g.cap, hair); cap.position.y = 0.005; cap.rotation.x = -0.35; head.add(cap);   // hair cap: top and back of the head
+  const strands = [], n = Math.max(0, P.strands | 0);
+  for (let i = 0; i < n; i++) {
+    const u = n > 1 ? i / (n - 1) : 0.5, ang = (u - 0.5) * Math.PI * 1.15;   // spread over the back half of the head
+    const pivot = new THREE.Group(); pivot.rotation.order = 'YXZ'; pivot.position.set(Math.sin(ang) * 0.1, 0.07 + (i % 3) * 0.015, -Math.cos(ang) * 0.1); head.add(pivot);
+    const mesh = new THREE.Mesh(g.strand, hair); mesh.scale.set(1 + (i % 2) * 0.4, 1, 0.3); pivot.add(mesh);
+    strands.push({ pivot, mesh, ang, ph: i * 1.7 + Math.sin(i * 12.9898) * 3, len: 0.3 + 0.1 * ((i * 7) % 5) / 4 });
+  }
+  return { group, head, strands };
+}
+function fitPilot(src, P) {   // glb bust: scaled to P.height (m), centred, bottom at the seat; P.rot / P.scale turn and resize it
+  const obj = src.clone(true), box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  obj.position.set(-c.x, -box.min.y, -c.z); const h = new THREE.Group(); h.add(obj); h.scale.setScalar(P.height / (size.y || 1)); const o = new THREE.Group(); o.add(h); return o;
+}
+function addPilot(m, cfg) {
+  const P = Object.assign({}, PILOT_DEF, cfg), holder = new THREE.Group(); holder.position.set(P.pos[0], P.pos[1], P.pos[2]); holder.scale.setScalar(P.scale);
+  const turn = new THREE.Group(); turn.rotation.y = (Number(P.rot) || 0) * Math.PI / 180; holder.add(turn); m.tilt.add(holder);
+  const pl = m.pilot = { P, holder, turn, fb: buildPilotFallback(P), glb: null, t: Math.random() * 20, f: 0, yaw: 0 }; turn.add(pl.fb.group);
+  if (P.model && !P.fallback) Assets.load(P.model).then(src => { pl.glb = fitPilot(src, P); turn.remove(pl.fb.group); turn.add(pl.glb); if (window.TUFG) setRetroFilter(TUFG.game.retro); }).catch(e => { if (window.TUFG) TUFG.game.warn(P.model, e); else console.warn(P.model, e); });
+}
+function posePilot(m, q, dt) {   // wind: the hair (and the glb bust, slightly) leans back and flutters with the speed; parked = hair hangs still
+  const pl = m.pilot; if (!pl) return; const P = pl.P, sp = Math.abs(q.vf || 0), tf = clamp((sp - 3) / 32, 0, 1); pl.f += (tf - pl.f) * Math.min(1, dt * 4); pl.t += dt * (0.3 + pl.f); const f = pl.f, t = pl.t, st = clamp(q.steer || 0, -1, 1);
+  pl.yaw += (st * 0.45 - pl.yaw) * Math.min(1, dt * 6);
+  if (pl.glb) { const k = P.sway; pl.glb.rotation.set(-f * 0.1 * k, pl.yaw * 0.6, Math.sin(t * 14) * 0.03 * f * k); return; }
+  pl.fb.head.rotation.y = pl.yaw; const lat = clamp((q.latAcc || 0) * 0.012, -0.35, 0.35) * f;
+  for (const s of pl.fb.strands) {
+    const fl = Math.sin(t * 15 + s.ph), fl2 = Math.sin(t * 11 + s.ph * 1.7);
+    s.pivot.rotation.x = -(1 - f) * 1.45 + fl * 0.2 * f; s.pivot.rotation.y = s.ang * (0.25 + 0.55 * f) + fl2 * 0.22 * f - lat; s.mesh.scale.z = s.len * (0.8 + 0.5 * f + fl * 0.08 * f);
+  }
 }
 function buildTrafficProc(d, color) {
   const g = new THREE.Group(), body = new THREE.MeshLambertMaterial({ color }), L = d.length || 4.3, W = d.width || 1.9, wr = d.wheelR || 0.34;
@@ -1841,9 +1886,10 @@ class FX {
 
 /* ============================ Camera ============================ */
 class ChaseCam {
-  constructor(cam) { this.cam = cam; this.yaw = 0; this.x = 0; this.y = 3; this.z = -8; this.shake = 0; this.fov = 62; this.blend = 0; this.orbit = 0; this.mode = 0; this.back = false; }
+  constructor(cam) { this.cam = cam; this.yaw = 0; this.x = 0; this.y = 3; this.z = -8; this.shake = 0; this.fov = 62; this.blend = 0; this.orbit = 0; this.mode = 0; this.back = false; this.hold = 0; this.ov = 0; }
   attract(car, dt, dock) {   // dock: the garage panel covers the bottom of the screen, so aim lower to lift the car up
-    this.orbit += dt * 0.22; const a = this.orbit + 2.4, d = 7.2;
+    if (this.hold > 0) { this.hold -= dt; this.orbit += this.ov * dt; this.ov *= Math.exp(-2.5 * dt); } else this.orbit += dt * 0.22;   // mouse drag (see Game.dragOrbit) pauses the slow turntable for a moment
+    const a = this.orbit + 2.4, d = 7.2;
     this.setPose(car.x + Math.sin(a) * d, 2.1, car.z + Math.cos(a) * d, car.x, dock ? -0.1 : 1.0, car.z, 58, 0);
     this.x = this.cam.position.x; this.y = 2.1; this.z = this.cam.position.z; this.yaw = Math.atan2(car.x - this.x, car.z - this.z);
   }
@@ -2211,7 +2257,7 @@ class Game {
   buildTrafficMeshes() {
     if (this.trafficGroup) { this.scene.remove(this.trafficGroup); this.trafficGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
     this.trafficGroup = new THREE.Group(); this.scene.add(this.trafficGroup);
-    this.trafficMesh = this.traffic.cars.map(c => { const g = new THREE.Group(), proc = buildTrafficProc(Config.traffic[c.type], c.color); g.add(proc); g.userData.proc = proc; this.trafficGroup.add(g); return g; });
+    this.trafficMesh = this.traffic.cars.map(c => { const d = Config.traffic[c.type], g = new THREE.Group(), proc = buildTrafficProc(d, c.color); g.add(proc); g.userData.proc = proc; if (d.pilot) { const pm = { tilt: g }; addPilot(pm, d.pilot); g.userData.pm = pm; } this.trafficGroup.add(g); return g; });
   }
   newTraffic() {
     // trafficPool: null = everything · ['sedan', 'van'] = only these (category or id) · { sedan: 1.5, van: 3, 'Bus School': 4, truck: 0 } = weight multipliers by category and/or by variant name (0 = never; unlisted = 1; category x variant)
@@ -2290,13 +2336,13 @@ class Game {
   preloadNear(id) {   // garage: while you look at a car, fetch the previous and the next one in the background
     try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) { /* ignore */ }
     const ids = this.raceIds(), i = ids.indexOf(id); if (i < 0) return;
-    for (const k of [1, -1]) { const c = Config.cars[ids[(i + k + ids.length) % ids.length]]; if (c && c.model && !Assets.cache.has(c.model)) Assets.load(c.model).catch(() => { /* simple model + warning when used */ }); }
+    for (const k of [1, -1]) { const c = Config.cars[ids[(i + k + ids.length) % ids.length]]; if (c && c.model && !Assets.cache.has(c.model)) Assets.load(c.model).catch(() => { /* simple model + warning when used */ }); if (c && c.pilot && c.pilot.model && !c.pilot.fallback && !Assets.cache.has(c.pilot.model)) Assets.load(c.pilot.model).catch(() => { /* fallback bust */ }); }
   }
   raceUrls() {   // every .glb this race will show: your car(s), the rivals' cars and this track's traffic
-    const set = new Set(), add = id => { const sp = Config.cars[id]; if (sp && sp.model) set.add(sp.model); };
+    const set = new Set(), add = id => { const sp = Config.cars[id]; if (sp && sp.model) set.add(sp.model); if (sp && sp.pilot && sp.pilot.model && !sp.pilot.fallback) set.add(sp.pilot.model); };
     add(this.carId); if (this.two) add(this.carId2);
     if (this.roster) for (const r of this.roster.list) add(r.carId);
-    if (this.traffic) for (const c of this.traffic.cars) { const d = Config.traffic[c.type]; if (d && d.model) set.add(d.model); }
+    if (this.traffic) for (const c of this.traffic.cars) { const d = Config.traffic[c.type]; if (d && d.model) set.add(d.model); if (d && d.pilot && d.pilot.model && !d.pilot.fallback) set.add(d.pilot.model); }
     return [...set];
   }
   loadScreen(urls, label, tok, gate) {   // shows the flame screen until every url is loaded (errors do not block: that car falls back to the simple model)
@@ -2313,7 +2359,7 @@ class Game {
       .then(() => gate ? gate(() => { $('lvTxt').textContent = 'Pronto · aperte uma tecla ou clique'; el.classList.add('wait'); }) : null).then(() => { el.classList.remove('wait'); el.classList.add('out'); setTimeout(() => { if (el.classList.contains('out')) el.hidden = true; }, 400); });
   }
   bootLoad() {   // first screen: only your selected car; everything else comes when needed
-    const sp = this.ok && this.carSpec, urls = sp && sp.model ? [sp.model] : [];
+    const sp = this.ok && this.carSpec, urls = sp && sp.model ? [sp.model] : []; if (sp && sp.pilot && sp.pilot.model && !sp.pilot.fallback) urls.push(sp.pilot.model);
     this.loadScreen(urls, 'Carregando', null, () => new Promise(res => {   // first load: wait for the Continue button — that click is the gesture that lets the browser play the opening song
       const el = $('loadscr'), b = $('lvGo'); $('lvTxt').textContent = 'Pronto'; el.classList.add('wait'); try { b.focus({ preventScroll: true }); } catch (x) { /* ignore */ }
       const go = () => { b.removeEventListener('click', go); removeEventListener('keydown', key, true); this.music.unlocked = true; if (!this.music.el) this.music.auto(); res(); };
@@ -2437,6 +2483,20 @@ class Game {
   }
   mixSfx() { const sp = !!this._sp; this.sfx.setMix(sp ? 0.5 : 0.7, sp ? -0.6 : 0); this.sfx2.setMix(0.5, 0.6); }
   refreshToggles() { for (const id of ['tRetro', 'tRetro2']) $(id).setAttribute('aria-pressed', this.retro); for (const id of ['tRes', 'tRes2']) { $(id).hidden = !this.retro; $(id).setAttribute('aria-pressed', this.hires); } for (const id of ['tSound', 'tSound2']) $(id).setAttribute('aria-pressed', this.snd); $('tGrid').setAttribute('aria-pressed', this.gridLow); $('tGridT').textContent = 'Grid reduzido (' + Config.grid.reduced + ')'; }
+  dragOrbit() {   // home screen + garage: hold the mouse button on the empty area and drag left/right to turn the car (the slow auto-turn resumes after a moment)
+    let drag = null;
+    addEventListener('pointerdown', e => {
+      if (e.button || !this.menuLike() || this.state === 'loading') return; const t = e.target;
+      if (!(t && (t.classList && t.classList.contains('screen') || t.tagName === 'CANVAS'))) return;
+      drag = { id: e.pointerId, x: e.clientX, v: 0, t: performance.now() }; this.cam.hold = 1e9; this.cam.ov = 0; document.body.classList.add('orbiting');
+    });
+    addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.id) return; const now = performance.now(), dx = e.clientX - drag.x, dt = Math.max(0.008, (now - drag.t) / 1000); drag.x = e.clientX; drag.t = now;
+      this.cam.orbit -= dx * 0.008; drag.v += (clamp(-dx * 0.008 / dt, -6, 6) - drag.v) * 0.4;
+    });
+    const end = e => { if (!drag || (e && e.pointerId !== drag.id)) return; this.cam.ov = drag.v; this.cam.hold = 2.5; drag = null; document.body.classList.remove('orbiting'); };
+    addEventListener('pointerup', end); addEventListener('pointercancel', end); addEventListener('blur', () => end());
+  }
   setGrid(v) { this.gridLow = v; this.save('gridlow', v ? '1' : '0'); this.refreshToggles(); if (this.menuLike()) this.resetRace(); }
 
   // ---- championship: every track x every time of day (20 rounds), then the oasis finale ----
@@ -2712,6 +2772,7 @@ class Game {
     for (const b of $('gPl').children) b.addEventListener('click', () => { this.audio(); this.gp = +b.dataset.v; this.markSel(); const c = this.curSel(); this.gp === 2 ? this.useCar2(c === 'random' ? this.pickRandom2() : c) : this.useCar(c === 'random' ? this.pickRandom() : c); });
     addEventListener('keydown', e => this.onKey(e)); addEventListener('keyup', e => { if (e.code === 'Space' && this.state === 'garage') e.preventDefault(); }); addEventListener('pointerdown', () => document.body.classList.remove('kn'), true); this.bindTouch();
     for (const ev of ['pointerdown', 'click', 'touchstart', 'touchend']) addEventListener(ev, () => this.audio(), { passive: true, capture: true });
+    this.dragOrbit();
     addEventListener('focus', () => { if (this.state !== 'paused') this.audio(); });
     addEventListener('beforeunload', e => { if (this.two && !this.menuLike() && this.state !== 'result') { e.preventDefault(); e.returnValue = ''; } });   // Ctrl+W (P2 handbrake + P1 throttle) must not close the tab silently
     document.addEventListener('visibilitychange', () => { if (document.hidden && (this.state === 'race' || this.state === 'countdown')) this.pause(); });
@@ -3026,7 +3087,7 @@ class Game {
     m.root.position.set(q.x, 0, q.z); m.root.rotation.y = q.h;
     m.tilt.rotation.z = clamp(q.latAcc * 0.0032, -0.07, 0.07); m.tilt.rotation.x = clamp(-q.longAcc * 0.0012, -0.045, 0.05);
     for (const w of m.wheels) { w.spin.rotation.x += q.vf * dt / (w.r || 0.36); if (w.front) w.pivot.rotation.y = q.steer * 0.45; }
-    m.tail.color.setHex(q.braking ? 0xff2a1a : 0x661010); if (m.brakeFx) m.brakeFx.visible = !!q.braking;
+    m.tail.color.setHex(q.braking ? 0xff2a1a : 0x661010); if (m.brakeFx) m.brakeFx.visible = !!q.braking; if (m.pilot) posePilot(m, q, dt);
   }
   present(dt) {
     const split = this.isSplit(), gv = this.gview(), H = this.H, sim = this.sim, sim2 = this.sim2, A = this.atm, R = this.renderer;
@@ -3037,7 +3098,7 @@ class Game {
       const near = Math.abs(q.s - sim.s) < 320 || (split && Math.abs(q.s - sim2.s) < 320), show = near && (q.ghost <= 0 || q.ghost > 1e8 || Math.floor(q.ghost * 10) % 2 === 0);
       m.root.visible = show; if (show) this.pose(m, q, dt);
     }
-    this.traffic.cars.forEach((c, i) => { const t = this.trafficMesh[i]; t.position.set(c.x, 0, c.z); t.rotation.y = c.h; });
+    this.traffic.cars.forEach((c, i) => { const t = this.trafficMesh[i]; t.position.set(c.x, 0, c.z); t.rotation.y = c.h; if (t.userData.pm && Math.abs(c.s - sim.s) < 260) posePilot(t.userData.pm, { vf: c.speed }, dt); });
     // skids: rear wheels (slots 0-1 player 1, 2-3 player 2)
     [[sim, 0], [sim2, 2]].forEach(([q, w0], k) => {
       const sh = Math.sin(q.h), ch = Math.cos(q.h), sk = (k === 0 || split) && (q.slip > 3 || (q.hb && Math.abs(q.vf) > 12) || (q.braking && q.vf > 35));

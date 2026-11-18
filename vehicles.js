@@ -49,12 +49,12 @@
    Chuva e vento não são do carro: são do ambiente.
 
    GRID DE LARGADA (grid) — corrida normal e campeonato começam com o jogador + adversários controlados pela IA.
-     cars         total de carros na largada, jogador incluído (12 = 11 adversários). Use 1 para correr sozinho
+     cars         total de carros na largada, jogador incluído (10 = 9 adversários). Use 1 para correr sozinho
      reduced      total quando o jogador liga "Grid reduzido" no menu (PCs mais fracos)
      versus       total de carros na largada em 2 jogadores, os dois incluídos (null = igual a cars/reduced; 2 = só os dois, lado a lado; 8 = 6 de IA atrás)
      champBalance igual a balance, mas no campeonato (menor = o carro de cada rival pesa mais; rivais compram carros melhores com o prêmio)
      bossSkill    habilidade extra dos rivais nas pistas com  boss: true  (oásis)
-     rowGap       distância entre as fileiras (m)        laneOffset   distância das duas colunas ao eixo da pista (m)
+     rowGap       distância entre as fileiras (m; 18 = o dobro do original, de 9)       laneOffset   distância das duas colunas ao eixo da pista (m)
      playerSlot   posição do jogador no grid (0 = pole). null = 4ª de trás para frente; 'random' sorteia
      balance      0 = cada adversário usa os números reais do carro dele; 1 = todos iguais ao carro do jogador (corrida mais justa)
      skill        [mín, máx] ritmo de cada adversário, como fração do limite de cada curva (menor = mais cauteloso)
@@ -103,6 +103,21 @@
                                   'twin5' (5 raios duplos)  'hex6' (6 parafusos / hexagonal)  'ninja3' (estrela ninja, 3 pontas grossas)
                     Exemplo: glb: { capShape: 'turbine', capColor: '#e8e8ea', rimColor: '#c1121f', wheelRF: 0.40, wheelRR: 0.46, wheelWF: 0.24, wheelWR: 0.30 }
 
+   PILOTO (opcional, para conversíveis) — um busto sentado no banco do motorista, preso ao carro (acompanha a inclinação do carro)
+     pilot: { model: 'assets/models/pilots/models_pilots_blonde.glb', pos: [0.4, 0.78, -0.25], rot: 0, scale: 1, height: 0.6 }
+       model     (opcional) .glb do busto. Sem ele, ou se não carregar, aparece o piloto geométrico (fallback) com cabelo loiro
+       pos       [x, y, z] em metros a partir do centro do carro: x = esquerda (positivo) / direita (negativo), y = altura do ASSENTO (base do busto), z = frente (positivo) / trás
+                 O padrão [0.4, 0.78, -0.25] é o banco esquerdo. Ajuste até o busto ficar bem no lugar
+       rot       giro do busto em graus em torno do eixo vertical (0 = olhando para a frente; use 180 se o .glb estiver virado para trás)
+       scale     multiplicador de tamanho do busto (padrão 1)
+       height    altura do busto em metros, do assento ao topo da cabeça (padrão 0.6); o .glb é ajustado a esta altura
+       sway      só para o .glb: intensidade do balanço com a velocidade (1 = padrão, 0 = busto parado)
+       fallback  true = ignora o .glb e usa sempre o piloto geométrico
+       hair, skin, shirt  cores do fallback em hexadecimal (padrão loiro / pele / camisa branca)     strands  quantidade de mechas do cabelo do fallback (padrão 18)
+     O cabelo do fallback fica caído com o carro parado e vai esvoaçando para trás conforme a velocidade; a cabeça acompanha a direção.
+     O busto some junto com o carro nas câmeras de capô e para-choque.
+     Também vale no TRÁFEGO: coloque  pilot  na variante (ou na categoria) e todos os carros dela terão piloto; com  like  o piloto do carro copiado vem junto.
+
    PINTURA ALTERNATIVA (texturas)
      paint        (opcional, só carros com .glb) lista de pinturas extras, cada uma com uma textura alternativa que você mesmo mapeia:
                     paint: [ { name: 'Azul', color: '#1d4ed8', texture: 'assets/cars/fun/monster/mature_azul.png' }, ... ]
@@ -123,377 +138,380 @@
      O mesmo campo  code  funciona em pistas secretas (tracks.js, pista fora de  order ). Tempo secreto: digite  neve  (ou use  #neve ) para ligar/desligar a neve.
    Quais tipos aparecem em cada pista: campo  trafficPool  da pista (null = todos; aceita ids e nomes de categoria).
    ===================================================================== */
-window.TUFG_VEHICLES = {
-  // Regra de classe: índice = média ponderada de velocidade e aceleração, cada uma normalizada dentro do seu intervalo (0 a 100).
-  // Índice >= limite da classe define a letra; abaixo de B é C.
-  grid: {
-    cars: 12, reduced: 6, versus: null, rowGap: 18, laneOffset: 2.6, playerSlot: null,
-    balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
-    names: ['Faísca', 'Trovão', 'Nitro', 'Cobra', 'Raio', 'Tubarão', 'Mestre Marcha', 'Sombra', 'Ferrugem', 'Dona Gasolina', 'Pé de Chumbo', 'Furacão', 'Pisca-Alerta', 'Zé do Turbo'],
-    colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8, 0xe8761c, 0xe9c32a, 0x1fa3a3, 0xd6528f, 0x9aa3ad, 0x7a4e2d]
-  },
-
-  classes: {
-    weights: { speed: 0.5, accel: 0.5 },
-    ranges: {                                      // [mínimo, máximo] de cada atributo. speed e accel definem a classe; os demais servem de referência (barras da garagem e guia para criar carros)
-      speed: [50, 85],                             // maxSpeed em m/s  (50 ≈ 180 km/h, 85 ≈ 306 km/h)
-      accel: [8, 16],                              // accel em m/s²   (8 = lento, 16 = explosivo)
-      maxLat: [16, 30],                            // aderência lateral em m/s²  (16 = escorrega, 30 = gruda; acima de ~32 deixa de ser divertido)
-      brake: [28, 48],                             // frenagem em m/s²  (28 = longa, 48 = muito curta; ~38 é um esportivo comum)
-      steerRate: [1.5, 2.4],                       // giro em baixa velocidade, rad/s  (1.5 = pesado, 2.4 = nervoso; acima disso o carro fica instável)
-      reverseAccel: [5, 10]                        // aceleração em ré, m/s²  (quase não influencia; 7 é bom)
+   window.TUFG_VEHICLES = {
+    // Regra de classe: índice = média ponderada de velocidade e aceleração, cada uma normalizada dentro do seu intervalo (0 a 100).
+    // Índice >= limite da classe define a letra; abaixo de B é C.
+    grid: {
+      cars: 10, reduced: 5, versus: null, rowGap: 18, laneOffset: 2.6, playerSlot: null,
+      balance: 0.6, champBalance: 0.3, bossSkill: 0.05, skill: [0.9, 1.0], rubber: 0.05, trafficScale: 0.6,
+      names: ['Faísca', 'Trovão', 'Nitro', 'Cobra', 'Raio', 'Tubarão', 'Mestre Marcha', 'Sombra', 'Ferrugem', 'Dona Gasolina', 'Pé de Chumbo', 'Furacão', 'Pisca-Alerta', 'Zé do Turbo'],
+      colors: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0x23262b, 0x2e8b57, 0x7a4aa8, 0xe8761c, 0xe9c32a, 0x1fa3a3, 0xd6528f, 0x9aa3ad, 0x7a4e2d]
     },
-    thresholds: { B: 40, A: 56, S: 70 }
-  },
-
-  playerCar: 'vento',   // carro de reserva. Na prática o jogador escolhe na Garagem (ou sorteia). Também dá para forçar um com  index.html#id_do_carro
-
-  cars: {
-    // Classe S
-    mature: {
-      name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0x112950, trim: 0x262725,
-      // Exemplo de pinturas alternativas (descomente e aponte para as suas texturas):
-      // paint: [ { name: 'Vermelho', color: '#d62828', texture: 'assets/cars/fun/monster/cars_monster_mature_red.png' }, { name: 'Branco', color: '#f2f2f2', texture: 'assets/cars/fun/monster/cars_monster_mature_white.png' } ],
-      // Exemplo de ajuste das peças sobre o .glb (tudo opcional; sem o campo glb valem os padrões). Valores em metros a partir do centro do carro:
-      // glb: { wheels: true, caps: true, brake: { x: 0.8, y: 0.8, z: -2.25, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.26, wheelFront: 1.4, wheelRear: -1.3, wheelR: 0.36, wheelW: 0.26, capOut: 0.03, capSize: 0.72 },
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.8, z: -2.15, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.2, wheelRear: -1.2, wheelR: 0.42, wheelW: 0.26, 
-        capOut: 0.015, capSize: 0.68, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xABACB2
+  
+    classes: {
+      weights: { speed: 0.5, accel: 0.5 },
+      ranges: {                                      // [mínimo, máximo] de cada atributo. speed e accel definem a classe; os demais servem de referência (barras da garagem e guia para criar carros)
+        speed: [50, 85],                             // maxSpeed em m/s  (50 ≈ 180 km/h, 85 ≈ 306 km/h)
+        accel: [8, 16],                              // accel em m/s²   (8 = lento, 16 = explosivo)
+        maxLat: [16, 30],                            // aderência lateral em m/s²  (16 = escorrega, 30 = gruda; acima de ~32 deixa de ser divertido)
+        brake: [28, 48],                             // frenagem em m/s²  (28 = longa, 48 = muito curta; ~38 é um esportivo comum)
+        steerRate: [1.5, 2.4],                       // giro em baixa velocidade, rad/s  (1.5 = pesado, 2.4 = nervoso; acima disso o carro fica instável)
+        reverseAccel: [5, 10]                        // aceleração em ré, m/s²  (quase não influencia; 7 é bom)
       },
-      sound: { synth: 'i4', pitch: 1, volume: 1, turbo: false, pops: true },
-      maxSpeed: 85, accel: 16, brake: 42, reverseAccel: 5, maxLat: 18, steerRate: 2.5,
-      class: 'S'
+      thresholds: { B: 40, A: 56, S: 70 }
     },
-    cat: {
-      name: 'Gemini Cat', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.5, width: 2.2,
-      color: 0xE75912, trim: 0x836D41,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.55, y: 0.85, z: -2.15, w: 0.95, h: 0.5 }, limitX: 1.3, wheelIn: 0.298, wheelFront: 1.285, wheelRear: -1.288, wheelR: 0.35, wheelW: 0.26, wheelRR: 0.355,
-        capOut: 0.001, capSize: 0.7, capShape: 'mesh', capColor: 0x000000, rimColor: 0xA7AEA3,
+  
+    playerCar: 'vento',   // carro de reserva. Na prática o jogador escolhe na Garagem (ou sorteia). Também dá para forçar um com  index.html#id_do_carro
+  
+    cars: {
+      // Classe S
+      mature: {
+        name: 'Monster Mature', model: 'assets/cars/fun/monster/cars_monster_mature.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0x112950, trim: 0x262725,
+        // Exemplo de pinturas alternativas (descomente e aponte para as suas texturas):
+        // paint: [ { name: 'Vermelho', color: '#d62828', texture: 'assets/cars/fun/monster/cars_monster_mature_red.png' }, { name: 'Branco', color: '#f2f2f2', texture: 'assets/cars/fun/monster/cars_monster_mature_white.png' } ],
+        // Exemplo de ajuste das peças sobre o .glb (tudo opcional; sem o campo glb valem os padrões). Valores em metros a partir do centro do carro:
+        // glb: { wheels: true, caps: true, brake: { x: 0.8, y: 0.8, z: -2.25, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.26, wheelFront: 1.4, wheelRear: -1.3, wheelR: 0.36, wheelW: 0.26, capOut: 0.03, capSize: 0.72 },
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.8, z: -2.15, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.2, wheelRear: -1.2, wheelR: 0.42, wheelW: 0.26, 
+          capOut: 0.015, capSize: 0.68, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xABACB2
+        },
+        sound: { synth: 'i4', pitch: 1, volume: 1, turbo: false, pops: true },
+        maxSpeed: 85, accel: 16, brake: 42, reverseAccel: 5, maxLat: 18, steerRate: 2.5,
+        class: 'S'
       },
-      sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
-      maxSpeed: 83, accel: 15, brake: 48, reverseAccel: 7, maxLat: 20, steerRate: 2.4,
-      class: 'S'
-    },
-    web: {
-      name: 'Pixel Web', model: 'assets/cars/fun/pixel/cars_pixel_web.glb', modelRot: 90, length: 4.1, width: 2.2,
-      color: 0xFFCE35, trim: 0x8A9499, 
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.75, y: 0.7, z: -2.15, w: 1.5, h: 0.5 }, limitX: 1.3, wheelIn: 0.39, wheelFront: 1.11, wheelRear: -1.35, wheelR: 0.34, wheelW: 0.21, wheelRR: 0.35,
-        capOut: 0.001, capSize: 0.7, capShape: 'turbine', capColor: 0xAFB5BD, rimColor: 0x000000,
+      cat: {
+        name: 'Gemini Cat', model: 'assets/cars/fun/gemini/cars_gemini_cat.glb', modelRot: 90, length: 4.5, width: 2.2,
+        color: 0xE75912, trim: 0x836D41,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.55, y: 0.85, z: -2.15, w: 0.95, h: 0.5 }, limitX: 1.3, wheelIn: 0.298, wheelFront: 1.285, wheelRear: -1.288, wheelR: 0.35, wheelW: 0.26, wheelRR: 0.355,
+          capOut: 0.001, capSize: 0.7, capShape: 'mesh', capColor: 0x000000, rimColor: 0xA7AEA3,
+        },
+        sound: { synth: 'v6', pitch: 0.85, volume: 1, turbo: true, pops: true },
+        maxSpeed: 83, accel: 15, brake: 48, reverseAccel: 7, maxLat: 20, steerRate: 2.4,
+        class: 'S'
       },
-      sound: { synth: 'v8', pitch: 0.8, volume: 1.2, turbo: false, pops: true },
-      maxSpeed: 83, accel: 15, brake: 48, reverseAccel: 7, maxLat: 20, steerRate: 2.4,
-      class: 'S'
-    },
-    
-    // Class A
-    future: {
-      name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0xFFFFFF, trim: 0x6E726C,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.8, y: 0.85, z: -2.15, w: 0.75, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.33, wheelRear: -1.48, wheelR: 0.4, wheelW: 0.26, wheelRR: 0.405,
-        capOut: 0.001, capSize: 0.4, capShape: 'ninja3', capColor: 0x000000, rimColor: 0x747774
+      web: {
+        name: 'Pixel Web', model: 'assets/cars/fun/pixel/cars_pixel_web.glb', modelRot: 90, length: 4.1, width: 2.2,
+        color: 0xFFCE35, trim: 0x8A9499, 
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.75, y: 0.7, z: -2.15, w: 1.5, h: 0.5 }, limitX: 1.3, wheelIn: 0.39, wheelFront: 1.11, wheelRear: -1.35, wheelR: 0.34, wheelW: 0.21, wheelRR: 0.35,
+          capOut: 0.001, capSize: 0.7, capShape: 'turbine', capColor: 0xAFB5BD, rimColor: 0x000000,
+        },
+        sound: { synth: 'v8', pitch: 0.8, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 83, accel: 15, brake: 48, reverseAccel: 7, maxLat: 20, steerRate: 2.4,
+        class: 'S'
       },
-      sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
-      maxSpeed: 60, accel: 14, brake: 22, reverseAccel: 6, maxLat: 22, steerRate: 1.8,
-       class: 'A'
-    },
-    daemon: {
-      name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 4.5, width: 2.2,
-      paint: [ 
-        { name: 'Cinza', color: '#7B7B7B', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_gray.jpg' },
-        { name: 'Preto', color: '#222222', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_black.jpg' } 
-      ],
-      color: 0x5E2762, trim: 0xA8915C,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.22, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.235, wheelRear: -1.36, wheelR: 0.38, wheelW: 0.26, 
-        capOut: 0.001, capSize: 0.46, capShape: 'star5', capColor: 0xD5B272, rimColor: 0x000000
+      
+      // Class A
+      future: {
+        name: 'Crossing Future', model: 'assets/cars/fun/crossing/cars_crossing_future.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0xFFFFFF, trim: 0x6E726C,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.8, y: 0.85, z: -2.15, w: 0.75, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.33, wheelRear: -1.48, wheelR: 0.4, wheelW: 0.26, wheelRR: 0.405,
+          capOut: 0.001, capSize: 0.4, capShape: 'ninja3', capColor: 0x000000, rimColor: 0x747774
+        },
+        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: true, pops: true },
+        maxSpeed: 60, accel: 14, brake: 22, reverseAccel: 6, maxLat: 22, steerRate: 1.8,
+         class: 'A'
       },
-      sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
-      maxSpeed: 70, accel: 12, brake: 28, reverseAccel: 3, maxLat: 20, steerRate: 2.4,
-      class: 'A'
-    },
-    aviator: {
-      name: 'Warmblood Aviator', model: 'assets/cars/fun/warmblood/cars_warmblood_aviator.glb', modelRot: 90, length: 4.5, width: 2.2,
-      color: 0x8B080B, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.54, y: 0.865, z: -2.2, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.268, wheelFront: 1.18, wheelRear: -1.315, wheelR: 0.4, wheelW: 0.26, 
-        capOut: 0.001, capSize: 0.7, capColor: 0x000000, rimColor: 0xFFFFFF
+      daemon: {
+        name: 'Rapid Daemon', model: 'assets/cars/fun/rapid/cars_rapid_daemon.glb', modelRot: 90, length: 4.5, width: 2.2,
+        paint: [ 
+          { name: 'Cinza', color: '#7B7B7B', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_gray.jpg' },
+          { name: 'Preto', color: '#222222', capColor: '#DBDCDA', texture: 'assets/cars/fun/rapid/cars_rapid_daemon_color_black.jpg' } 
+        ],
+        color: 0x5E2762, trim: 0xA8915C,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.22, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.235, wheelRear: -1.36, wheelR: 0.38, wheelW: 0.26, 
+          capOut: 0.001, capSize: 0.46, capShape: 'star5', capColor: 0xD5B272, rimColor: 0x000000
+        },
+        sound: { synth: 'v8', pitch: 0.95, volume: 1.5, turbo: true, pops: true },
+        maxSpeed: 70, accel: 12, brake: 28, reverseAccel: 3, maxLat: 20, steerRate: 2.4,
+        class: 'A'
       },
-      sound: { synth: 'rotary', pitch: 0.55, volume: 1.5, turbo: false, pops: true },
-      maxSpeed: 68, accel: 12, brake: 28, reverseAccel: 3, maxLat: 22, steerRate: 2.0,
-      class: 'A'
-    },
-    snake: {
-      name: 'Vanish Snake', model: 'assets/cars/fun/vanish/cars_vanish_snake.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0xE2DBC4, trim: 0x010B4A,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.65, y: 0.85, z: -2.15, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.288, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, wheelRR: 0.415,
-        capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0xF2EBD1,
+      aviator: {
+        name: 'Warmblood Aviator', model: 'assets/cars/fun/warmblood/cars_warmblood_aviator.glb', modelRot: 90, length: 4.5, width: 2.2,
+        color: 0x8B080B, trim: 0x000000,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.54, y: 0.865, z: -2.2, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.268, wheelFront: 1.18, wheelRear: -1.315, wheelR: 0.4, wheelW: 0.26, 
+          capOut: 0.001, capSize: 0.7, capColor: 0x000000, rimColor: 0xFFFFFF
+        },
+        sound: { synth: 'rotary', pitch: 0.55, volume: 1.5, turbo: false, pops: true },
+        maxSpeed: 68, accel: 12, brake: 28, reverseAccel: 3, maxLat: 22, steerRate: 2.0,
+        class: 'A'
       },
-      sound: { synth: 'v8', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
-      maxSpeed: 64, accel: 14, brake: 23, reverseAccel: 2, maxLat: 22, steerRate: 2.8,
-      class: 'A'
-    },
-    
-    // Class B
-    retro: {
-      name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0x1C7CE2, trim: 0xFFFFFF,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.6, y: 0.69, z: -2.15, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.3, wheelRear: -1.315, wheelR: 0.38, wheelW: 0.3, wheelRR: 0.4,
-        capOut: 0.001, capSize: 0.62, capShape: 'hex6', capColor: 0x000000, rimColor: 0x764729
+      snake: {
+        name: 'Vanish Snake', model: 'assets/cars/fun/vanish/cars_vanish_snake.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0xE2DBC4, trim: 0x010B4A,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.65, y: 0.85, z: -2.15, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.288, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, wheelRR: 0.415,
+          capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0xF2EBD1,
+        },
+        sound: { synth: 'v8', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
+        maxSpeed: 64, accel: 14, brake: 23, reverseAccel: 2, maxLat: 22, steerRate: 2.8,
+        class: 'A'
       },
-      sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
-      maxSpeed: 54, accel: 12, brake: 32, reverseAccel: 8, maxLat: 26, steerRate: 1.8,
-      class: 'B'
-    },
-    holy: {
-      name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0x8DFF09, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.15, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.24, wheelRear: -1.28, wheelR: 0.41, wheelW: 0.25, wheelRR: 0.396,
-        capOut: 0.001, capSize: 0.5, capShape: 'dish', capColor: 0x000000, rimColor: 0x853D23
+      
+      // Class B
+      retro: {
+        name: 'Crossing Retro', model: 'assets/cars/fun/crossing/cars_crossing_retro.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0x1C7CE2, trim: 0xFFFFFF,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.6, y: 0.69, z: -2.15, w: 0.42, h: 0.42 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.3, wheelRear: -1.315, wheelR: 0.38, wheelW: 0.3, wheelRR: 0.4,
+          capOut: 0.001, capSize: 0.62, capShape: 'hex6', capColor: 0x000000, rimColor: 0x764729
+        },
+        sound: { synth: 'flat6', pitch: 0.95, volume: 1, turbo: false, pops: true },
+        maxSpeed: 54, accel: 12, brake: 32, reverseAccel: 8, maxLat: 26, steerRate: 1.8,
+        class: 'B'
       },
-      sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: true, pops: true },
-      maxSpeed: 62, accel: 10, brake: 30, reverseAccel: 2, maxLat: 24, steerRate: 2.0,
-      class: 'B'
-    },
-    sprint: {
-      name: 'Workforce Sprint', model: 'assets/cars/fun/workforce/cars_workforce_sprint.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0xE2DBC4, trim: 0x010B4A,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.4, y: 0.67, z: -2.1, w: 1.5, h: 0.42 }, limitX: 1.3, wheelIn: 0.4, wheelFront: 1.23, wheelRear: -1.135, wheelR: 0.38, wheelW: 0.25, wheelRR: 0.4, 
-        capOut: 0.001, capSize: 0.6, capShape: 'star5', capColor: 0x000000, rimColor: 0xC47D4F
+      holy: {
+        name: 'Rapid Holy', model: 'assets/cars/fun/rapid/cars_rapid_holy.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0x8DFF09, trim: 0x000000,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.85, z: -2.15, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.24, wheelRear: -1.28, wheelR: 0.41, wheelW: 0.25, wheelRR: 0.396,
+          capOut: 0.001, capSize: 0.5, capShape: 'dish', capColor: 0x000000, rimColor: 0x853D23
+        },
+        sound: { synth: 'v8', pitch: 1.1, volume: 1.2, turbo: true, pops: true },
+        maxSpeed: 62, accel: 10, brake: 30, reverseAccel: 2, maxLat: 24, steerRate: 2.0,
+        class: 'B'
       },
-      sound: { synth: 'v6', pitch: 0.5, volume: 1.2, turbo: true, pops: true },
-      maxSpeed: 58, accel: 10, brake: 35, reverseAccel: 2, maxLat: 26, steerRate: 1.8,
-      class: 'B'
-    },
-    prodigy: {
-      name: 'Vanish Snake Prodigy', model: 'assets/cars/fun/vanish/cars_vanish_snake_prodigy.glb', modelRot: 90, length: 4.4, width: 2.2,
-      color: 0x8B080B, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.68, y: 0.78, z: -2.08, w: 0.7, h: 0.42 }, limitX: 1.3, wheelIn: 0.31, wheelFront: 1.35, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, 
-        capOut: 0.001, capSize: 0.8, capShape: 'ninja3', capColor: 0x000000
+      sprint: {
+        name: 'Workforce Sprint', model: 'assets/cars/fun/workforce/cars_workforce_sprint.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0xE2DBC4, trim: 0x010B4A,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.4, y: 0.67, z: -2.1, w: 1.5, h: 0.42 }, limitX: 1.3, wheelIn: 0.4, wheelFront: 1.23, wheelRear: -1.135, wheelR: 0.38, wheelW: 0.25, wheelRR: 0.4, 
+          capOut: 0.001, capSize: 0.6, capShape: 'star5', capColor: 0x000000, rimColor: 0xC47D4F
+        },
+        sound: { synth: 'v6', pitch: 0.5, volume: 1.2, turbo: true, pops: true },
+        maxSpeed: 58, accel: 10, brake: 35, reverseAccel: 2, maxLat: 26, steerRate: 1.8,
+        class: 'B'
       },
-      sound: { synth: 'v6', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
-      maxSpeed: 60, accel: 11, brake: 38, reverseAccel: 2, maxLat: 20, steerRate: 3.0,
-      class: 'B'
-    },
-    
-    // Class C
-    blonde: {
-      name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.1, width: 2.2,
-      paint: [ 
-        { name: 'Dourado', color: 0xE99811, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_golden.jpg' },
-        { name: 'Ciano', color: 0x00E4EB, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_cyan.jpg' },
-        { name: 'Preto', color: 0x1A1817, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_black.jpg' }
-      ],
-      color: 0xCAC7C1, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.65, y: 0.87, z: -2.15, w: 0.65, h: 0.42 }, limitX: 1.3, wheelIn: 0.3015, wheelFront: 1.17, wheelRear: -1.08, wheelR: 0.37, wheelW: 0.26, 
-        capOut: 0.001, capSize: 0.65, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xAFB3B2
+      prodigy: {
+        name: 'Vanish Snake Prodigy', model: 'assets/cars/fun/vanish/cars_vanish_snake_prodigy.glb', modelRot: 90, length: 4.4, width: 2.2,
+        color: 0x8B080B, trim: 0x000000,
+        pilot: { model: 'assets/models/pilots/models_pilots_blonde.glb', pos: [0.4, 0.68, -0.38], rot: 0, scale: 1, height: 0.6 },
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.68, y: 0.78, z: -2.08, w: 0.7, h: 0.42 }, limitX: 1.3, wheelIn: 0.31, wheelFront: 1.35, wheelRear: -1.16, wheelR: 0.38, wheelW: 0.25, 
+          capOut: 0.001, capSize: 0.8, capShape: 'ninja3', capColor: 0x000000
+        },
+        sound: { synth: 'v6', pitch: 0.5, volume: 1.5, turbo: false, pops: true },
+        maxSpeed: 60, accel: 11, brake: 38, reverseAccel: 2, maxLat: 20, steerRate: 3.0,
+        class: 'B'
       },
-      sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
-      maxSpeed: 40, accel: 10, brake: 42, reverseAccel: 10, maxLat: 30, steerRate: 1.5,
-      class: 'C'
-    },
-    lunar: {
-      name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.4, width: 2.2,
-      paint: [ 
-        { name: 'Vermelho', color: 0xCB0201, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_red.jpg' }, 
-        { name: 'Branco', color: 0xEFF5FB, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_white.jpg' },
-        { name: 'Preto', color: 0x0D1011, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_black.jpg' }
-      ],
-      color: 0x91DB30, trim: 0xFFFFFF,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.5, y: 0.98, z: -2.2, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.4012, wheelFront: 1.25, wheelRear: -1.25, wheelR: 0.35, wheelW: 0.26, 
-        capOut: 0.001, capSize: 0.82, capColor: 0x000000
+      
+      // Class C
+      blonde: {
+        name: 'BMC Blonde', model: 'assets/cars/fun/bmc/cars_bmc_blonde.glb', modelRot: 90, length: 4.1, width: 2.2,
+        paint: [ 
+          { name: 'Dourado', color: 0xE99811, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_golden.jpg' },
+          { name: 'Ciano', color: 0x00E4EB, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_cyan.jpg' },
+          { name: 'Preto', color: 0x1A1817, texture: 'assets/cars/fun/bmc/cars_bmc_blonde_color_black.jpg' }
+        ],
+        color: 0xCAC7C1, trim: 0x000000,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.65, y: 0.87, z: -2.15, w: 0.65, h: 0.42 }, limitX: 1.3, wheelIn: 0.3015, wheelFront: 1.17, wheelRear: -1.08, wheelR: 0.37, wheelW: 0.26, 
+          capOut: 0.001, capSize: 0.65, capShape: 'spoke10', capColor: 0x000000, rimColor: 0xAFB3B2
+        },
+        sound: { synth: 'rotary', pitch: 0.95, volume: 1, turbo: false, pops: true },
+        maxSpeed: 40, accel: 10, brake: 42, reverseAccel: 10, maxLat: 30, steerRate: 1.5,
+        class: 'C'
       },
-      sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
-      maxSpeed: 48, accel: 8, brake: 48, reverseAccel: 8, maxLat: 32, steerRate: 1.8,
-      class: 'C'
-    },
-    redhead: {
-      name: 'Warmblood Redhead', model: 'assets/cars/fun/warmblood/cars_warmblood_redhead.glb', modelRot: 90, length: 4.5, width: 2.2,
-      paint: [ 
-        { name: 'Amarelo', color: 0xFFC401, texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_yellow.jpg' }, 
-        { name: 'Azul', color: 0x61A0FC, rimColor: '#776044', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_blue.jpg' }, 
-        { name: 'Prata', color: 0xB3BABD, rimColor: '#B3BABD', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_silver.jpg' } 
-      ],
-      color: 0xE10A0A, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.215, wheelRear: -1.32, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.379,
-        capOut: 0.001, capSize: 0.6, capColor: 0x000000, rimColor: 0x674022
+      lunar: {
+        name: 'Diamond Lunar', model: 'assets/cars/fun/diamond/cars_diamond_lunar.glb', modelRot: 90, length: 4.4, width: 2.2,
+        paint: [ 
+          { name: 'Vermelho', color: 0xCB0201, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_red.jpg' }, 
+          { name: 'Branco', color: 0xEFF5FB, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_white.jpg' },
+          { name: 'Preto', color: 0x0D1011, rimColor: '#858483', texture: 'assets/cars/fun/diamond/cars_diamond_lunar_color_black.jpg' }
+        ],
+        color: 0x91DB30, trim: 0xFFFFFF,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.5, y: 0.98, z: -2.2, w: 0.95, h: 0.42 }, limitX: 1.3, wheelIn: 0.4012, wheelFront: 1.25, wheelRear: -1.25, wheelR: 0.35, wheelW: 0.26, 
+          capOut: 0.001, capSize: 0.82, capColor: 0x000000
+        },
+        sound: { synth: 'i4', pitch: 1, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 48, accel: 8, brake: 48, reverseAccel: 8, maxLat: 32, steerRate: 1.8,
+        class: 'C'
       },
-      sound: { synth: 'rotary', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
-      maxSpeed: 54, accel: 10, brake: 32, reverseAccel: 8, maxLat: 20, steerRate: 2.2,
-      class: 'C'
-    },
-    soul: {
-      name: 'Magnolia Soul', model: 'assets/cars/fun/magnolia/cars_magnolia_soul.glb', modelRot: 90, length: 4.5, width: 2.2,
-      paint: [ 
-        { name: 'Verde', color: 0x3C571D, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_green.jpg' }, 
-        { name: 'Amarelo', color: 0x9F620C, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_yellow.jpg' },
-        { name: 'Azul', color: 0x0A1129, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_blue.jpg' }
-      ],
-      color: 0xFFEFBC, trim: 0x000000,
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.23, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
-        capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0x6A3A20
+      redhead: {
+        name: 'Warmblood Redhead', model: 'assets/cars/fun/warmblood/cars_warmblood_redhead.glb', modelRot: 90, length: 4.5, width: 2.2,
+        paint: [ 
+          { name: 'Amarelo', color: 0xFFC401, texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_yellow.jpg' }, 
+          { name: 'Azul', color: 0x61A0FC, rimColor: '#776044', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_blue.jpg' }, 
+          { name: 'Prata', color: 0xB3BABD, rimColor: '#B3BABD', texture: 'assets/cars/fun/warmblood/cars_warmblood_redhead_color_silver.jpg' } 
+        ],
+        color: 0xE10A0A, trim: 0x000000,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.3, wheelFront: 1.215, wheelRear: -1.32, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.379,
+          capOut: 0.001, capSize: 0.6, capColor: 0x000000, rimColor: 0x674022
+        },
+        sound: { synth: 'rotary', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 54, accel: 10, brake: 32, reverseAccel: 8, maxLat: 20, steerRate: 2.2,
+        class: 'C'
       },
-      sound: { synth: 'v6', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
-      maxSpeed: 48, accel: 10, brake: 36, reverseAccel: 8, maxLat: 22, steerRate: 1.8,
-      class: 'C'
+      soul: {
+        name: 'Magnolia Soul', model: 'assets/cars/fun/magnolia/cars_magnolia_soul.glb', modelRot: 90, length: 4.5, width: 2.2,
+        paint: [ 
+          { name: 'Verde', color: 0x3C571D, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_green.jpg' }, 
+          { name: 'Amarelo', color: 0x9F620C, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_yellow.jpg' },
+          { name: 'Azul', color: 0x0A1129, texture: 'assets/cars/fun/magnolia/cars_magnolia_soul_color_blue.jpg' }
+        ],
+        color: 0xFFEFBC, trim: 0x000000,
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.75, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.23, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
+          capOut: 0.001, capSize: 0.6, capShape: 'twin5', capColor: 0x000000, rimColor: 0x6A3A20
+        },
+        sound: { synth: 'v6', pitch: 0.7, volume: 1.2, turbo: false, pops: true },
+        maxSpeed: 48, accel: 10, brake: 36, reverseAccel: 8, maxLat: 22, steerRate: 1.8,
+        class: 'C'
+      },
+  
+  /*
+      vento: {
+        name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
+        color: 0xd8321f, trim: 0x1b1d22,
+        sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+        maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9      // classe B: equilibrado
+      },
+      // Os três abaixo são carros de teste com o modelo simples. Troque por seus .glb preenchendo  model.
+      cometa: {
+        name: 'Cometa Turbo', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xf2b100, trim: 0x1b1d22,
+        sound: { synth: 'flat6', pitch: 1.05, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+        maxSpeed: 72, accel: 15, brake: 36, reverseAccel: 7, maxLat: 20, steerRate: 2.0      // classe S: rápido e explosivo, escorrega mais
+      },
+      onda: {
+        name: 'Onda RS', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0x2a6fd6, trim: 0xe8e8e8,
+        sound: { synth: 'i4', pitch: 1.1, volume: 1, turbo: false, pops: false, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+        maxSpeed: 58, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0      // classe C: muita aderência, lento em reta
+      },
+      falcao: {
+        name: 'Falcão Z', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xe9ecef, trim: 0x14161a, wing: false,
+        sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
+        maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
+      }
+  */
+  
+      // Classe X: carro secreto (libere digitando o code nos menus ou abrindo index.html#fantasma)
+      quadrado: {
+        name: 'Popular Quadrado', model: 'assets/cars/fun/popular/cars_popular_quadrado.glb', modelRot: 90, length: 4.5, width: 1.95, 
+        color: 0x222222, trim: 0xFEE204, wing: true,
+        code: 'quadrado',
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.7, z: -2.2, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.32, wheelRear: -1.345, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.36, 
+          capOut: 0.001, capSize: 0.75, capShape: 'hex6', capColor: 0x000000, rimColor: 0xFEE204
+        },
+        maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
+        sound: { synth: 'v6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
+        class: 'X'
+      },
+      firma: {
+        name: 'Willforce Firma', model: 'assets/cars/fun/willforce/cars_willforce_firma.glb', modelRot: 90, length: 4.2, width: 1.95, 
+        color: 0xFFFFFF, trim: 0x222222, wing: true,
+        code: 'firma',
+        glb: { 
+          wheels: true, caps: true, brake: { x: 0.7, y: 0.8, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.16, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
+          capOut: 0.001, capSize: 0.6, capShape: 'hex6', capColor: 0x000000, rimColor: 0xC7CBD3
+        },
+        maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
+        sound: { synth: 'flat6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
+        class: 'X'
+      },
+  
+      // Exemplo de piloto num conversível (cole dentro do carro):
+      //   pilot: { model: 'assets/models/pilots/models_pilots_blonde.glb', pos: [0.4, 0.78, -0.25], rot: 0, scale: 1, height: 0.6 },
+      // Exemplo (descomente e ajuste):
+      // meu_carro: {
+      //   name: 'Meu Carro', model: 'models/meu_carro.glb', modelRot: 0, length: 4.5, width: 1.9,
+      //   maxSpeed: 70, accel: 13, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
+      //   sound: { synth: 'v8', engine: 'sounds/meu_motor.ogg' }   // só o que quiser trocar; o resto fica no padrão
+      // },
     },
-
-/*
-    vento: {
-      name: 'Vento GT', model: null, modelRot: 0, length: 4.4, width: 1.9,
-      color: 0xd8321f, trim: 0x1b1d22,
-      sound: { synth: 'v8', pitch: 1, volume: 1, turbo: false, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
-      maxSpeed: 68, accel: 12, brake: 38, reverseAccel: 7, maxLat: 22, steerRate: 1.9      // classe B: equilibrado
-    },
-    // Os três abaixo são carros de teste com o modelo simples. Troque por seus .glb preenchendo  model.
-    cometa: {
-      name: 'Cometa Turbo', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xf2b100, trim: 0x1b1d22,
-      sound: { synth: 'flat6', pitch: 1.05, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
-      maxSpeed: 72, accel: 15, brake: 36, reverseAccel: 7, maxLat: 20, steerRate: 2.0      // classe S: rápido e explosivo, escorrega mais
-    },
-    onda: {
-      name: 'Onda RS', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0x2a6fd6, trim: 0xe8e8e8,
-      sound: { synth: 'i4', pitch: 1.1, volume: 1, turbo: false, pops: false, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
-      maxSpeed: 58, accel: 11, brake: 42, reverseAccel: 7, maxLat: 26, steerRate: 2.0      // classe C: muita aderência, lento em reta
-    },
-    falcao: {
-      name: 'Falcão Z', model: null, modelRot: 0, length: 4.4, width: 1.9, color: 0xe9ecef, trim: 0x14161a, wing: false,
-      sound: { synth: 'v6', pitch: 0.95, volume: 1, turbo: true, pops: true, engine: '', engineRate: [0.6, 2.2], shift: '', downshift: '', backfire: '', blowoff: '', brake: '', skid: '', hit: '' },
-      maxSpeed: 78, accel: 11.5, brake: 34, reverseAccel: 7, maxLat: 21, steerRate: 1.8      // classe A: muito veloz, acelera devagar
+  
+    traffic: {
+      sedan: {
+        name: 'Sedã', model: null, modelRot: 0, length: 4.3, width: 1.9, weight: 3, speed: [20, 30],
+        color: [0x2f6fb5, 0xe8e2d0, 0x3f8a52, 0xc9a227, 0x7a4aa8, 0x444851, 0xd0762c],
+        parts: [
+          { size: [1.9, .75, 4.3], pos: [0, .6, 0], color: 'body' },
+          { size: [1.6, .6, 2.1], pos: [0, 1.25, -.2], color: 0x1b2733 },
+          { size: [1.5, .12, .05], pos: [0, .75, -2.16], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Crossing Company',  model: 'assets/cars/fun/crossing/cars_crossing_company.glb', modelRot: 90, pilot: { fallback: true, pos: [0.4, 0.78, -0.25] } },
+        ]
+      },
+      van: {
+        name: 'Van', model: null, modelRot: 0, length: 5.2, width: 2.0, weight: 1, speed: [18, 25],
+        color: [0xe8e2d0, 0xb8bcc4, 0x2f6fb5],
+        parts: [
+          { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
+          { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
+          { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Goat Van',  model: 'assets/cars/fun/goat/cars_goat_van.glb',  modelRot: 90 },
+          { name: 'Popular Family', model: 'assets/cars/fun/popular/cars_popular_family.glb', modelRot: 90 },
+          // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
+        ]
+      },
+      pickup: {
+        name: 'Pickup', model: null, modelRot: 0, length: 5.2, width: 2.0, weight: 1, speed: [18, 28],
+        color: [0xe8e2d0, 0xb8bcc4, 0x2f6fb5],
+        parts: [
+          { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
+          { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
+          { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Crossing Brabo',  model: 'assets/cars/fun/crossing/cars_crossing_brabo.glb',  modelRot: 90 },
+          { name: 'Crossing Thousand', model: 'assets/cars/fun/crossing/cars_crossing_thousand.glb', modelRot: 90 },
+          // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
+        ]
+      },
+      // Categoria com variantes: cada carro sorteia uma. Variante 1 = visual do carro secreto 'quadrado'. Para mais modelos, acrescente variantes (model: '....glb').
+      hatch: {
+        name: 'Hatch', weight: 3, speed: [22, 31], length: 3.9, width: 1.8,
+        color: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0xe9c32a, 0x2e8b57, 0x7a4aa8],
+        parts: [  // modelo simples (reserva enquanto o .glb carrega, ou se não houver .glb)
+          { size: [1.8, .7, 3.9], pos: [0, .58, 0], color: 'body' },
+          { size: [1.55, .62, 2.3], pos: [0, 1.22, -.3], color: 0x1b2733 },
+          { size: [1.4, .12, .05], pos: [0, .75, -1.96], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Popular Quadrado', like: 'quadrado' },
+          { name: 'Popular Club', model: 'assets/cars/fun/popular/cars_popular_club.glb', modelRot: 90, length: 4.0, width: 1.8 },
+          //{ name: 'Hatch Compacto' }  // sem .glb: usa o modelo simples acima. Troque por  model: 'assets/....glb'
+        ]
+      },
+      povao: {
+        name: 'Povão', weight: 3, speed: [19, 26], length: 4.2, width: 1.85,
+        color: [0xe8e2d0, 0xb8bcc4, 0x7a7d82, 0x9a2b2b, 0x3a6ea5],
+        parts: [
+          { size: [1.85, .8, 4.2], pos: [0, .62, 0], color: 'body' },
+          { size: [1.6, .68, 2.5], pos: [0, 1.3, -.1], color: 0x1b2733 },
+          { size: [1.5, .12, .05], pos: [0, .78, -2.11], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Povão Firma', like: 'firma' },
+          //{ name: 'Povão Sedã' }                      // sem .glb: usa o modelo simples acima
+        ]
+      },
+      truck: {
+        name: 'Caminhão', model: null, modelRot: 0, length: 8, width: 2.4, weight: 1, speed: [15, 21], wheelR: 0.5,
+        color: [0xd0762c, 0xe8e2d0, 0x3f8a52],
+        parts: [
+          { size: [2.4, 2.7, 5.6], pos: [0, 2.0, -1.2], color: 0xdad6c8 },
+          { size: [2.3, 1.7, 2.4], pos: [0, 1.35, 2.8], color: 'body' },
+          { size: [2.0, .6, .1], pos: [0, 1.9, 4.0], color: 0x1b2733 },
+          { size: [1.8, .16, .05], pos: [0, .8, -4.02], color: 0xcc2010, basic: true }
+        ],
+        variants: [
+          { name: 'Truck Bignose', model: 'assets/cars/fun/truck/cars_truck_bignose.glb', modelRot: 90, length: 10.0, width: 4.0 },
+          { name: 'Truck Fridge', model: 'assets/cars/fun/truck/cars_truck_fridge.glb', modelRot: 90, length: 6.0, width: 3.0 },
+          { name: 'Truck Dump', model: 'assets/cars/fun/truck/cars_truck_dump.glb', modelRot: 90, length: 7.0, width: 3.0 },
+          { name: 'Bus School', model: 'assets/cars/fun/truck/cars_truck_schoolbus.glb', modelRot: 90, width: 3.0 },
+          { name: 'Bus Travel', model: 'assets/cars/fun/truck/cars_truck_travelbus.glb', modelRot: 90, length: 9.0, width: 3.0 },
+        ]
+      }
     }
-*/
-
-    // Classe X: carro secreto (libere digitando o code nos menus ou abrindo index.html#fantasma)
-    quadrado: {
-      name: 'Popular Quadrado', model: 'assets/cars/fun/popular/cars_popular_quadrado.glb', modelRot: 90, length: 4.5, width: 1.95, 
-      color: 0x222222, trim: 0xFEE204, wing: true,
-      code: 'quadrado',
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.7, z: -2.2, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.35, wheelFront: 1.32, wheelRear: -1.345, wheelR: 0.36, wheelW: 0.26, wheelRR: 0.36, 
-        capOut: 0.001, capSize: 0.75, capShape: 'hex6', capColor: 0x000000, rimColor: 0xFEE204
-      },
-      maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
-      sound: { synth: 'v6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
-      class: 'X'
-    },
-    firma: {
-      name: 'Willforce Firma', model: 'assets/cars/fun/willforce/cars_willforce_firma.glb', modelRot: 90, length: 4.2, width: 1.95, 
-      color: 0xFFFFFF, trim: 0x222222, wing: true,
-      code: 'firma',
-      glb: { 
-        wheels: true, caps: true, brake: { x: 0.7, y: 0.8, z: -2.16, w: 1, h: 0.6 }, limitX: 1.3, wheelIn: 0.33, wheelFront: 1.16, wheelRear: -1.3, wheelR: 0.372, wheelW: 0.26, wheelRR: 0.379, 
-        capOut: 0.001, capSize: 0.6, capShape: 'hex6', capColor: 0x000000, rimColor: 0xC7CBD3
-      },
-      maxSpeed: 88, accel: 17, brake: 46, reverseAccel: 8, maxLat: 28, steerRate: 2.2,
-      sound: { synth: 'flat6', pitch: 0.9, volume: 1.3, turbo: true, pops: true },
-      class: 'X'
-    },
-
-    // Exemplo (descomente e ajuste):
-    // meu_carro: {
-    //   name: 'Meu Carro', model: 'models/meu_carro.glb', modelRot: 0, length: 4.5, width: 1.9,
-    //   maxSpeed: 70, accel: 13, brake: 38, reverseAccel: 7, maxLat: 23, steerRate: 1.9,
-    //   sound: { synth: 'v8', engine: 'sounds/meu_motor.ogg' }   // só o que quiser trocar; o resto fica no padrão
-    // },
-  },
-
-  traffic: {
-    sedan: {
-      name: 'Sedã', model: null, modelRot: 0, length: 4.3, width: 1.9, weight: 3, speed: [20, 30],
-      color: [0x2f6fb5, 0xe8e2d0, 0x3f8a52, 0xc9a227, 0x7a4aa8, 0x444851, 0xd0762c],
-      parts: [
-        { size: [1.9, .75, 4.3], pos: [0, .6, 0], color: 'body' },
-        { size: [1.6, .6, 2.1], pos: [0, 1.25, -.2], color: 0x1b2733 },
-        { size: [1.5, .12, .05], pos: [0, .75, -2.16], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Crossing Company',  model: 'assets/cars/fun/crossing/cars_crossing_company.glb', modelRot: 90 },
-      ]
-    },
-    van: {
-      name: 'Van', model: null, modelRot: 0, length: 5.2, width: 2.0, weight: 1, speed: [18, 25],
-      color: [0xe8e2d0, 0xb8bcc4, 0x2f6fb5],
-      parts: [
-        { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
-        { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
-        { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Goat Van',  model: 'assets/cars/fun/goat/cars_goat_van.glb',  modelRot: 90 },
-        { name: 'Popular Family', model: 'assets/cars/fun/popular/cars_popular_family.glb', modelRot: 90 },
-        // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
-      ]
-    },
-    pickup: {
-      name: 'Pickup', model: null, modelRot: 0, length: 5.2, width: 2.0, weight: 1, speed: [18, 28],
-      color: [0xe8e2d0, 0xb8bcc4, 0x2f6fb5],
-      parts: [
-        { size: [2.0, 1.9, 5.2], pos: [0, 1.15, 0], color: 'body' },
-        { size: [1.8, .7, .1], pos: [0, 1.65, 2.58], color: 0x1b2733 },
-        { size: [1.6, .14, .05], pos: [0, .7, -2.62], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Crossing Brabo',  model: 'assets/cars/fun/crossing/cars_crossing_brabo.glb',  modelRot: 90 },
-        { name: 'Crossing Thousand', model: 'assets/cars/fun/crossing/cars_crossing_thousand.glb', modelRot: 90 },
-        // { name: 'Van Simples' }  // sem model: usa o modelo simples acima
-      ]
-    },
-    // Categoria com variantes: cada carro sorteia uma. Variante 1 = visual do carro secreto 'quadrado'. Para mais modelos, acrescente variantes (model: '....glb').
-    hatch: {
-      name: 'Hatch', weight: 3, speed: [22, 31], length: 3.9, width: 1.8,
-      color: [0xc43b2b, 0x2f6fd6, 0xe9ecef, 0xe9c32a, 0x2e8b57, 0x7a4aa8],
-      parts: [  // modelo simples (reserva enquanto o .glb carrega, ou se não houver .glb)
-        { size: [1.8, .7, 3.9], pos: [0, .58, 0], color: 'body' },
-        { size: [1.55, .62, 2.3], pos: [0, 1.22, -.3], color: 0x1b2733 },
-        { size: [1.4, .12, .05], pos: [0, .75, -1.96], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Popular Quadrado', like: 'quadrado' },
-        { name: 'Popular Club', model: 'assets/cars/fun/popular/cars_popular_club.glb', modelRot: 90, length: 4.0, width: 1.8 },
-        //{ name: 'Hatch Compacto' }  // sem .glb: usa o modelo simples acima. Troque por  model: 'assets/....glb'
-      ]
-    },
-    povao: {
-      name: 'Povão', weight: 3, speed: [19, 26], length: 4.2, width: 1.85,
-      color: [0xe8e2d0, 0xb8bcc4, 0x7a7d82, 0x9a2b2b, 0x3a6ea5],
-      parts: [
-        { size: [1.85, .8, 4.2], pos: [0, .62, 0], color: 'body' },
-        { size: [1.6, .68, 2.5], pos: [0, 1.3, -.1], color: 0x1b2733 },
-        { size: [1.5, .12, .05], pos: [0, .78, -2.11], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Povão Firma', like: 'firma' },
-        //{ name: 'Povão Sedã' }                      // sem .glb: usa o modelo simples acima
-      ]
-    },
-    truck: {
-      name: 'Caminhão', model: null, modelRot: 0, length: 8, width: 2.4, weight: 1, speed: [15, 21], wheelR: 0.5,
-      color: [0xd0762c, 0xe8e2d0, 0x3f8a52],
-      parts: [
-        { size: [2.4, 2.7, 5.6], pos: [0, 2.0, -1.2], color: 0xdad6c8 },
-        { size: [2.3, 1.7, 2.4], pos: [0, 1.35, 2.8], color: 'body' },
-        { size: [2.0, .6, .1], pos: [0, 1.9, 4.0], color: 0x1b2733 },
-        { size: [1.8, .16, .05], pos: [0, .8, -4.02], color: 0xcc2010, basic: true }
-      ],
-      variants: [
-        { name: 'Truck Bignose', model: 'assets/cars/fun/truck/cars_truck_bignose.glb', modelRot: 90, length: 10.0, width: 4.0 },
-        { name: 'Truck Fridge', model: 'assets/cars/fun/truck/cars_truck_fridge.glb', modelRot: 90, length: 6.0, width: 3.0 },
-        { name: 'Truck Dump', model: 'assets/cars/fun/truck/cars_truck_dump.glb', modelRot: 90, length: 7.0, width: 3.0 },
-        { name: 'Bus School', model: 'assets/cars/fun/truck/cars_truck_schoolbus.glb', modelRot: 90, width: 3.0 },
-        { name: 'Bus Travel', model: 'assets/cars/fun/truck/cars_truck_travelbus.glb', modelRot: 90, length: 9.0, width: 3.0 },
-      ]
-    }
-  }
-};
+  };
