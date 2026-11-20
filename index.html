@@ -497,7 +497,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.70</summary>
+        <summary>Estado do projeto · v0.71</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -679,7 +679,8 @@ for (const [id, t] of Object.entries(Config.tracks)) t.id = id;
 Config.champ = Object.assign({ times: ['amanhecer', 'dia', 'entardecer', 'noite'], tracks: null, finale: 'oasis', finaleTime: 'amanhecer', passGrade: 'C', points: { S: 100, A: 75, B: 55, C: 35, D: 15 },
   startClass: 'C', startCash: 0, repeat: 0.3,   // starts owning only this class; replaying a stage already passed pays this fraction
   prizes: [16000, 12000, 9000, 3500, 2800, 2200, 1800, 1400, 1100, 800, 500, 300], botIncome: 1.3,   // cash by finishing position (the last value repeats)
-  prices: { C: 0, B: 20000, A: 55000, S: 100000 } }, TR.championship || {});
+  prices: { C: 0, B: 20000, A: 55000, S: 100000 },
+  unlocks: { 1: 'all' } }, TR.championship || {});   // secret cars given by the final standing: place -> 'all' (every secret class X car, including ones added later) or a list of car ids, e.g. { 1: 'all', 2: ['quadrado'], 3: ['firma'] }
 Config.champRounds = function () {   // championship = every track x every time of day (5 x 4 = 20 rounds); per track, round 1 is the original layout and the next ones are its variants; the finale comes after
   const C = Config.champ, ids = (C.tracks || Config.champTracks).filter(i => Config.tracks[i]), out = []; ids.forEach(id => { const vs = [id].concat(Config.trackOrder.filter(v => Config.tracks[v].variantOf === id)); let j = 0; C.times.forEach(tm => { if (Config.times[tm]) out.push({ track: vs[j++ % vs.length], time: tm }); }); }); return out;
 };
@@ -2623,10 +2624,15 @@ class Game {
       + f('30,24 12,36 36,58', '#dde1e8') + f('130,24 148,36 124,58', '#c6ccd6') + f('30,20 42,38 80,112 38,66', '#f4f6f9') + f('130,20 118,38 80,112 122,66', '#d3d8e0') + f('42,38 118,38 80,112', '#e8ecf1') + f('30,20 130,20 118,38 42,38', '#ffffff')
       + f('72,108 88,108 93,138 67,138', '#dfe3ea') + f('50,138 110,138 122,158 38,158', '#f8f9fb') + f('38,158 122,158 122,165 38,165', '#c3c9d3') + '</g><path d="M80 38V112M42 38L80 112M118 38L80 112" stroke="#aeb6c2" stroke-width=".7" fill="none"/></svg>';
   }
+  champUnlocks(place) {   // championship reward: secret cars by final place (Config.champ.unlocks); returns the names newly unlocked
+    const u = (Config.champ.unlocks || {})[place]; if (!u) return []; const ids = u === 'all' ? Object.keys(Config.cars) : [].concat(u), fresh = [];
+    for (const id of ids) if (this.secretCar(id) && !this.unlocked.has('car:' + id)) { this.unlockId(id); fresh.push(Config.cars[id].name || id); }
+    return fresh;
+  }
   openPodium(place, pts) {
-    const el = $('podium'); if (!el) return; this.podiumOn = true;
+    const el = $('podium'); if (!el) return; this.podiumOn = true; const fresh = this.champUnlocks(place);
     $('pTitle').textContent = place > 3 ? 'Campeonato concluído · ' + place + 'º lugar' : ['Campeão!', 'Vice-campeão', 'Terceiro lugar'][place - 1]; $('pTrophy').innerHTML = place > 3 ? this.origamiSvg() : this.trophySvg(place); $('pTrophy').hidden = false; $('pOrigami').innerHTML = place > 3 ? '' : this.origamiSvg();
-    $('pSub').textContent = pts + ' pontos · ' + place + 'º lugar entre ' + (this.champ.rivals.length + 1) + ' pilotos'; el.hidden = false;
+    $('pSub').textContent = pts + ' pontos · ' + place + 'º lugar entre ' + (this.champ.rivals.length + 1) + ' pilotos' + (fresh.length ? ' · Carro' + (fresh.length > 1 ? 's' : '') + ' secreto' + (fresh.length > 1 ? 's' : '') + ' liberado' + (fresh.length > 1 ? 's' : '') + ': ' + fresh.join(', ') : ''); el.hidden = false;
     const cv = $('fw'); if (place > 3) { cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); cancelAnimationFrame(this._fwr); setTimeout(() => { const b = $('pRetry'); if (b && !el.hidden) b.focus({ preventScroll: true }); }, 300); return; }
     const c = cv.getContext('2d'), W = cv.width = el.clientWidth || innerWidth, H = cv.height = el.clientHeight || innerHeight, pal = [['#ffd54a', '#fff2a8', '#ff9a1f', '#ffffff'], ['#e8edf4', '#9fb4d0', '#ffffff', '#6fa8ff'], ['#ffb27a', '#e07a2e', '#ffd9b0', '#ff6a3d']][place - 1], rk = [], ps = [];
     let t0 = performance.now(), last = t0, nextL = 0; cancelAnimationFrame(this._fwr);
