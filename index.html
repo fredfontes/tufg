@@ -10,11 +10,16 @@
 <!-- Ícone padrão (Favicon e suporte geral) -->
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/imgs/icon-192.png">
 <!-- Ícone específico para iPhone e iPad (Apple) -->
-<link rel="apple-touch-icon" href="/assets/imgs/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/imgs/apple-touch-icon.png">
 <!-- Arquivo de manifesto do Web App (PWA) -->
 <link rel="manifest" href="/manifest.json">
 <!-- Cor da barra de navegação/status no celular -->
 <meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TUFG">
+<meta name="format-detection" content="telephone=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Chivo+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -30,7 +35,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;background:var(--asphalt);color:var(--chalk);overflow:hidden;font-family:var(--mono);font-size:14px}
+html,body{height:100%;margin:0;overscroll-behavior:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;background:var(--asphalt);color:var(--chalk);overflow:hidden;font-family:var(--mono);font-size:14px}
 body{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
 #app{position:fixed;inset:0;background:#000;user-select:none;-webkit-user-select:none}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -497,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.71</summary>
+        <summary>Estado do projeto · v0.72</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -3204,6 +3209,17 @@ class Game {
   }
 }
 
+/* PWA: service worker (offline) + tela ligada durante a corrida */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+let wakeLock = null;
+const wakeSync = () => {
+  const g = window.TUFG && window.TUFG.game, want = g && !document.hidden && (g.state === 'race' || g.state === 'countdown');
+  if (want && !wakeLock && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wakeLock = l; l.addEventListener('release', () => { wakeLock = null; }); }).catch(() => {});
+  else if (!want && wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+};
+setInterval(wakeSync, 1000); document.addEventListener('visibilitychange', wakeSync);
 window.TUFG = { game: new Game(), drawCap, CAP_SHAPES, attachGlb, paintModel, Config, Track, CarSim, Driver, Assets, World, PROPS, Sfx };
 })();
 </script>
