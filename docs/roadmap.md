@@ -13,4 +13,4 @@
 
 ## Ideias
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.
-- Conferir visual dos carros com texturas de 512 px (v0.74); se ficar ruim, voltar à branch `0.73` (1024 px) ou `0.72` (originais).
+- Conferir visual dos carros com texturas de 1024 px (v0.77); 512 px foi testado e ficou ruim.
