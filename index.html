@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.77</summary>
+        <summary>Estado do projeto · v0.78</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -824,12 +824,12 @@ class Track {
   yAt(s) { if (!this.hasElev) return 0; s = clamp(s, 0, this.length - 0.001); const f = s / this.step, i = Math.min(this.N - 2, Math.floor(f)); return lerp(this.cy[i], this.cy[i + 1], f - i); }   // height of the road axis at distance s
   slopeAt(s) { if (!this.hasElev) return 0; s = clamp(s, 0, this.length - 0.001); const i = Math.min(this.N - 2, Math.floor(s / this.step)); return (this.cy[i + 1] - this.cy[i]) / this.step; }   // rise over run (+ uphill)
   terrain(i, lat) {   // ground height beside the road at sample i, lateral distance lat: flat as far as the roadside, then an embankment that falls to the base ground
-    if (!this.hasElev) return 0; const c = this.cy[clamp(i, 0, this.N - 1)], fl = this.def.wall + 16, ln = 10 + 5 * (c + 1), a = Math.abs(lat); return a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln);
+    if (!this.hasElev) return 0; const c = this.cy[clamp(i, 0, this.N - 1)], fl = this.def.wall + 16, ln = 10 + 3 * (c + 1), a = Math.abs(lat); return a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln);
   }
   ground(x, z, st) {   // height of the ground under (x, z); st = { h: -1 } keeps the search hint, and receives sl (slope along the road) and th (road heading)
     if (!this.hasElev) { st.sl = 0; st.th = 0; return 0; }
     let L = this.locate(x, z, st.h, this._gl); if (st.h >= 0 && Math.abs(L.d) > 120) L = this.locate(x, z, -1, this._gl);
-    st.h = L.i; st.sl = this.slopeAt(L.s); st.th = L.th; const c = this.yAt(L.s), fl = this.def.wall + 16, a = Math.abs(L.d), ln = 10 + 5 * (c + 1);
+    st.h = L.i; st.sl = this.slopeAt(L.s); st.th = L.th; const c = this.yAt(L.s), fl = this.def.wall + 16, a = Math.abs(L.d), ln = 10 + 3 * (c + 1);
     return a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln);
   }
   at(s, o = {}) {
@@ -1322,7 +1322,7 @@ class World {
 
     // relief: the ground beside an elevated road is flat as far as the roadside and then falls to the base ground in an embankment
     if (T.hasElev) {
-      const fl = WALL + 16, ln = i => 10 + 5 * (T.cy[i] + 1), eg = canvasTex(64, 64, drawGround, true);
+      const fl = WALL + 16, ln = i => 10 + 3 * (T.cy[i] + 1), eg = canvasTex(64, 64, drawGround, true);
       for (const sg of [1, -1]) {
         mesh(band(T, sg * (W + 1.1), sg * fl, i => T.cy[i] - 0.12, i => T.cy[i] - 0.12, { abs: true, uA: 0, uB: (fl - W - 1.1) / 14, vs: 14 }), mat(eg, over));
         mesh(band(T, sg * fl, i => sg * (fl + ln(i)), i => T.cy[i] - 0.12, gy, { abs: true, uA: 0, uB: i => ln(i) / 14, vs: 14 }), mat(eg, over));
@@ -1614,7 +1614,7 @@ class World {
     this.rg.attributes.position.needsUpdate = true;
   }
   follow(cam) {
-    const p = cam.position; this.sky.position.copy(p); if (this.skybox) this.skybox.position.copy(p); if (this.stars) this.stars.position.copy(p); const lift = this.track.hasElev ? clamp(p.y - 3, 0, 60) : 0; this.mount.position.set(p.x, p.y - 26 - lift + 65 * this.mS, p.z);   // relief: the far mountains reach down to the base ground when the camera is high
+    const p = cam.position; this.sky.position.copy(p); if (this.skybox) this.skybox.position.copy(p); if (this.stars) this.stars.position.copy(p); const lift = this.track.hasElev ? clamp(p.y - 3, 0, 160) : 0; this.mount.position.set(p.x, p.y - 26 - lift + 65 * this.mS, p.z);   // relief: the far mountains reach down to the base ground when the camera is high
     this.sunDisc.position.set(p.x + this.sunDir.x * 480, p.y + this.sunDir.y * 480, p.z + this.sunDir.z * 480); this.sunDisc.lookAt(p);
   }
 }

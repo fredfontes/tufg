@@ -13,4 +13,5 @@
 
 ## Ideias
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.
-- Conferir visual dos carros com texturas de 1024 px (v0.77); 512 px foi testado e ficou ruim.
+- Peso dos `.glb`: 512 px e 1024 px foram testados e ficaram ruins; voltaram os originais de 2048 px. Alternativas: compressão (Draco/Meshopt, WebP/KTX2) ou reduzir só os carros menos vistos.
+- Avaliar o relevo "toboga" da Serra Verde (v0.78) e decidir a intensidade final.
