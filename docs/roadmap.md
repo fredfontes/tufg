@@ -14,3 +14,4 @@
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.
 - Peso dos `.glb`: 512 px e 1024 px foram testados e ficaram ruins; voltaram os originais de 2048 px. Alternativas: compressão (Draco/Meshopt, WebP/KTX2) ou reduzir só os carros menos vistos.
 - Avaliar o relevo "toboga" da Serra Verde (v0.78) e decidir a intensidade final.
+- Área de chegada: validar fase 1 (v0.80); próximas fases: mais detalhes, troféu, carros/bots interagindo, colisão com o palco.

@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.79</summary>
+        <summary>Estado do projeto · v0.80</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1393,7 +1393,7 @@ class World {
     this.gantry(T.lineS, bannerTex('THE URGE FOR GAS', false), false);
     this.gantry(T.finishS, bannerTex('CHEGADA', true), true);
 
-    this.tz = T.def.tunnels || []; this.cnz = T.def.canopy || []; this.props(); this.posts(); this.billboards(); this.tunnels(); this.canopies();
+    this.tz = T.def.tunnels || []; this.cnz = T.def.canopy || []; this.props(); this.posts(); this.billboards(); this.tunnels(); this.canopies(); this.finishArea();
   }
   gantry(s, tex, finish) {
     const T = this.track, o = T.at(s), W = T.def.wall + 1.2, g = new THREE.Group(), steel = new THREE.MeshLambertMaterial({ color: 0x3a3e46 });
@@ -1588,6 +1588,58 @@ class World {
       g.scale.setScalar(k0); g.position.set(o.x + o.lx * d, T.terrain(Math.round(s / T.step), d), o.z + o.lz * d); g.rotation.y = o.h + Math.PI + sg * 0.25; this.group.add(g);
     });
   }
+  finishArea() {   // the end of the road: a stage with a sponsor wall and a podium, grandstands and a cheering crowd (hides the point where the road ends)
+    const T = this.track, WALL = T.def.wall, W = T.half, G = this.group, tc = new THREE.Color(this.theme.tint || '#ffffff'), col = hex => new THREE.Color(hex).multiply(tc), R = rng((T.def.seed || 1) * 31 + 7);
+    const o = T.at(T.length - 0.02), st = new THREE.Group(); st.position.set(o.x, o.y, o.z); st.rotation.y = o.h; G.add(st);   // local +z = road direction, local +x = left
+    const basic = (hex, extra) => new THREE.MeshBasicMaterial(Object.assign({ color: col(hex) }, extra)), box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); st.add(b); return b; };
+    const Wd = 2 * (W + WALL) + 16, Z0 = 4;
+    // sponsor wall: title on top, a row of outdoors from the track list, checkered strip below
+    const list = (T.def.ads || this.sc.billboards || []).map(resolveAd); while (list.length < 5) list.push(resolveAd({ title: list.length % 2 ? 'THE URGE FOR GAS' : 'OCTANA', subtitle: list.length % 2 ? 'o prazer de acelerar' : 'gasolina de corrida', bg: list.length % 2 ? '#e8a400' : '#2a2e36', color: list.length % 2 ? '#14161a' : '#f4f1e8' }));
+    const wtex = canvasTex(2048, 512, (c, w, h) => {
+      c.fillStyle = '#14161a'; c.fillRect(0, 0, w, h);
+      c.fillStyle = '#ffb000'; c.fillRect(0, 0, w, 150); c.fillStyle = '#14161a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 120px Impact,"Arial Narrow",sans-serif'; c.fillText('THE URGE FOR GAS', w / 2, 80);
+      const n = 5, pw = (w - 48) / n - 16; for (let k = 0; k < n; k++) { c.save(); c.translate(24 + k * (pw + 16), 172); drawAd(c, pw, 250, list[k % list.length], null); c.restore(); }
+      const sq = 32; for (let x = 0; x < w / sq; x++) for (let y = 0; y < 2; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * sq, 440 + y * sq, sq, sq); }
+    });
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Wd / 4), new THREE.MeshBasicMaterial({ map: wtex, color: tc })); wall.rotation.y = Math.PI; wall.position.set(0, Wd / 8 + 0.2, Z0 - 0.3); st.add(wall);
+    box(Wd + 0.6, Wd / 4 + 0.6, 0.5, basic('#22252b'), 0, Wd / 8 + 0.2, Z0 + 0.1);
+    const ckt = canvasTex(64, 64, (c, w, h) => { for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * 16, y * 16, 16, 16); } });
+    for (const sg of [1, -1]) { box(1.2, Wd / 4 + 5, 1.2, basic('#3b3f48'), sg * (Wd / 2 + 0.3), (Wd / 4 + 5) / 2, Z0 + 0.1); const fl = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({ map: ckt, color: tc, side: THREE.DoubleSide })); fl.position.set(sg * (Wd / 2 - 2.2), Wd / 4 + 4, Z0 + 0.1); st.add(fl); }
+    // podium: 2nd (left), 1st (centre), 3rd (right) seen from the cars
+    const numTex = n => canvasTex(64, 64, (c, w, h) => { c.fillStyle = '#e9e6dc'; c.fillRect(0, 0, w, h); c.fillStyle = '#14161a'; c.font = '900 52px Impact,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(n), w / 2, h / 2 + 3); });
+    const pod = [[0, 1.5, 1, '#e8b923'], [3.3, 1.0, 2, '#c4c9cf'], [-3.3, 0.7, 3, '#b4753c']], ZP = Z0 - 3.2, win = [];
+    for (const [x, hh, n, top] of pod) { const side = basic('#d9d6cc'), m = [side, side, basic(top), side, side, new THREE.MeshBasicMaterial({ map: numTex(n), color: tc })]; box(2.9, hh, 2.5, m, x, hh / 2, ZP); win.push([x, hh, ZP]); }
+    // people: legs + body + head + two raised arms, as instanced boxes
+    const people = [];   // [x, y, z, yaw, phase, bodyColor, skin, legColor]
+    const palette = ['#e84a3a', '#f2b01e', '#2d7fd1', '#3cb371', '#f4f1e8', '#e86aa8', '#8a5bd1', '#ff7a1a'], skins = ['#f1c9a5', '#d8a074', '#a8714a', '#7a4d2e'], legs = ['#2b3a55', '#3a3f48', '#4a4136', '#1f2430'];
+    const add = (x, y, z, fx, fz) => people.push([x, y, z, Math.atan2(fx, fz), R() * 6.28, palette[(R() * palette.length) | 0], skins[(R() * skins.length) | 0], legs[(R() * legs.length) | 0]]);
+    for (const [x, hh, z] of win) add(x, hh, z, 0, -1);
+    const T0 = Math.round((T.length - 40) / T.step);
+    for (const sg of [1, -1]) {
+      const cz = this.cliffZone[sg], lat0 = WALL + 3.6;
+      if (!cz) {   // grandstand: three tiers with a crowd on each
+        for (let k = 0; k < 3; k++) { const h = (k + 1) * 0.95, x = sg * (lat0 + 1.3 + k * 2.5); box(2.5, h, 44, basic(k % 2 ? '#4a505c' : '#3f4551'), x, h / 2, Z0 - 21);
+          for (let z = Z0 - 41; z < Z0 - 0.5; z += 1.25 + R() * 0.5) if (R() < 0.92) add(x + (R() - 0.5) * 0.8, h, z, -sg * 0.7, -0.7); }
+      } else for (let z = Z0 - 60; z < Z0 - 1; z += 1.1 + R() * 0.9) add(sg * (WALL + 1.2 + R() * 1.4), 0, z, -sg * 0.6, -0.8);   // cliff on this side: people along the guardrail
+      for (let z = Z0 - 110; z < Z0 - 62; z += 3 + R() * 4) { const n = 1 + ((R() * 3) | 0); for (let k = 0; k < n; k++) add(sg * (WALL + 1.2 + R() * 2.2), 0, z + R(), -sg * 0.6, -0.8); }   // thin crowd before the stands
+    }
+    for (const sg of [1, -1]) for (let x = 6.4; x < W + WALL - 1; x += 1.3 + R() * 0.7) for (let r = 0; r < 2; r++) add(sg * x, 0, Z0 - 1.4 - r * 1.6, 0, -1);   // crowd in front of the wall, beside the podium
+    const n = people.length, mk = (w, h, d, ox, oy) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(ox, oy, 0); return g; };
+    const parts = [mk(0.34, 0.55, 0.22, 0, 0.275), mk(0.46, 0.7, 0.28, 0, 0.9), mk(0.3, 0.3, 0.3, 0, 1.4), mk(0.12, 0.5, 0.12, 0, 0.25), mk(0.12, 0.5, 0.12, 0, 0.25)].map(g => { const m = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ color: tc }), n); m.frustumCulled = false; st.add(m); return m; });
+    people.forEach((p, i) => { parts[0].setColorAt(i, new THREE.Color(p[7])); parts[1].setColorAt(i, new THREE.Color(p[5])); parts[2].setColorAt(i, new THREE.Color(p[6])); parts[3].setColorAt(i, new THREE.Color(p[5])); parts[4].setColorAt(i, new THREE.Color(p[5])); });
+    for (const m of parts) m.instanceColor.needsUpdate = true;
+    this.crowd = { people, parts, dummy: new THREE.Object3D(), acc: 1 }; this.animCrowd(0);
+  }
+  animCrowd(dt) {   // the crowd jumps and waves (updated ~15 times per second)
+    const C = this.crowd; C.acc += dt; if (C.acc < 1 / 15) return; C.acc = 0; const t = this.t, d = C.dummy, [legs, body, head, aL, aR] = C.parts;
+    C.people.forEach((p, i) => {
+      const [x, y, z, yaw, ph] = p, jump = Math.abs(Math.sin(t * 5.2 + ph)) * 0.16, arm = 0.55 + 0.5 * Math.sin(t * 7 + ph * 2), cs = Math.cos(yaw), sn = Math.sin(yaw);
+      d.rotation.set(0, yaw, 0); d.position.set(x, y, z); d.updateMatrix(); legs.setMatrixAt(i, d.matrix);
+      d.position.set(x, y + jump, z); d.updateMatrix(); body.setMatrixAt(i, d.matrix); head.setMatrixAt(i, d.matrix);
+      for (const [m, s] of [[aL, 1], [aR, -1]]) { d.rotation.set(0, yaw, -s * arm); d.position.set(x + s * 0.3 * cs, y + jump + 1.2, z - s * 0.3 * sn); d.updateMatrix(); m.setMatrixAt(i, d.matrix); }
+    });
+    for (const m of C.parts) m.instanceMatrix.needsUpdate = true;
+  }
   initLapse() {   // def.sunrise: { from, to, until }: the race starts in the time of day  from  and slowly becomes  to  until that fraction of the track (clear weather only)
     const L = this.track.def.sunrise, th = this.theme; if (!L || th.time !== L.from || th.rain || th.snow || !Config.times[L.to]) return;
     const keys = ['skyTop', 'skyMid', 'horizon', 'fog', 'fogNear', 'fogFar', 'hemiSky', 'hemiGround', 'hemi', 'sunLight', 'sunI', 'tint', 'stars', 'headlights', 'flare', 'sunDir'];
@@ -1605,7 +1657,7 @@ class World {
     if (this.stars) { this.stars.material.opacity = th.stars; this.stars.visible = th.stars > 0.01 && !this.skybox; }
     if (this.skyTex && this.sky.visible) { const c = this.skyTex.image.getContext('2d'), w = this.skyTex.image.width, h = this.skyTex.image.height, g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, mc('skyTop')); g.addColorStop(0.3, mc('skyMid')); g.addColorStop(0.5, mc('horizon')); g.addColorStop(1, mc('horizon')); c.fillStyle = g; c.fillRect(0, 0, w, h); this.skyTex.needsUpdate = true; }
   }
-  update(dt) { this.t += dt; if (this.waterTex) { this.waterTex.offset.x = this.t * 0.01; this.waterTex.offset.y = this.t * 0.02; } }
+  update(dt) { this.t += dt; if (this.crowd) this.animCrowd(dt); if (this.waterTex) { this.waterTex.offset.x = this.t * 0.01; this.waterTex.offset.y = this.t * 0.02; } }
   rainUpdate(dt, cam, vx, vz, adv = true) {
     if (!this.rain) return; if (adv) this.rt += dt * (this.snow ? 3.2 : 26); const BX = 46, BY = 20, c = cam.position, rb = this.track.hasElev ? Math.max(0, c.y - 2.5) : 0, n = this.rainN, b = this.rb, o = this.rpos, mod = (a, m) => ((a % m) + m) % m;
     for (let i = 0; i < n; i++) {
