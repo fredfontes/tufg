@@ -16,3 +16,4 @@ Ordem original de desenvolvimento: cenários → horário/clima → som → camp
 - **v0.71**: 1º lugar no campeonato libera todos os carros secretos.
 - **v0.72**: PWA offline (service worker), manifest, ícones maskable/apple, wake lock; publicação direto na `main` com branches de backup `0.NN`.
 - **v0.73**: todos os `.glb` (carros e piloto) com texturas reduzidas para no máximo 1024 px (330,5 MB → 167,5 MB, −49%), feito com script Python/PIL porque o npm é bloqueado no ambiente; originais ficam na branch `0.72`. Cache do service worker passou para `tufg-v2`.
+- **v0.74**: teste com texturas de no máximo 512 px (a partir dos originais de 2048): `.glb` 330,5 MB → 154,2 MB (−53%; só 13 MB a menos que 1024 px, o resto é geometria). Backup da v0.73 (1024 px) na branch `0.73`; cache do SW `tufg-v3`.

@@ -1,5 +1,5 @@
 /* TUFG service worker: app shell offline, código network-first, assets pesados cache-first sob demanda. */
-const V = 'tufg-v2';
+const V = 'tufg-v3';
 const SHELL = `${V}-shell`, ASSETS = `${V}-assets`;
 const PRECACHE = ['/', '/index.html', '/vehicles.js', '/tracks.js', '/ads.js', '/music.js', '/manifest.json',
   '/assets/imgs/icon-192.png', '/assets/imgs/icon-512.png', '/assets/imgs/icon-maskable-512.png', '/assets/imgs/apple-touch-icon.png',
