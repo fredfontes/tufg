@@ -8,8 +8,7 @@
 - Verificar em dispositivo real: instalação/offline do PWA, música de abertura no Brave mobile, piloto .glb real, mp3 reais.
 - Usuário apagar as branches `v0.71` e `pwa-offline` no GitHub.
 
-- Relevo nas outras pistas e variantes (hoje só a Serra Verde original); depois saltos nos cumes e pista inclinada.
-- Relevo não cobre ainda canopy (Oásis) nem a água do litoral.
+- Relevo: litoral (mar) e Oásis (canopy) seguem planos; depois saltos nos cumes e pista inclinada.
 
 ## Ideias
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.

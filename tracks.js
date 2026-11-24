@@ -138,6 +138,7 @@
         blurb: 'Avenidas entre prédios, curvas de 90° e muito tráfego. Exige freio e precisão.',
         width: 18, wall: 13, step: 3, runoff: 140, startS: 9, seed: 33,
         traffic: 18, trafficPool: { sedan: 1.5, hatch: 1.5, povao: 1, van: 3, pickup: 0.7, truck: 3, 'Truck Dump': 4, 'Bus School': 5, 'Bus Travel': 0.5, 'Truck Bignose': 0.3 },
+        elev: [[0, 0], [230, 0], [533, 32], [824, 2], [1098, 35], [1378, 3], [1677, 29], [1921, 2], [2205, 33], [2486, 3], [2755, 25], [3073, 0], [3273, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 35 m, ~18% nos trechos mais íngremes)
         segments: [[260,0],[90,90],[200,0],[90,-90],[220,0],[90,-90],[240,0],[90,90],[260,0],[90,90],[220,0],[90,-90],[300,0],[90,-90],[200,0],[90,90],[320,0],[90,90],[240,0]],
         ranks: [90, 98, 110, 128]
       },
@@ -146,6 +147,7 @@
         blurb: 'Estrada de terra batida entre plantações. Retas longas, curvas suaves e caminhões lentos.',
         width: 14, wall: 11, step: 3, runoff: 140, startS: 9, seed: 47,
         traffic: 10, trafficPool: { sedan: 0.4, hatch: 0.4, povao: 0.6, van: 1, pickup: 5, truck: 5, 'Bus Travel': 2, 'Bus School': 0.5, 'Truck Dump': 1.5 },
+        elev: [[0, 0], [230, 0], [656, 28], [1129, 2], [1567, 26], [2027, 1], [2465, 22], [2821, 0], [3021, 0]],   // relevo: colinas longas e arredondadas (até 28 m, ~10% nos trechos mais íngremes)
         segments: [[300,0],[200,-25],[180,0],[200,30],[320,0],[220,-35],[180,0],[240,40],[320,0],[100,-80],[200,0],[220,35],[340,0]],
         ranks: [56, 61, 69, 80]
       },
@@ -164,6 +166,7 @@
         blurb: 'Descida rápida por um cânion de rocha vermelha. Desvie do tráfego e derrape nas curvas fechadas.',
         width: 16, wall: 12, step: 3, runoff: 140, startS: 9, seed: 11,
         traffic: 14, trafficPool: { sedan: 0.5, hatch: 0.5, povao: 0.5, van: 1, pickup: 5, truck: 5, 'Bus Travel': 1.5, 'Bus School': 0.3, 'Truck Dump': 1.5, 'Truck Bignose': 1.5 },
+        elev: [[0, 0], [230, 0], [604, 45], [949, 4], [1281, 35], [1657, 4], [1989, 39], [2310, 4], [2651, 55], [3193, 0], [3393, 0]],   // relevo: vales e cristas fundos (até 55 m, ~22% nos trechos mais íngremes)
         segments: [[200,0],[180,40],[140,0],[200,-55],[100,0],[110,85],[160,0],[160,-100],[120,0],[200,45],[260,0],[180,-60],[140,0],[120,80],[200,0],[240,-50],[160,0],[220,60],[300,0]],
         ranks: [76, 84, 95, 110]
       },
@@ -193,6 +196,7 @@
       urbana_b: {
         base: 'urbana', name: 'Centro Neon · Avenida Sul', difficulty: 4, seed: 111,
         blurb: 'Esquinas abertas de avenida, em ritmo de bulevar. Há um desvio ao lado da pista e atalhos de terra entre os quarteirões.',
+        elev: [[0, 0], [230, 0], [548, 31], [789, 2], [1062, 26], [1332, 1], [1588, 23], [1853, 1], [2131, 24], [2439, 1], [2758, 0], [2958, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 31 m, ~18% nos trechos mais íngremes)
         segments: [[300,0],[300,150],[200,0],[220,-90],[460,0],[300,-140],[200,0],[220,90],[300,0],[220,90],[240,0]],
         fork: { from: 0.38, len: 440, side: 'left', amp: 24 },
         cuts: [{ at: 204, len: 540, amp: 50, ramp: 0.45 }, { at: 1740, len: 540, amp: 50, ramp: 0.45 }],
@@ -201,6 +205,7 @@
       urbana_c: {
         base: 'urbana', name: 'Centro Neon · Zigue-zague', difficulty: 4, seed: 112,
         blurb: 'Curvas de 45° e 90° em sequência, ritmo quebrado. Há um desvio paralelo à avenida.',
+        elev: [[0, 0], [230, 0], [491, 35], [816, 3], [1076, 34], [1375, 2], [1704, 35], [2011, 3], [2269, 29], [2794, 0], [2994, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 35 m, ~20% nos trechos mais íngremes)
         segments: [[220,0],[70,45],[160,0],[70,-45],[200,0],[70,-45],[140,0],[70,45],[240,0],[90,90],[180,0],[90,-90],[260,0],[70,45],[120,0],[70,-45],[220,0],[90,-90],[200,0],[90,90],[280,0]],
         fork: { from: 0.55, len: 440, side: 'left', amp: 24 },
         ranks: [79, 86, 97, 113]
@@ -208,6 +213,7 @@
       urbana_d: {
         base: 'urbana', name: 'Centro Neon · Retorno', difficulty: 5, seed: 113,
         blurb: 'Dois retornos de 180° entre as avenidas. Há um desvio paralelo à avenida.',
+        elev: [[0, 0], [230, 0], [495, 37], [813, 2], [1067, 23], [1313, 1], [1610, 24], [1931, 0], [2188, 30], [2435, 1], [2699, 29], [3118, 0], [3318, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 37 m, ~21% nos trechos mais íngremes)
         segments: [[360,0],[120,180],[300,0],[90,-90],[200,0],[90,-90],[340,0],[90,90],[220,0],[90,90],[280,0],[120,-180],[340,0],[90,90],[200,0],[90,-90],[300,0]],
         fork: { from: 0.36, len: 420, side: 'left', amp: 24 },
         ranks: [92, 100, 113, 131]
@@ -215,6 +221,7 @@
       fazenda_b: {
         base: 'fazenda', name: 'Campos do Vale · Colheita', difficulty: 1, seed: 121,
         blurb: 'Grandes curvas de terra entre as plantações. A estrada se divide em dois caminhos e há atalhos pelo meio do campo.',
+        elev: [[0, 0], [230, 0], [622, 28], [1117, 1], [1509, 16], [1930, 1], [2340, 18], [2726, 1], [3148, 0], [3348, 0]],   // relevo: colinas longas e arredondadas (até 28 m, ~11% nos trechos mais íngremes)
         segments: [[320,0],[560,170],[620,0],[320,-60],[200,0],[560,-180],[180,0],[320,55],[260,0]],
         fork: { from: 0.4, len: 820, side: 'left', amp: 46 },
         cuts: [{ at: 252, len: 540, amp: 50, ramp: 0.45 }, { at: 2200, len: 540, amp: 50, ramp: 0.45 }],
@@ -223,6 +230,7 @@
       fazenda_c: {
         base: 'fazenda', name: 'Campos do Vale · Estrada Velha', difficulty: 2, seed: 122,
         blurb: 'Mais curvas e menos retas, em terra batida. A estrada se divide em dois caminhos.',
+        elev: [[0, 0], [230, 0], [641, 17], [1127, 2], [1586, 21], [2018, 2], [2439, 15], [2965, 0], [3165, 0]],   // relevo: colinas longas e arredondadas (até 21 m, ~7% nos trechos mais íngremes)
         segments: [[260,0],[180,45],[140,0],[160,-60],[160,0],[200,55],[120,0],[180,-70],[200,0],[150,-50],[140,0],[210,65],[200,0],[160,-45],[260,0],[200,40],[240,0]],
         fork: { from: 0.5, len: 800, side: 'left', amp: 46 },
         ranks: [67, 73, 83, 96]
@@ -230,6 +238,7 @@
       fazenda_d: {
         base: 'fazenda', name: 'Campos do Vale · Retão do Vale', difficulty: 1, seed: 123,
         blurb: 'Retas enormes e poucas curvas lentas. A estrada se divide em dois caminhos.',
+        elev: [[0, 0], [230, 0], [643, 21], [1032, 0], [1484, 30], [1926, 0], [2391, 15], [2878, 0], [3078, 0]],   // relevo: colinas longas e arredondadas (até 30 m, ~10% nos trechos mais íngremes)
         segments: [[480,0],[260,-30],[420,0],[220,35],[540,0],[160,-75],[300,0],[240,30],[460,0]],
         fork: { from: 0.36, len: 900, side: 'right', amp: 46 },
         ranks: [55, 60, 68, 78]
@@ -238,6 +247,7 @@
         base: 'serra', name: 'Serra Verde · Subida Norte', difficulty: 5, seed: 131,
         blurb: 'Curvas largas, um grampo e túneis. Há um desvio ao lado da pista e atalhos de terra pela encosta.',
         tunnels: [[990, 1080], [1971, 2061], [2691, 2781]],
+        elev: [[0, 0], [230, 0], [588, 42], [919, 2], [1195, 45], [1529, 3], [1882, 67], [2243, 2], [2590, 24], [2722, 0], [2922, 0]],   // relevo: toboga da serra (até 67 m, ~27% nos trechos mais íngremes)
         segments: [[200,0],[420,160],[100,0],[260,-80],[560,0],[420,-170],[140,0],[260,75],[100,0],[220,-110],[240,0]],
         fork: { from: 0.42, len: 380, side: 'left', amp: 24 },
         cuts: [{ at: 204, len: 540, amp: 50, ramp: 0.45 }],
@@ -247,6 +257,7 @@
         base: 'serra', name: 'Serra Verde · Mirante', difficulty: 4, seed: 132,
         blurb: 'Curvas mais abertas e túneis. Há um desvio ao lado da pista.',
         tunnels: [[340, 430], [820, 930], [2150, 2280]],
+        elev: [[0, 0], [230, 0], [569, 61], [903, 1], [1211, 54], [1517, 1], [1885, 67], [2244, 2], [2536, 44], [2851, 0], [3051, 0]],   // relevo: toboga da serra (até 67 m, ~27% nos trechos mais íngremes)
         segments: [[240,0],[160,70],[120,0],[150,-80],[140,0],[170,75],[100,0],[140,-85],[120,0],[110,120],[90,0],[110,-115],[130,0],[150,80],[160,0],[140,-75],[160,0],[130,90],[140,0],[150,-85],[240,0]],
         fork: { from: 0.4, len: 460, side: 'right', amp: 24 },
         ranks: [84, 92, 104, 122]
@@ -255,6 +266,7 @@
         base: 'serra', name: 'Serra Verde · Caracol', difficulty: 5, seed: 133,
         blurb: 'Grampos seguidos de mais de 120°. Há um desvio ao lado da pista.',
         tunnels: [[260, 340], [760, 860], [2000, 2100]],
+        elev: [[0, 0], [230, 0], [574, 43], [874, 1], [1197, 49], [1533, 0], [1867, 50], [2218, 0], [2418, 0]],   // relevo: toboga da serra (até 50 m, ~22% nos trechos mais íngremes)
         segments: [[160,0],[100,130],[80,0],[100,-125],[90,0],[110,120],[80,0],[100,-130],[100,0],[120,110],[100,0],[120,-105],[110,0],[130,95],[120,0],[130,-100],[110,0],[110,120],[100,0],[110,-110],[240,0]],
         fork: { from: 0.58, len: 440, side: 'right', amp: 24 },
         ranks: [81, 88, 100, 117]
@@ -262,6 +274,7 @@
       canion_b: {
         base: 'canion', name: 'Estrada do Cânion · Mesa Vermelha', difficulty: 3, seed: 141,
         blurb: 'Arcos amplos ao redor das mesas de rocha. A estrada se divide em dois caminhos e há atalhos de terra.',
+        elev: [[0, 0], [230, 0], [556, 49], [884, 3], [1229, 48], [1565, 1], [1946, 36], [2283, 1], [2626, 52], [2952, 3], [3295, 0], [3495, 0]],   // relevo: vales e cristas fundos (até 52 m, ~23% nos trechos mais íngremes)
         segments: [[240,0],[520,-170],[100,0],[300,70],[640,0],[520,175],[160,0],[300,-65],[240,0],[220,45],[260,0]],
         fork: { from: 0.32, len: 820, side: 'left', amp: 46 },
         cuts: [{ at: 324, len: 540, amp: 50, ramp: 0.45 }, { at: 1980, len: 540, amp: 50, ramp: 0.45 }],
@@ -270,6 +283,7 @@
       canion_c: {
         base: 'canion', name: 'Estrada do Cânion · Garganta', difficulty: 3, seed: 142,
         blurb: 'Curvas largas e rápidas pela garganta. A estrada se divide em dois caminhos.',
+        elev: [[0, 0], [230, 0], [619, 40], [932, 3], [1249, 46], [1592, 3], [1983, 40], [2370, 3], [2678, 40], [2995, 0], [3195, 0]],   // relevo: vales e cristas fundos (até 46 m, ~20% nos trechos mais íngremes)
         segments: [[260,0],[150,60],[200,0],[140,-75],[180,0],[170,70],[240,0],[120,-100],[160,0],[180,60],[200,0],[150,-70],[240,0],[130,90],[200,0],[170,-55],[300,0]],
         fork: { from: 0.5, len: 780, side: 'left', amp: 46 },
         ranks: [78, 86, 97, 113]
@@ -277,6 +291,7 @@
       canion_d: {
         base: 'canion', name: 'Estrada do Cânion · Desfiladeiro', difficulty: 4, seed: 143,
         blurb: 'Trecho curto e nervoso, de curvas fechadas. A estrada se divide em dois caminhos.',
+        elev: [[0, 0], [230, 0], [568, 43], [960, 1], [1276, 35], [1663, 4], [2068, 0], [2268, 0]],   // relevo: vales e cristas fundos (até 43 m, ~19% nos trechos mais íngremes)
         segments: [[200,0],[100,100],[100,0],[110,-100],[120,0],[130,85],[100,0],[120,-90],[160,0],[100,110],[120,0],[110,-105],[140,0],[140,80],[160,0],[120,-85],[240,0]],
         fork: { from: 0.52, len: 760, side: 'left', amp: 46 },
         ranks: [68, 75, 85, 98]
