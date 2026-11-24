@@ -15,3 +15,4 @@ Ordem original de desenvolvimento: cenários → horário/clima → som → camp
 - **v0.64–0.68**: atalhos escondidos no toque, pilotos `.glb`, arrastar para girar o carro, toggle de música na pausa.
 - **v0.71**: 1º lugar no campeonato libera todos os carros secretos.
 - **v0.72**: PWA offline (service worker), manifest, ícones maskable/apple, wake lock; publicação direto na `main` com branches de backup `0.NN`.
+- **v0.73**: todos os `.glb` (carros e piloto) com texturas reduzidas para no máximo 1024 px (330,5 MB → 167,5 MB, −49%), feito com script Python/PIL porque o npm é bloqueado no ambiente; originais ficam na branch `0.72`. Cache do service worker passou para `tufg-v2`.

@@ -28,7 +28,7 @@ Scripts carregados na ordem: vehicles.js, tracks.js, ads.js, music.js, depois o 
 `Game.preload()` carrega só o necessário; `Game.warm()` compila shaders antes da largada. Carregamento por bytes com barra. Grid reduzido (`grid.reduced`) em máquinas fracas.
 
 ## PWA (v0.72)
-- `sw.js`: `const V='tufg-v1'`; caches `tufg-v1-shell` e `tufg-v1-assets`. Código (`.html/.js/.json`) é network-first com fallback ao cache; `/assets/**` e CDNs são cache-first; sintetiza respostas 206 (Range) para mp3. Mensagem `precache` faz download offline com progresso. Para invalidar caches, mudar `V`.
+- `sw.js`: `const V='tufg-v2'`; caches `tufg-v2-shell` e `tufg-v2-assets`. Código (`.html/.js/.json`) é network-first com fallback ao cache; `/assets/**` e CDNs são cache-first; sintetiza respostas 206 (Range) para mp3. Mensagem `precache` faz download offline com progresso. Para invalidar caches, mudar `V`.
 - Registro só em https ou localhost. Wake Lock mantém a tela ligada em `race`/`countdown`.
 - `manifest.json`: `id "/"`, fullscreen, ícones 192/512/maskable.
 

@@ -7,7 +7,7 @@
 - Atualizar o artifact de teste para a versão mais recente.
 - Verificar em dispositivo real: instalação/offline do PWA, música de abertura no Brave mobile, piloto .glb real, mp3 reais.
 - Usuário apagar as branches `v0.71` e `pwa-offline` no GitHub.
-- Rodar `otimizar-glb.sh` nos carros (~325 MB hoje) para reduzir carregamento.
 
 ## Ideias
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.
+- Conferir visual dos carros com texturas de 1024 px (v0.73); se ficar bom, testar 512 px.
