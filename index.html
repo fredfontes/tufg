@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.75</summary>
+        <summary>Estado do projeto · v0.76</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -883,7 +883,7 @@ class CarSim {
       const c = (1.5 + 0.0013 * vf * vf) * Math.sign(vf); a = -c; const nv = vf - c * dt; vf = (nv * vf < 0) ? 0 : nv;
     }
     if (hb > 0 && vf > 0) vf = Math.max(0, vf - 3 * dt);
-    if (track.hasElev && (thr > 0 || brk > 0 || Math.abs(vf) > 0.4)) vf -= 9.81 * 0.8 * track.slopeAt(L.s) * Math.cos(angDiff(this.h, L.th)) * dt;   // uphill slows the car, downhill speeds it up (arcade strength)
+    if (track.hasElev && (thr > 0 || brk > 0 || Math.abs(vf) > 0.4)) vf -= 9.81 * 1.1 * track.slopeAt(L.s) * Math.cos(angDiff(this.h, L.th)) * dt;   // uphill slows the car, downhill speeds it up (arcade strength)
     if (!onRoad) { const g = vf * 0.5 + 2 * Math.sign(vf); vf -= g * dt; a -= g; }
     vf = clamp(vf, -14, sp.maxSpeed); this.longAcc = a; this.vf = vf;
 
@@ -1614,7 +1614,7 @@ class World {
     this.rg.attributes.position.needsUpdate = true;
   }
   follow(cam) {
-    const p = cam.position; this.sky.position.copy(p); if (this.skybox) this.skybox.position.copy(p); if (this.stars) this.stars.position.copy(p); this.mount.position.set(p.x, p.y - 26 + 65 * this.mS, p.z);
+    const p = cam.position; this.sky.position.copy(p); if (this.skybox) this.skybox.position.copy(p); if (this.stars) this.stars.position.copy(p); const lift = this.track.hasElev ? clamp(p.y - 3, 0, 60) : 0; this.mount.position.set(p.x, p.y - 26 - lift + 65 * this.mS, p.z);   // relief: the far mountains reach down to the base ground when the camera is high
     this.sunDisc.position.set(p.x + this.sunDir.x * 480, p.y + this.sunDir.y * 480, p.z + this.sunDir.z * 480); this.sunDisc.lookAt(p);
   }
 }
