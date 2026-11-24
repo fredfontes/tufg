@@ -18,6 +18,9 @@ Scripts carregados na ordem: vehicles.js, tracks.js, ads.js, music.js, depois o 
 ## Config (index.html)
 `Config` junta `TUFG_VEHICLES`, `TUFG_TRACKS` e `TUFG_ADS`: `retroHeight` (360), `trackOrder`, `tracks`, `sceneries`, `cars`, `times` (amanhecer/dia/entardecer/noite), `weathers` (limpo/chuva/neve secreta), `champ` (prêmios, preços, `unlocks`), `Config.atmosphere(tempo, clima)`.
 
+## Relevo (v0.75)
+`Track.cy[i]` = altura do eixo (de `def.elev`); `yAt(s)`, `slopeAt(s)`, `terrain(i, lat)` e `ground(x, z, st)` dão alturas e inclinação. `band()` soma `cy[i]` (use `abs: true` para alturas absolutas). `CarSim.step` aplica a gravidade da ladeira; `Game.pose` posiciona e inclina carros; `ChaseCam`, retrovisor, `FX` e chuva usam `car.gy`/`fx.ground`. Física e colisão continuam 2D.
+
 ## Estados do jogo
 `Game.state`: menu, countdown, race, result etc. Estado salvo no navegador (localStorage): escolhas, cor por jogador e carro, dinheiro/progresso do campeonato, opção de música.
 

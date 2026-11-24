@@ -31,6 +31,11 @@
                   A pista não pode cruzar a si mesma nem passar perto demais de outro trecho (use 150 m ou mais).
      tunnels      (opcional) túneis de pedra com iluminação: lista de [de, até] em metros ao longo da pista, ex.: [[320,405],[1215,1325]].
                   Eles formam um morro sobre a pista; adereços e placas ficam fora dessas áreas.
+     elev         (opcional) relevo: lista de [metros, altura em metros] ao longo da pista, ex.: [[0,0],[500,14],[1100,-6],[1700,10],[2600,0]].
+                  A altura é suavizada entre os pontos (topos e vales arredondados) e a menor altura vira o chão. Subidas e descidas afetam a
+                  velocidade do carro (arcade). Inclinação boa: até ~8% (ex.: 8 m de desnível em 100 m); acima de 12% fica íngreme demais.
+                  Mantenha o começo e o fim planos. Pistas com  base  NÃO herdam  elev : declare o relevo de cada traçado.
+                  (Por enquanto o relevo vale para pistas sem túnel de bambu / palmeiras sobre a pista; veja o cenário Oásis.)
      ranks        tempos [S, A, B, C] em segundos para as notas na tela de resultado
      base         (opcional) id de outra pista da qual esta herda tudo (cenário, largura, tráfego, anúncios...). Só o que você escrever aqui muda.
                   Uma pista com  base  é um TRAÇADO NOVO da pista de origem: aparece na seleção de pistas, no sorteio e no campeonato (etapas 2, 3 e 4 de cada pista).
@@ -150,6 +155,7 @@
         width: 14, wall: 11, step: 3, runoff: 140, startS: 9, seed: 58,
         traffic: 12, trafficPool: { sedan: 0.5, hatch: 0.5, povao: 0.7, van: 1, pickup: 4, truck: 5, 'Bus Travel': 2, 'Bus School': 0.3, 'Truck Fridge': 1.5 },
         tunnels: [[320, 405], [1215, 1325], [1705, 1855]],
+        elev: [[0, 0], [250, 0], [650, 16], [1000, 22], [1350, 10], [1750, 28], [2150, 14], [2500, 4], [2700, 0], [2900, 0]],   // sobe a serra, desce em ondas e chega plano
         segments: [[200,0],[110,100],[100,0],[120,-110],[90,0],[130,90],[110,0],[110,-120],[100,0],[140,100],[120,0],[130,-100],[100,0],[140,110],[160,0],[130,-90],[140,0],[120,95],[120,0],[130,-95],[260,0]],
         ranks: [84, 92, 104, 122]
       },

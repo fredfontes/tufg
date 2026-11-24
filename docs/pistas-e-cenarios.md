@@ -18,6 +18,9 @@ Cada uma tem 3 variações de traçado `_b`, `_c`, `_d` (`variantOf`, fora da se
 - Bifurcação (`fork: { from 0.3–0.7, len, side, amp }`): bots sorteiam o caminho; vale em qualquer horário/clima. Litoral/fazenda/cânion = estradas paralelas; urbana/serra = desvio curto.
 - Tráfego por pista: litoral 14, urbana 18, fazenda 10, serra 12, cânion 14, oasis 8 (× `trafficScale`).
 
+## Relevo (v0.75)
+`elev: [[metros, altura], ...]` em tracks.js; altura suavizada entre pontos, menor altura vira o chão. Inclinação boa até ~8%, máximo ~12%; começo e fim planos. Variantes não herdam `elev`. Ao lado da pista o chão é plano até `wall + 16` m e depois cai em encosta até o chão base. Hoje só `serra` tem relevo (0 → 28 m). Ainda não cobre canopy (palmeiras/bambu do Oásis) nem a água do litoral.
+
 ## Horário e clima
 Horários: amanhecer, dia, entardecer (sun flare), noite. Climas: limpo, chuva, neve (secreto). Pista/horário/clima aleatórios por padrão na primeira visita e quando marcados "aleatório" (o cenário atrás do menu já é sorteado e usado na 1ª corrida). `times` pode ser sobrescrito campo a campo em tracks.js. O Oásis tem `sunrise`: começa no amanhecer e vira dia durante a corrida.
 
