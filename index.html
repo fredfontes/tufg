@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.80</summary>
+        <summary>Estado do projeto · v0.81</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -763,6 +763,7 @@ class Track {
     const G = Config.grid; this.lineS = Math.max(def.startS + 8, 6 + (Math.ceil(G.cars / 2) - 1) * G.rowGap + G.rowGap / 2 + 12); this._prof = {};   // start line, just ahead of the first grid row
     this._var = {}; this.fork = (def.fork || def.cuts) && !(opt && opt.fork === false) ? this.makeFork(def.fork, def.cuts || []) : null;
     this.flatW = def.wall + 16; if (this.fork) { let rc = 0; for (let i = 0; i < N; i += 3) rc = Math.max(rc, Math.hypot(this.fork.bx[i] - this.cx[i], this.fork.bz[i] - this.cz[i])); this.flatW = Math.max(this.flatW, rc + this.half + 14); }   // relief: width of the flat ground beside the road (covers the fork roads)
+    this.buildCaps();
   }
   /* Fork: a second road B that leaves the main road A (the layout centre line) and rejoins it further on. B is A's centre line pushed sideways by ob[i]
      (0 outside the fork, easing in and out in between), so both roads share the same sample index i and the same progress s. Everything that measures
@@ -824,8 +825,35 @@ class Track {
   }
   yAt(s) { if (!this.hasElev) return 0; s = clamp(s, 0, this.length - 0.001); const f = s / this.step, i = Math.min(this.N - 2, Math.floor(f)); return lerp(this.cy[i], this.cy[i + 1], f - i); }   // height of the road axis at distance s
   slopeAt(s) { if (!this.hasElev) return 0; s = clamp(s, 0, this.length - 0.001); const i = Math.min(this.N - 2, Math.floor(s / this.step)); return (this.cy[i + 1] - this.cy[i]) / this.step; }   // rise over run (+ uphill)
+  // relief: where another stretch of the same road runs lower beside this one (hairpins, spirals), the ground must not rise above it. For each sample and side, cd = lateral distance
+  // where the nearest lower road begins and ch = its height; the ground then falls steeply (S per metre) to that height before reaching it and stays under it.
+  buildCaps() {
+    const N = this.N, st = this.step, W = this.half + 1.1, reach = this.flatW + 140, S = 0.8; this.cd = [new Float32Array(N).fill(Infinity), new Float32Array(N).fill(Infinity)]; this.ch = [new Float32Array(N), new Float32Array(N)];
+    if (!this.hasElev) return; const skip = Math.ceil(80 / st);
+    for (let i = 0; i < N; i++) {
+      const c = this.cy[i], lx = this.lx[i], lz = this.lz[i];
+      for (let j = 0; j < N; j++) {
+        if (Math.abs(i - j) < skip || this.cy[j] > c - 1.2) continue;
+        const dx = this.cx[j] - this.cx[i], dz = this.cz[j] - this.cz[i]; if (Math.abs(-dx * lz + dz * lx) > st * 1.3) continue;
+        const l = dx * lx + dz * lz, ls = Math.abs(l); if (ls < W || ls > reach) continue;
+        const k = l > 0 ? 0 : 1, dj = ls - this.half - 3; if (dj < this.cd[k][i]) { this.cd[k][i] = dj; this.ch[k][i] = Math.max(0, this.cy[j] - 0.6); }
+      }
+    }
+    // profile breakpoints per sample and side: 5 lateral distances (sorted) and the ground height at each
+    const a0 = W, S5 = [[], []], H5 = [[], []]; for (let k = 0; k < 2; k++) for (let q = 0; q < 5; q++) { S5[k].push(new Float32Array(N)); H5[k].push(new Float32Array(N)); }
+    for (let i = 0; i < N; i++) for (let k = 0; k < 2; k++) {
+      const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1), end = fl + ln, dj = this.cd[k][i], hj = this.ch[k][i], fin = dj < Infinity, top = Math.max(a0, Math.min(end, fin ? dj - (c - hj) / S : a0));
+      const pts = [a0, top, fin ? Math.max(a0, Math.min(end, dj)) : a0, Math.min(fl, end), end].sort((p, q) => p - q);
+      for (let q = 0; q < 5; q++) { const a = pts[q]; let g = a <= fl ? c : a >= end ? 0 : c * (1 - (a - fl) / ln); if (fin) g = Math.min(g, a >= dj ? hj : hj + S * (dj - a)); S5[k][q][i] = a; H5[k][q][i] = Math.max(0, g); }
+    }
+    this.pa = S5; this.ph = H5;
+  }
+  capped(i, k, a) {   // ground height at sample i, side k (0 left, 1 right), lateral distance a, with the cap applied
+    const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1); let g = a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln), dj = this.cd ? this.cd[k][i] : Infinity;
+    if (dj < Infinity) g = Math.min(g, a >= dj ? this.ch[k][i] : this.ch[k][i] + 0.8 * (dj - a)); return Math.max(0, g);
+  }
   terrain(i, lat) {   // ground height beside the road at sample i, lateral distance lat: flat as far as the roadside, then an embankment that falls to the base ground
-    if (!this.hasElev) return 0; const c = this.cy[clamp(i, 0, this.N - 1)], fl = this.flatW, ln = 10 + 3 * (c + 1), a = Math.abs(lat); return a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln);
+    if (!this.hasElev) return 0; i = clamp(i, 0, this.N - 1); return this.capped(i, lat >= 0 ? 0 : 1, Math.abs(lat));
   }
   ground(x, z, st) {   // height of the ground under (x, z); st = { h: -1 } keeps the search hint, and receives sl (slope along the road) and th (road heading)
     if (!this.hasElev) { st.sl = 0; st.th = 0; return 0; }
@@ -1325,8 +1353,11 @@ class World {
     if (T.hasElev) {
       const fl = T.flatW, ln = i => 10 + 3 * (T.cy[i] + 1), eg = canvasTex(64, 64, drawGround, true);
       for (const sg of [1, -1]) {
-        mesh(band(T, sg * (W + 1.1), sg * fl, i => T.cy[i] - 0.12, i => T.cy[i] - 0.12, { abs: true, uA: 0, uB: (fl - W - 1.1) / 14, vs: 14 }), mat(eg, over));
-        mesh(band(T, sg * fl, i => sg * (fl + ln(i)), i => T.cy[i] - 0.12, gy, { abs: true, uA: 0, uB: i => ln(i) / 14, vs: 14 }), mat(eg, over));
+        const k = sg > 0 ? 0 : 1;
+        for (let q = 0; q < 4; q++) {
+          const A = T.pa[k][q], B = T.pa[k][q + 1], HA = T.ph[k][q], HB = T.ph[k][q + 1], a0 = W + 1.1;
+          mesh(band(T, i => sg * A[i], i => sg * B[i], i => HA[i] > 0.01 ? HA[i] - 0.12 : gy, i => HB[i] > 0.01 ? HB[i] - 0.12 : gy, { abs: true, uA: i => (A[i] - a0) / 14, uB: i => (B[i] - a0) / 14, vs: 14 }), mat(eg, over));
+        }
       }
     }
     // road, curbs
