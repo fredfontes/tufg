@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.82</summary>
+        <summary>Estado do projeto · v0.83</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1623,19 +1623,19 @@ class World {
     const T = this.track, WALL = T.def.wall, W = T.half, G = this.group, tc = new THREE.Color(this.theme.tint || '#ffffff'), col = hex => new THREE.Color(hex).multiply(tc), R = rng((T.def.seed || 1) * 31 + 7);
     const o = T.at(T.length - 0.02), st = new THREE.Group(); st.position.set(o.x, o.y, o.z); st.rotation.y = o.h; G.add(st);   // local +z = road direction, local +x = left
     const basic = (hex, extra) => new THREE.MeshBasicMaterial(Object.assign({ color: col(hex) }, extra)), box = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); st.add(b); return b; };
-    const Wd = 2 * (W + WALL) + 16, Z0 = 4;
+    const Wd = 2 * (W + 1.1) + 4, Z0 = 4, WH = Wd / 2.4;   // stage as wide as the road plus the curbs (small margin)
     // sponsor wall: title on top, a row of outdoors from the track list, checkered strip below
     const list = (T.def.ads || this.sc.billboards || []).map(resolveAd); while (list.length < 5) list.push(resolveAd({ title: list.length % 2 ? 'THE URGE FOR GAS' : 'OCTANA', subtitle: list.length % 2 ? 'o prazer de acelerar' : 'gasolina de corrida', bg: list.length % 2 ? '#e8a400' : '#2a2e36', color: list.length % 2 ? '#14161a' : '#f4f1e8' }));
-    const wtex = canvasTex(2048, 512, (c, w, h) => {
+    const wtex = canvasTex(2048, 853, (c, w, h) => {
       c.fillStyle = '#14161a'; c.fillRect(0, 0, w, h);
-      c.fillStyle = '#ffb000'; c.fillRect(0, 0, w, 150); c.fillStyle = '#14161a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 120px Impact,"Arial Narrow",sans-serif'; c.fillText('THE URGE FOR GAS', w / 2, 80);
-      const n = 3, pw = (w - 48) / n - 16, ps = 1.45; for (let k = 0; k < n; k++) { c.save(); c.translate(24 + k * (pw + 16), 172); c.scale(ps, ps); drawAd(c, pw / ps, 256 / ps, list[(k + 1) % list.length], null); c.restore(); }   // only the 3 central outdoors, bigger text
-      const sq = 32; for (let x = 0; x < w / sq; x++) for (let y = 0; y < 2; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * sq, 440 + y * sq, sq, sq); }
+      c.fillStyle = '#ffb000'; c.fillRect(0, 0, w, 230); c.fillStyle = '#14161a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 180px Impact,"Arial Narrow",sans-serif'; c.fillText('THE URGE FOR GAS', w / 2, 122);
+      const n = 2, pw = (w - 48) / n - 16, ps = 1.45; for (let k = 0; k < n; k++) { c.save(); c.translate(24 + k * (pw + 16), 256); c.scale(ps, ps); drawAd(c, pw / ps, 520 / ps, list[(k + 1) % list.length], null); c.restore(); }   // 2 outdoors
+      const sq = 32; for (let x = 0; x < w / sq; x++) for (let y = 0; y < 2; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * sq, 789 + y * sq, sq, sq); }
     });
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Wd / 4), new THREE.MeshBasicMaterial({ map: wtex, color: tc })); wall.rotation.y = Math.PI; wall.position.set(0, Wd / 8 + 0.2, Z0 - 0.3); st.add(wall);
-    box(Wd + 0.6, Wd / 4 + 0.6, 0.5, basic('#22252b'), 0, Wd / 8 + 0.2, Z0 + 0.1);
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(Wd, WH), new THREE.MeshBasicMaterial({ map: wtex, color: tc })); wall.rotation.y = Math.PI; wall.position.set(0, WH / 2 + 0.2, Z0 - 0.3); st.add(wall);
+    box(Wd + 0.6, WH + 0.6, 0.5, basic('#22252b'), 0, WH / 2 + 0.2, Z0 + 0.1);
     const ckt = canvasTex(64, 64, (c, w, h) => { for (let x = 0; x < 4; x++) for (let y = 0; y < 4; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * 16, y * 16, 16, 16); } });
-    for (const sg of [1, -1]) { box(1.2, Wd / 4 + 5, 1.2, basic('#3b3f48'), sg * (Wd / 2 + 0.3), (Wd / 4 + 5) / 2, Z0 + 0.1); const fl = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({ map: ckt, color: tc, side: THREE.DoubleSide })); fl.position.set(sg * (Wd / 2 - 2.2), Wd / 4 + 4, Z0 + 0.1); st.add(fl); }
+    for (const sg of [1, -1]) { box(1.2, WH + 5, 1.2, basic('#3b3f48'), sg * (Wd / 2 + 0.3), (WH + 5) / 2, Z0 + 0.1); const fl = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({ map: ckt, color: tc, side: THREE.DoubleSide })); fl.position.set(sg * (Wd / 2 - 2.2), WH + 4, Z0 + 0.1); st.add(fl); }
     // podium: 2nd (left), 1st (centre), 3rd (right) seen from the cars
     const numTex = n => canvasTex(64, 64, (c, w, h) => { c.fillStyle = '#e9e6dc'; c.fillRect(0, 0, w, h); c.fillStyle = '#14161a'; c.font = '900 52px Impact,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(n), w / 2, h / 2 + 3); });
     const pod = [[0, 1.5, 1, '#e8b923'], [3.3, 1.0, 2, '#c4c9cf'], [-3.3, 0.7, 3, '#b4753c']], ZP = Z0 - 3.2, win = [];
@@ -3239,7 +3239,9 @@ class Game {
     this.world.update(dt);
     if (this.world.lap) { const run = this.state === 'race' || this.state === 'finishing'; if (run || this.state === 'countdown') this.world.lapse(run ? Math.max(sim.s, split ? sim2.s : 0) / this.track.finishS / this.world.lap.until : 0); }
     const hl = (this.world.theme || A).headlights || 0;
-    [[this.pool, sim, true], [this.pool2, sim2, split]].forEach(([pl, q, on]) => { pl.visible = hl > 0 && on; if (pl.visible) { pl.material.opacity = hl * 0.75; pl.position.set(q.x + Math.sin(q.h) * 14, 0.07 + (this.track.hasElev ? this.track.ground(q.x + Math.sin(q.h) * 14, q.z + Math.cos(q.h) * 14, pl._gs || (pl._gs = { h: -1 })) : 0), q.z + Math.cos(q.h) * 14); pl.rotation.y = q.h; } });
+    [[this.pool, sim, true], [this.pool2, sim2, split]].forEach(([pl, q, on]) => { pl.visible = hl > 0 && on; if (pl.visible) { pl.material.opacity = hl * 0.75; const sh = Math.sin(q.h), ch = Math.cos(q.h), T = this.track; let gy = 0, pit = 0;
+        if (T.hasElev) { const gs = pl._gs || (pl._gs = { h: -1 }), g1 = T.ground(q.x + sh * 5, q.z + ch * 5, gs), g2 = T.ground(q.x + sh * 14, q.z + ch * 14, gs), g3 = T.ground(q.x + sh * 23, q.z + ch * 23, gs); gy = g2; pit = Math.atan((g3 - g1) / 18); }   // the light follows the ground: height and pitch along the 26 m pool
+        pl.position.set(q.x + sh * 14, 0.07 + gy, q.z + ch * 14); pl.rotation.y = q.h; pl.rotation.x = Math.PI / 2 - pit; } });
     const views = split ? [[this.camera, sim, 0], [this.camera2, sim2, 1]] : [[this.camera, H[gv].sim, 0]], iw = this.rw, ih = this.rh, hh = Math.floor(ih / 2);
     if (split) R.setScissorTest(true); else { R.setScissorTest(false); R.setViewport(0, 0, iw, ih); }
     views.forEach(([cam, q, n], i) => {
