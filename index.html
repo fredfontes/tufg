@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.81</summary>
+        <summary>Estado do projeto · v0.82</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1629,7 +1629,7 @@ class World {
     const wtex = canvasTex(2048, 512, (c, w, h) => {
       c.fillStyle = '#14161a'; c.fillRect(0, 0, w, h);
       c.fillStyle = '#ffb000'; c.fillRect(0, 0, w, 150); c.fillStyle = '#14161a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 120px Impact,"Arial Narrow",sans-serif'; c.fillText('THE URGE FOR GAS', w / 2, 80);
-      const n = 5, pw = (w - 48) / n - 16; for (let k = 0; k < n; k++) { c.save(); c.translate(24 + k * (pw + 16), 172); drawAd(c, pw, 250, list[k % list.length], null); c.restore(); }
+      const n = 3, pw = (w - 48) / n - 16, ps = 1.45; for (let k = 0; k < n; k++) { c.save(); c.translate(24 + k * (pw + 16), 172); c.scale(ps, ps); drawAd(c, pw / ps, 256 / ps, list[(k + 1) % list.length], null); c.restore(); }   // only the 3 central outdoors, bigger text
       const sq = 32; for (let x = 0; x < w / sq; x++) for (let y = 0; y < 2; y++) { c.fillStyle = (x + y) % 2 ? '#f4f1e8' : '#14161a'; c.fillRect(x * sq, 440 + y * sq, sq, sq); }
     });
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Wd / 4), new THREE.MeshBasicMaterial({ map: wtex, color: tc })); wall.rotation.y = Math.PI; wall.position.set(0, Wd / 8 + 0.2, Z0 - 0.3); st.add(wall);
