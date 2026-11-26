@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.84</summary>
+        <summary>Estado do projeto · v0.85</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1293,7 +1293,7 @@ class World {
     const T = this.track, def = T.def, W = T.half, WALL = def.wall, sc = this.sc, theme = this.theme, scene = this.scene, G = this.group, add = o => { G.add(o); return o; };
     const F = T.fork, eL = i => T.outer(i, 1), eR = i => T.outer(i, -1), BT = F && { N: T.N, step: T.step, cx: F.bx, cz: F.bz, lx: F.blx, lz: F.blz, cy: T.cy };   // F: fork (second road) or null; eL / eR: how far the outer scenery is pushed out beside the branch
     const tint = theme.tint || '#ffffff', mat = (map, o) => new THREE.MeshBasicMaterial(Object.assign({ map, side: THREE.DoubleSide, color: tint }, o));
-    const over = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };   // flat overlays on the ground plane never z-fight
+    const over2 = { polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }, over = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };   // flat overlays on the ground plane never z-fight
     const mesh = (g, m, ro) => { const o = add(new THREE.Mesh(g, m)); if (ro != null) o.renderOrder = ro; return o; };
     scene.fog = new THREE.Fog(theme.fog, theme.fogNear, theme.fogFar);
     this.hemi = add(new THREE.HemisphereLight(theme.hemiSky, theme.hemiGround, theme.hemi));
@@ -1383,9 +1383,9 @@ class World {
     mesh(band(T, W, W + 1.1, 0.03, 0.03, { vs: 8, ok: trunkOk(1) }), mat(cTex)); mesh(band(T, -W, -W - 1.1, 0.03, 0.03, { vs: 8, ok: trunkOk(-1) }), mat(cTex));
     if (F) {   // the branch roads: paved forks, and dirt shortcuts
       const isCut = i => F.lobeOf[i] >= 0 && F.lobes[F.lobeOf[i]].cut, has = i => Math.abs(F.ob[i]) > 0.05, r = { i0: F.i0, i1: F.i1, vs: 8 };
-      if (F.lobes.some(l => !l.cut)) mesh(band(BT, W, -W, 0, 0, Object.assign({}, r, { ok: i => has(i) && !isCut(i) })), mat(aTex, over), 1);
-      if (F.lobes.some(l => l.cut)) mesh(band(BT, W * 0.9, -W * 0.9, 0.01, 0.01, Object.assign({}, r, { ok: i => has(i) && isCut(i) })), mat(aTex, over), 2);
-      for (const sg of [1, -1]) mesh(band(BT, sg * W, sg * (W + 1.1), 0.03, 0.03, Object.assign({}, r, { ok: i => { const o = F.ob[i], a = Math.abs(o); return a >= 0.5 && !isCut(i) && !((sg > 0) === (o < 0) && a < F.thr); } })), mat(cTex));
+      if (F.lobes.some(l => !l.cut)) mesh(band(BT, W, -W, 0.02, 0.02, Object.assign({}, r, { ok: i => has(i) && !isCut(i) })), mat(aTex, over2), 1);   // lifted a bit and with a stronger offset: where the fork leaves the main road the two overlap (z-fighting)
+      if (F.lobes.some(l => l.cut)) mesh(band(BT, W * 0.9, -W * 0.9, 0.03, 0.03, Object.assign({}, r, { ok: i => has(i) && isCut(i) })), mat(aTex, over2), 2);
+      for (const sg of [1, -1]) mesh(band(BT, sg * W, sg * (W + 1.1), 0.05, 0.05, Object.assign({}, r, { ok: i => { const o = F.ob[i], a = Math.abs(o); return a >= 0.5 && !isCut(i) && !((sg > 0) === (o < 0) && a < F.thr); } })), mat(cTex));
     }
 
     // sidewalk (outside the barrier)
