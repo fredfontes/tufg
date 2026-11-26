@@ -196,7 +196,7 @@
       urbana_b: {
         base: 'urbana', name: 'Centro Neon · Avenida Sul', difficulty: 4, seed: 111,
         blurb: 'Esquinas abertas de avenida, em ritmo de bulevar. Há um desvio ao lado da pista e atalhos de terra entre os quarteirões.',
-        elev: [[0, 0], [230, 0], [548, 31], [789, 2], [1062, 26], [1332, 1], [1588, 23], [1853, 1], [2131, 24], [2439, 1], [2758, 0], [2958, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 31 m, ~18% nos trechos mais íngremes)
+        elev: [[0,0],[230,0],[548,16],[789,1],[1062,13],[1332,0],[1588,12],[1853,0],[2131,12],[2439,0],[2758,0],[2958,0]],   // relevo: ladeiras curtas (reduzido pela metade na v0.87: os retornos de 180° deixavam o morro sobre os prédios) — até 16 m, ~9%
         segments: [[300,0],[300,150],[200,0],[220,-90],[460,0],[300,-140],[200,0],[220,90],[300,0],[220,90],[240,0]],
         fork: { from: 0.38, len: 440, side: 'left', amp: 24 },
         cuts: [{ at: 204, len: 540, amp: 50, ramp: 0.45 }, { at: 1740, len: 540, amp: 50, ramp: 0.45 }],
@@ -213,7 +213,7 @@
       urbana_d: {
         base: 'urbana', name: 'Centro Neon · Retorno', difficulty: 5, seed: 113,
         blurb: 'Dois retornos de 180° entre as avenidas. Há um desvio paralelo à avenida.',
-        elev: [[0, 0], [230, 0], [495, 37], [813, 2], [1067, 23], [1313, 1], [1610, 24], [1931, 0], [2188, 30], [2435, 1], [2699, 29], [3118, 0], [3318, 0]],   // relevo: ladeiras íngremes e curtas, estilo cidade em morro (até 37 m, ~21% nos trechos mais íngremes)
+        elev: [[0,0],[230,0],[495,18],[813,1],[1067,12],[1313,0],[1610,12],[1931,0],[2188,15],[2435,0],[2699,14],[3118,0],[3318,0]],   // relevo: ladeiras curtas (reduzido pela metade na v0.87: os retornos de 180° deixavam o morro sobre os prédios) — até 18 m, ~10%
         segments: [[360,0],[120,180],[300,0],[90,-90],[200,0],[90,-90],[340,0],[90,90],[220,0],[90,90],[280,0],[120,-180],[340,0],[90,90],[200,0],[90,-90],[300,0]],
         fork: { from: 0.36, len: 420, side: 'left', amp: 24 },
         ranks: [92, 100, 113, 131]
