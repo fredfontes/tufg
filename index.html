@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.85</summary>
+        <summary>Estado do projeto · v0.86</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -827,7 +827,8 @@ class Track {
   slopeAt(s) { if (!this.hasElev) return 0; s = clamp(s, 0, this.length - 0.001); const i = Math.min(this.N - 2, Math.floor(s / this.step)); return (this.cy[i + 1] - this.cy[i]) / this.step; }   // rise over run (+ uphill)
   // relief: where another stretch of the same road runs lower beside this one (hairpins, spirals), the ground must not rise above it. For each sample and side, cd = lateral distance
   // where the nearest lower road begins and ch = its height; the ground then falls steeply (S per metre) to that height before reaching it and stays under it.
-  buildCaps() {
+  buildCaps(sc) {
+    this.protW = (this.def.wall || 12) + (sc && sc.sidewalk ? 0.7 + (sc.sidewalk.width || 6) : 0.7) + 1.2;   // shoulder + barrier + sidewalk: the ground stays at road level out to here
     const N = this.N, st = this.step, W = this.half + 1.1, reach = this.flatW + 140, S = 0.8; this.cd = [new Float32Array(N).fill(Infinity), new Float32Array(N).fill(Infinity)]; this.ch = [new Float32Array(N), new Float32Array(N)];
     // inner side of tight bends: the bands cannot go past the centre of curvature (they would fold over the road and climb the buildings); lim = lateral limit
     this.lim = [new Float32Array(N).fill(Infinity), new Float32Array(N).fill(Infinity)];
@@ -847,19 +848,20 @@ class Track {
         const k = l > 0 ? 0 : 1, dj = ls - this.half - 3; if (dj < this.cd[k][i]) { this.cd[k][i] = dj; this.ch[k][i] = Math.max(0, this.cy[j] - 0.6); }
       }
     }
-    // profile breakpoints per sample and side: 5 lateral distances (sorted) and the ground height at each
-    const a0 = W, S5 = [[], []], H5 = [[], []]; for (let k = 0; k < 2; k++) for (let q = 0; q < 5; q++) { S5[k].push(new Float32Array(N)); H5[k].push(new Float32Array(N)); }
+    // profile breakpoints per sample and side: 7 lateral distances (sorted) and the ground height at each (6 bands)
+    const S7 = [[], []], H7 = [[], []]; for (let k = 0; k < 2; k++) for (let q = 0; q < 7; q++) { S7[k].push(new Float32Array(N)); H7[k].push(new Float32Array(N)); }
     for (let i = 0; i < N; i++) for (let k = 0; k < 2; k++) {
-      const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1), lm = this.lim[k][i], end = Math.min(fl + ln, lm), dj = this.cd[k][i], hj = this.ch[k][i], fin = dj < Infinity, top = Math.max(a0, Math.min(end, fin ? dj - (c - hj) / S : a0));
-      const pts = [a0, top, fin ? Math.max(a0, Math.min(end, dj)) : a0, Math.min(fl, end), end].sort((p, q) => p - q);
-      for (let q = 0; q < 5; q++) { const a = pts[q]; let g = a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln); if (lm < fl + ln) g = Math.min(g, a >= lm ? 0 : c * (lm - a) / (lm - a0)); if (fin) g = Math.min(g, a >= dj ? hj : hj + S * (dj - a)); S5[k][q][i] = a; H5[k][q][i] = Math.max(0, g); }
+      const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1), P = this.protW + this.outer(i, k === 0 ? 1 : -1), lm = this.lim[k][i], end = Math.max(P + 3, Math.min(fl + ln, lm)), dj = this.cd[k][i], fin = dj < Infinity;
+      const pts = [W, Math.min(P, end), Math.min(P + 2, end), fin ? dj - (c - this.ch[k][i]) / S : W, fin ? dj : W, Math.min(fl, end), end].map(p => Math.max(W, Math.min(end, p))).sort((p, q) => p - q);
+      for (let q = 0; q < 7; q++) { S7[k][q][i] = pts[q]; H7[k][q][i] = this.capped(i, k, pts[q]); }
     }
-    this.pa = S5; this.ph = H5;
+    this.pa = S7; this.ph = H7;
   }
-  capped(i, k, a) {   // ground height at sample i, side k (0 left, 1 right), lateral distance a, with the cap applied
-    const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1); let g = a <= fl ? c : a >= fl + ln ? 0 : c * (1 - (a - fl) / ln), dj = this.cd ? this.cd[k][i] : Infinity, lm = this.lim ? this.lim[k][i] : Infinity;
-    if (lm < fl + ln) g = Math.min(g, a >= lm ? 0 : c * (lm - a) / (lm - (this.half + 1.1)));
-    if (dj < Infinity) g = Math.min(g, a >= dj ? this.ch[k][i] : this.ch[k][i] + 0.8 * (dj - a)); return Math.max(0, g);
+  capped(i, k, a) {   // ground height at sample i, side k (0 left, 1 right), lateral distance a: flat out to the sidewalk, then the embankment, never above a lower road nearby nor past the centre of a tight bend
+    const c = this.cy[i], fl = this.flatW, ln = 10 + 3 * (c + 1), P = (this.protW || 0) + this.outer(i, k === 0 ? 1 : -1); if (a <= P) return c;
+    const f = x => { let g = x <= fl ? c : x >= fl + ln ? 0 : c * (1 - (x - fl) / ln); const lm = this.lim ? this.lim[k][i] : Infinity, dj = this.cd ? this.cd[k][i] : Infinity;
+      if (lm < fl + ln) g = Math.min(g, x >= lm ? 0 : c * (lm - x) / Math.max(1, lm - P)); if (dj < Infinity) g = Math.min(g, x >= dj ? this.ch[k][i] : this.ch[k][i] + 0.8 * (dj - x)); return Math.max(0, Math.min(c, g)); };
+    return a >= P + 2 ? f(a) : c + (f(P + 2) - c) * (a - P) / 2;
   }
   terrain(i, lat) {   // ground height beside the road at sample i, lateral distance lat: flat as far as the roadside, then an embankment that falls to the base ground
     if (!this.hasElev) return 0; i = clamp(i, 0, this.N - 1); return this.capped(i, lat >= 0 ? 0 : 1, Math.abs(lat));
@@ -1360,10 +1362,11 @@ class World {
 
     // relief: the ground beside an elevated road is flat as far as the roadside and then falls to the base ground in an embankment
     if (T.hasElev) {
+      T.buildCaps(sc);
       const fl = T.flatW, ln = i => 10 + 3 * (T.cy[i] + 1), eg = canvasTex(64, 64, drawGround, true);
       for (const sg of [1, -1]) {
         const k = sg > 0 ? 0 : 1;
-        for (let q = 0; q < 4; q++) {
+        for (let q = 0; q < 6; q++) {
           const A = T.pa[k][q], B = T.pa[k][q + 1], HA = T.ph[k][q], HB = T.ph[k][q + 1], a0 = W + 1.1;
           mesh(band(T, i => sg * A[i], i => sg * B[i], i => HA[i] > 0.01 ? HA[i] - 0.12 : gy, i => HB[i] > 0.01 ? HB[i] - 0.12 : gy, { abs: true, uA: i => (A[i] - a0) / 14, uB: i => (B[i] - a0) / 14, vs: 14 }), mat(eg, over));
         }
