@@ -10,6 +10,8 @@
 
 - Relevo: litoral (mar) e Oásis (canopy) seguem planos; depois saltos nos cumes e pista inclinada.
 
+- Campeonato de 2 jogadores (v0.89): validar em dispositivo real; ver se a dupla precisa de regras de avanço diferentes.
+
 ## Ideias
 Mais cenários/horários finos, mais pilotos .glb, mais tráfego variado, ranking local, modo espelho.
 - Peso dos `.glb`: 512 px e 1024 px foram testados e ficaram ruins; voltaram os originais de 2048 px. Alternativas: compressão (Draco/Meshopt, WebP/KTX2) ou reduzir só os carros menos vistos.

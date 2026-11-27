@@ -29,6 +29,7 @@ Horários: amanhecer, dia, entardecer (sun flare), noite. Climas: limpo, chuva, 
 - `passGrade: 'C'`, pontos S100/A75/B55/C35/D15; prêmios por posição (pódio paga mais), `prices` B 20k / A 55k / S 100k, `startClass: 'C'`, `repeat 0.3`, `botIncome 1.3`.
 - Bots juntam dinheiro e compram carros melhores (alguns cedo, outros poupam para o fim).
 - Fim: 1º–3º = pódio com fogos; 4º+ = tela final com origami e "Tentar novamente".
+- **2 jogadores (v0.89)**: botão "Jogadores: 1/2" na tela do campeonato (desativado no toque). Cada modo tem seu próprio save (`champ` e `champ2`; `champ2` tem `p2 = { car, cash, owned, res }`). Os dois correm juntos em tela dividida contra 8 rivais; cada um tem dinheiro, garagem (J1/J2 na loja), nota e pontos próprios; a etapa é vencida se pelo menos um tirar nota C ou melhor; quem não termina fica sem pontos. No fim o pódio mostra o melhor colocado e qualquer 1º lugar libera os carros secretos.
 
 ## Outdoors (`ads.js`)
 Texto grande + menor, cores de borda/fundo ou imagem SVG/PNG (local ou absoluta). `tracks.js` só referencia os ids.
