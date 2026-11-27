@@ -502,7 +502,7 @@ body.tc #mini{bottom:calc(max(14px,env(safe-area-inset-bottom,0px)) + min(26vh,1
         <div class="mkeys"><span>Sozinho: WASD ou setas</span><span><kbd>P</kbd><kbd>Esc</kbd> pausar</span><span><kbd>R</kbd> reiniciar</span><span><kbd>B</kbd> retrovisor</span><span><kbd>G</kbd> garagem <kbd>V</kbd> pista <kbd>X</kbd> campeonato</span><span>Menu: <kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>←</kbd><kbd>→</kbd> opção</span></div>
       </div>
       <details class="mdet">
-        <summary>Estado do projeto · v0.87</summary>
+        <summary>Estado do projeto · v0.88</summary>
         <ul>
           <li><b>Pronto:</b> tela dividida para 2 jogadores (J1 em cima com WASD + Espaço, J2 embaixo com setas + Ctrl direito), grid de largada com 10 carros (9 pilotos de IA que desviam do tráfego, batem e ultrapassam; opção de grid reduzido com 5), posição no HUD e no resultado, campeonato de 20 etapas (5 pistas × amanhecer, dia, entardecer, noite, chuva sorteada) com pontos, progresso salvo e final no oásis do tepui, 5 pistas (litoral, centro urbano, fazenda, serra, cânion) com cenário próprio e opção de pista aleatória, horários (amanhecer, dia, entardecer com sun flare, noite), chuva (menos aderência) e opções Aleatório para pista, horário e clima, garagem com classes C/B/A/S, tráfego, colisões, pausa, resultado, melhor tempo por pista, filtro retrô, som sintetizado por carro (motor por rotação e marcha, troca de marcha, turbo, estouros, freada, derrapagem, chuva; sons personalizados por carro no vehicles.js), carros e pistas configuráveis em vehicles.js e tracks.js.</li>
           <li><b>Planejado:</b> campeonato para 2 jogadores, pontos por posição.</li>
@@ -1475,14 +1475,16 @@ class World {
             if (this.shore && sg < 0 && !K.edge) { dist = Math.min(dist, this.shore(Math.round(ss / T.step)) - WALL - ex - 1.2); if (dist < rule.dist[0] * 0.5) continue; }   // keep beach props off the water
             const lat = WALL + ex + dist + (K.edge ? V.half : 0), cz = this.cliffZone[sg], big = rule.kind === 'hill' || rule.kind === 'mesa';
             if (cz && rule.kind !== 'hill' && rule.kind !== 'mesa' && lat + rad > cz.from + ex - 0.5) continue;   // no trees inside the rock wall
-            const x = o.x + o.lx * sg * lat, z = o.z + o.lz * sg * lat;
+            let lat2 = lat;   // relief: a building never stands on the embankment slope; it moves outward until the ground is level under it (or is dropped)
+            if (T.hasElev && rule.kind === 'building') { const ii = Math.round(ss / T.step), fl = r => Math.abs(T.terrain(ii, sg * (lat2 - r)) - T.terrain(ii, sg * (lat2 + r))) < 0.8; let ex2 = 0; while (!fl(rad + 2) && ex2 < 70) { lat2 += 5; ex2 += 5; } if (ex2 >= 70) continue; }
+            const x = o.x + o.lx * sg * lat2, z = o.z + o.lz * sg * lat2;
             if (!clear(x, z, WALL + (big ? 4 : 0.9) + rad * (big ? 1 : rad > 8 ? 0.8 : 0.5))) continue;   // hills and mesas stay completely off the road (also off other stretches of it)
             if (this.tz.length && lat < WALL + 25 && !big && this.tz.some(([a, b]) => ss > a - 25 && ss < b + 25)) continue;   // keep the tunnel mounds clear
             if (this.cnz.length && lat < WALL + 14 && !big && this.cnz.some(z => ss > z.from - 12 && ss < z.to + 12)) continue;   // and the palm / bamboo arches
             if (rule.kind === 'building') { if (buildings.some(b => (b[0] - x) ** 2 + (b[1] - z) ** 2 < 110)) continue; buildings.push([x, z]); }
             const yaw = yawMode === 'face' ? Math.atan2(-sg * o.lx, -sg * o.lz) : yawMode === 'road' ? o.h : yawR;
             const key = rule.kind + ':' + (K.variants ? ri + '.' + vi : ''); let slot = slots.get(key); if (!slot) slots.set(key, slot = { V, items: [] });
-            slot.items.push({ x, y: -0.1 + T.terrain(Math.round(ss / T.step), lat), z, yaw, sx: scl * st[0], sy: scl * st[1], sz: scl * st[0], col: pal[ci], jit });
+            slot.items.push({ x, y: -0.1 + T.terrain(Math.round(ss / T.step), sg * lat2), z, yaw, sx: scl * st[0], sy: scl * st[1], sz: scl * st[0], col: pal[ci], jit });
           }
         }
       }
